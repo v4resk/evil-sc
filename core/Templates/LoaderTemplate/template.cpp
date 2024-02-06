@@ -2,7 +2,9 @@
 
 int main(){
 
-###DECODE_FUNCTION###
+###SHELLCODE###
+
+###DECRYPT_FUNCTION###
 
 ###METHOD_MAIN###
 
