@@ -1,0 +1,10 @@
+#define _WIN32_WINNT 0x0600
+#include <iostream>
+#include <windows.h>
+#include <psapi.h>
+#include <tlhelp32.h>
+#include <stdlib.h>
+#include <tchar.h>
+#include <cstdio>
+#include <winternl.h>
+#include "skCrypter.h"
