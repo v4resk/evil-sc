@@ -1,8 +1,9 @@
 ###METHOD_INCLUDES###
-
-int main(int argc, char **argv) {
+###ENCODER_INCLUDES###
 
 ###SHELLCODE###
+
+int main(int argc, char **argv) {
 
 ###DECRYPT_FUNCTION###
 

