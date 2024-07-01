@@ -1,0 +1,43 @@
+import os
+import re
+import traceback
+from abc import abstractmethod
+from pydoc import locate
+
+from core.config.config import Config
+
+
+class ModuleNotCompatibleException(Exception):
+    pass
+
+
+class ModuleNotLoadableException(Exception):
+    pass
+
+
+class ModuleNotFoundException(Exception):
+    pass
+
+
+class Module:
+    def __init__(self, name: str = None, libraries: list = None, components: list = None):
+        self.components = components if components else []
+        self.libraries = libraries if libraries else []
+        self.name = name
+        self.order = None
+        self.compile = False
+        self.filter_string = ""
+        self.loadable = True
+
+    def add_component(self, component):
+        self.components.append(component)
+
+    def generate(self, **kwargs):
+        pass
+
+    def build(self, **kwargs):
+        pass
+
+    def test(self):
+        print(f"CALL: {self.call_component.code}")
+        print(f"CODE: {self.code_components.code}")
