@@ -97,16 +97,11 @@ class esc:
         #Do compilers
         #-------->  Make "modules" only one class ! No heritage needed, same modules pour tt
         # Les modules contienent le code a editer (ex: callComponent etc)
-
-
-        conf = Config()
-        #conf.test()
-
         loader = TemplateLoader(vars(self))
         #loader.test()
+        loader.write_code()
+        loader.compile()
 
-        enc = EncryptorsChain.from_list(self.encryptors)
-        print(enc.to_string())
         print()
 
         # Debug Prints

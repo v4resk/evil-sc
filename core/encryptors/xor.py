@@ -3,6 +3,8 @@ import secrets
 import string
 import struct
 from itertools import islice, cycle
+import uuid
+
 
 from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
@@ -18,6 +20,7 @@ class xor(Encryptor):
         self.decoder_in = [bytes]
         self.decoder_out = [bytes]
         self.key = ''.join(secrets.choice(".+-,:;_%=()" + string.ascii_letters + string.digits) for _ in range(12)).encode()
+        self.uuid = uuid.uuid4().hex
 
     def slow_encode(self, data):
         encoded = b""
@@ -43,8 +46,8 @@ class xor(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.call_component = CallComponent("length = xor_encode(encoded, length);")
-        module.code_components = CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####KEY_LENGTH####", str(len(self.key))))
+        module.call_component = CallComponent(f"length = xor_encode_{self.uuid}(encoded, length);")
+        module.code_components = CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####KEY_LENGTH####", str(len(self.key))).replace("####UUID####",str(self.uuid)))
         
 
         return module

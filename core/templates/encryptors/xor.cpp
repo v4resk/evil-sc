@@ -1,4 +1,4 @@
-int xor_encode(unsigned char* data, int data_len)
+int xor_encode_####UUID####(unsigned char* data, int data_len)
 {
     const char* key = "####KEY####";
     int key_len = ####KEY_LENGTH####;

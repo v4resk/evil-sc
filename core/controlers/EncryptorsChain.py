@@ -6,10 +6,14 @@ from pydoc import locate
 from core.encryptors.Encryptor import Encryptor
 from core.config.config import Config
 
+
+debug_mode = Config().get("DEBUG", "ENCODERS")
+
 class EncryptorsChain:
     def __init__(self):
         self.chain = OrderedDict()
         self.current = 0
+
 
     def is_empty(self):
         return len(self.chain) == 0
@@ -43,9 +47,9 @@ class EncryptorsChain:
                     encoder_class_string = f"core.encryptors.{e}.{e}"
                     encoder_class = locate(encoder_class_string)
                     encoder_instance = encoder_class()
-        
-                    #Debug            
-                    encoder_instance.translate().test()
+
+                    if debug_mode == "True":            
+                        encoder_instance.translate().test()
 
                     chain.push(encoder_instance)
             except Exception as ex:

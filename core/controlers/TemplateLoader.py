@@ -2,6 +2,8 @@
 
 from core.config.config import Config
 from core.controlers.EncryptorsChain import EncryptorsChain
+from core.controlers.ShellcodeControler import ShellcodeControler
+from core.controlers.CompilerControler import CompilerControler
 import shutil
 import os
 
@@ -11,13 +13,13 @@ class TemplateLoader:
         for key, value in _vars.items():
             setattr(self, key, value)
 
+        self.call_component = []
+        self.code_components = []
+
         #Copy template file to build emplacement
         self.copy_new_template_file()
         #Load encryptors chain
         self.load_encryptors_chain()
-
-    def test(self):
-        print(vars(self))
 
     def copy_new_template_file(self):
         src_file = f"{Config().get('FOLDERS', 'methods')}/{self.method}.cpp"
@@ -38,5 +40,69 @@ class TemplateLoader:
             print(f"Error: {e}")
     
     def load_encryptors_chain(self):
-        self.encryptors_chain = EncryptorsChain()
+        self.encryptors_chain = EncryptorsChain.from_list(self.encryptors)
+        if self.encryptors_chain:
+            #DEBUG
+            #print(self.encryptors_chain.to_string())
+            #END DEBUG
+            for key, encryptor in self.encryptors_chain.chain.items():
+                encryptor_module = encryptor.translate()
+                self.call_component.append(encryptor_module.call_component)
+                self.code_components.append(encryptor_module.code_components)
+
+    def write_code(self):
+        with open(self.template_file, "r") as template_file:
+            template_content = template_file.read()
+        
+        # Replace Codes
+        code_placeholder = Config().get('PLACEHOLDERS', 'code')
+        code_components_code = ""
+        for component in self.code_components:
+            code_components_code += component.code
+        template_content = template_content.replace(code_placeholder,code_components_code)
+
+        # Replace Calls
+        call_placeholder = Config().get('PLACEHOLDERS', 'call')
+        call_components_code = ""
+        for component in self.call_component:
+            call_components_code += component.code
+        template_content = template_content.replace(call_placeholder,call_components_code)
+        
+        # Replace Usings
+
+        # Replace Defines
+
+        # Replace Shellcode
+        shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode')
+        shellcodeControler = ShellcodeControler(self.shellcode_variable, self.encryptors_chain)
+        #shellcodeControler.test()
+        template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_c())
+
+        # Replace Anti-Debug
+
+        # Replace Delay
+
+        # Replace ARGS
+
+        # Write to file
+        print(template_content)
+        with open(self.template_file, "w") as evil_sc_file:
+            evil_sc_file.write(template_content)
+
+
+    def compile(self):
+        compiler_controler = CompilerControler(self.template_file, self.outfile)
+        compiler_controler.compile()
         pass
+
+    def test(self):
+        for component in self.call_component:
+            print(f"CODE:\n{component.code}")
+        
+        for component in self.code_components:
+            print(f"CALL:\n{component.code}")
+
+            
+
+
+        
