@@ -1,4 +1,3 @@
-import base64
 import secrets
 import string
 import struct
@@ -10,7 +9,7 @@ from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.controlers.Module import Module
-from Crypto.Util import strxor
+from Crypto.Util import strxor # type: ignore
 from core.config.config import Config
 
 

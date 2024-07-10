@@ -14,7 +14,6 @@ class EncryptorsChain:
         self.chain = OrderedDict()
         self.current = 0
 
-
     def is_empty(self):
         return len(self.chain) == 0
 
@@ -35,7 +34,7 @@ class EncryptorsChain:
             return False
         self.chain.move_to_end(index)
         self.chain.popitem()
-
+    
     
     @staticmethod
     def from_list(encryptors: list = None):
@@ -55,5 +54,4 @@ class EncryptorsChain:
             except Exception as ex:
                 print(ex)
                 continue
-
         return chain

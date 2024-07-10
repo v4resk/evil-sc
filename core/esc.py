@@ -39,6 +39,7 @@ class esc:
         self.evil_sc_template_file = ""
         self.outfile = ""
 
+        self.valid_encryptors = ["base64","xor","nop"]
 
 
     def parse_arguments(self):
@@ -48,7 +49,7 @@ class esc:
         parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods"),
                             help='Shellcode-loading method')
 
-        parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=["aes","xor"],
+        parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.valid_encryptors,
                             help='Template-dependent encryption or encoding method to be applied to the shellcode')
 
         parser.add_argument('-ek', '--encrypt-key', action='append', dest='encryptors_keys', metavar='KEY',

@@ -29,6 +29,11 @@ class Module:
         self.filter_string = ""
         self.loadable = True
 
+        self.call_component = None
+        self.code_components = None
+        self.include_components = None
+        self.define_components = None
+
     def add_component(self, component):
         self.components.append(component)
 

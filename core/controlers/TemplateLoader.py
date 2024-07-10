@@ -13,13 +13,19 @@ class TemplateLoader:
         for key, value in _vars.items():
             setattr(self, key, value)
 
-        self.call_component = []
+        self.call_components = []
         self.code_components = []
+        self.include_components = []
+        self.define_components = []
+
+        self.build_options = ""
 
         #Copy template file to build emplacement
         self.copy_new_template_file()
         #Load encryptors chain
         self.load_encryptors_chain()
+        #Get Build options
+        self.get_build_options()
 
     def copy_new_template_file(self):
         src_file = f"{Config().get('FOLDERS', 'methods')}/{self.method}.cpp"
@@ -47,28 +53,36 @@ class TemplateLoader:
             #END DEBUG
             for key, encryptor in self.encryptors_chain.chain.items():
                 encryptor_module = encryptor.translate()
-                self.call_component.append(encryptor_module.call_component)
+                self.call_components.append(encryptor_module.call_component)
                 self.code_components.append(encryptor_module.code_components)
+                self.include_components.append(encryptor_module.include_components)
+                self.define_components.append(encryptor_module.define_components)
 
     def write_code(self):
         with open(self.template_file, "r") as template_file:
             template_content = template_file.read()
         
         # Replace Codes
-        code_placeholder = Config().get('PLACEHOLDERS', 'code')
+        code_placeholder = Config().get('PLACEHOLDERS', 'CODE')
         code_components_code = ""
         for component in self.code_components:
             code_components_code += component.code
         template_content = template_content.replace(code_placeholder,code_components_code)
 
         # Replace Calls
-        call_placeholder = Config().get('PLACEHOLDERS', 'call')
+        call_placeholder = Config().get('PLACEHOLDERS', 'CALL')
         call_components_code = ""
-        for component in self.call_component:
+        for component in self.call_components:
             call_components_code += component.code
         template_content = template_content.replace(call_placeholder,call_components_code)
         
-        # Replace Usings
+        # Replace Includes
+        include_placeholder = Config().get('PLACEHOLDERS', 'INCLUDE')
+        include_components_code = ""
+        for component in self.include_components:
+            if component :
+                include_components_code += component.code
+        template_content = template_content.replace(include_placeholder,include_components_code)
 
         # Replace Defines
 
@@ -89,14 +103,19 @@ class TemplateLoader:
         with open(self.template_file, "w") as evil_sc_file:
             evil_sc_file.write(template_content)
 
+    def get_build_options(self, compiler="mingw"):
+        if compiler == "mingw":
+            return ""
+        return ""
 
     def compile(self):
-        compiler_controler = CompilerControler(self.template_file, self.outfile)
+        compiler_controler = CompilerControler(self.template_file, self.outfile, self.build_options)
         compiler_controler.compile()
         pass
 
+    
     def test(self):
-        for component in self.call_component:
+        for component in self.call_components:
             print(f"CODE:\n{component.code}")
         
         for component in self.code_components:

