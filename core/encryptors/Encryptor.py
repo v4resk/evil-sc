@@ -31,6 +31,9 @@ class Encryptor(ABC):
     def translate(self):
         pass
 
+    def to_string(self):
+        return self.__class__.__name__.lower()
+
     # To edit, function that will retreive the .cpp implementation
     def template(self):
         encoder = self.__class__.__name__.lower()

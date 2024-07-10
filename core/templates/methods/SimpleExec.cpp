@@ -27,13 +27,6 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
 
     unsigned char* decoded = encoded;
 
-    printf("\n");
-    printf("DEBUG:After XOR:");
-    for (size_t i = 0; i < length; i++) {
-        printf("0x%02x,", decoded[i]);
-    }
-    printf("\n\n");
-
     //currentProcess = GetCurrentProcess();
 
     printf("[*] Allocating %d bytes of memory\n", length);

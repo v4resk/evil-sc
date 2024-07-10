@@ -89,7 +89,7 @@ class TemplateLoader:
         # Replace Shellcode
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode')
         shellcodeControler = ShellcodeControler(self.shellcode_variable, self.encryptors_chain)
-        shellcodeControler.test()
+        #shellcodeControler.test()
         template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_c())
 
         # Replace Anti-Debug
