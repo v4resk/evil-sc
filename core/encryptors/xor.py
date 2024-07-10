@@ -49,8 +49,7 @@ class xor(Encryptor):
         module.call_component = CallComponent(f"length = xor_encode_{self.uuid}(encoded, length);")
         module.code_components = CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####KEY_LENGTH####", str(len(self.key))).replace("####UUID####",str(self.uuid)))
         
-
         return module
 
     def test(self):
-        print("hello")
+        print("hello from xor encryptor object")

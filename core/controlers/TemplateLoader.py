@@ -75,7 +75,7 @@ class TemplateLoader:
         # Replace Shellcode
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode')
         shellcodeControler = ShellcodeControler(self.shellcode_variable, self.encryptors_chain)
-        #shellcodeControler.test()
+        shellcodeControler.test()
         template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_c())
 
         # Replace Anti-Debug
@@ -85,7 +85,7 @@ class TemplateLoader:
         # Replace ARGS
 
         # Write to file
-        print(template_content)
+        #print(template_content)
         with open(self.template_file, "w") as evil_sc_file:
             evil_sc_file.write(template_content)
 
