@@ -17,6 +17,7 @@ class TemplateLoader:
         self.code_components = []
         self.include_components = []
         self.define_components = []
+        self.mingw_options = []
 
         self.build_options = ""
 
@@ -57,6 +58,7 @@ class TemplateLoader:
                 self.code_components.append(encryptor_module.code_components)
                 self.include_components.append(encryptor_module.include_components)
                 self.define_components.append(encryptor_module.define_components)
+                self.mingw_options.append(encryptor_module.mingw_options)
 
     def write_code(self):
         with open(self.template_file, "r") as template_file:
@@ -109,7 +111,14 @@ class TemplateLoader:
         return ""
 
     def compile(self):
-        compiler_controler = CompilerControler(self.template_file, self.outfile, self.build_options)
+        # Add build options from encryptchains
+        mingw_options = ""
+        for component in self.mingw_options:
+            if component:
+                mingw_options += f"{component }"
+
+        # Compile using CompilerControler
+        compiler_controler = CompilerControler(self.template_file, self.outfile, mingw_options)
         compiler_controler.compile()
         pass
 

@@ -33,6 +33,7 @@ class Module:
         self.code_components = None
         self.include_components = None
         self.define_components = None
+        self.mingw_options = None
 
     def add_component(self, component):
         self.components.append(component)
