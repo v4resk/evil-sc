@@ -1,12 +1,16 @@
 from core.controlers.EncryptorsChain import EncryptorsChain
 from binascii import hexlify
+from core.config.config import Config
+
 
 class ShellcodeControler:
     def __init__(self, shellcode_variable, encryptors_chain):
         self.encryptors_chain = encryptors_chain
         self.shellcode_bytes = self.file_to_bytes(shellcode_variable)
+        self.debug_mode = Config().get("DEBUG", "SHELLCODE")
 
-        print(f"C Plane Shellcode: {self.get_plain_shellcode_c()}\n")
+        if self.debug_mode == "True":
+            print(f"C Plane Shellcode: {self.get_plain_shellcode_c()}\n")
     
         self.encrypted_shellcode_bytes = self.encrypt_shellcode()
 
@@ -21,19 +25,21 @@ class ShellcodeControler:
         i = 0
         encrypted_shellcode_bytes = self.shellcode_bytes 
         for key, encryptor in reversed(self.encryptors_chain.chain.items()):
+            
             ### DEBUG ####
-            #print(f"{encryptor.key}")
-            print(f"{encryptor.to_string()}{i} Before Encode: {self.get_shellcode_c(encrypted_shellcode_bytes)}")
-            print()
-            ### DEBUG ####
+            if self.debug_mode == "True":
+                print(f"{encryptor.to_string()}{i} Before Encode: {self.get_shellcode_c(encrypted_shellcode_bytes)}")
+                print()
+
 
             encrypted_shellcode_bytes = encryptor.encode(encrypted_shellcode_bytes)
 
             ### DEBUG ####
-            print(f"{encryptor.to_string()}{i} After Encode: {self.get_shellcode_c(encrypted_shellcode_bytes)}")
-            print()
-            i = i+1
-            ### DEBUG ####
+            if self.debug_mode == "True":
+                print(f"{encryptor.to_string()}{i} After Encode: {self.get_shellcode_c(encrypted_shellcode_bytes)}")
+                print()
+                i = i+1
+
         return encrypted_shellcode_bytes
 
     def decrypt_shellcode(self):

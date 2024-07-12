@@ -34,7 +34,6 @@ class esc:
         self.method = ""
         self.encoders = []
         self.encryptors = []
-        self.encryptors_keys = []
         self.sandbox_evasion = []
         self.evil_sc_template_file = ""
         self.outfile = ""
@@ -51,9 +50,6 @@ class esc:
 
         parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.valid_encryptors,
                             help='Template-dependent encryption or encoding method to be applied to the shellcode')
-
-        parser.add_argument('-ek', '--encrypt-key', action='append', dest='encryptors_keys', metavar='KEY',
-                            help=f'A key to be used for --encrypt (auto-generated if empty)')
 
         parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="explorer.exe",
                             help='Process name for shellcode injection')
@@ -89,7 +85,6 @@ class esc:
         self.method = args.method
         self.encryptors = args.encryptors
         self.sandbox_evasion = args.sandbox_evasion
-        self.encryptors_keys = args.encryptors_keys
         self.outfile = args.outfile
 
         # TO DO
@@ -106,11 +101,10 @@ class esc:
         print()
 
         # Debug Prints
-        print(f'{Fore.GREEN}Shellcode:\t\t{Fore.WHITE} {self.shellcode_variable}')
-        print(f'{Fore.GREEN}Method:\t\t\t{Fore.WHITE} {os.path.basename(self.method)}')
+        print(f'{Fore.GREEN}Shellcode:\t\t{Fore.WHITE}{self.shellcode_variable}')
+        print(f'{Fore.GREEN}Method:\t\t\t{Fore.WHITE}{os.path.basename(self.method)}')
         print(f'{Fore.GREEN}Encryptors:\t\t{Fore.WHITE}{loader.encryptors_chain.to_string()}')
-        print(f'{Fore.GREEN}Encryptors Keys:\t{Fore.WHITE}{self.encryptors_keys}')
-        print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{[os.path.basename(file) for file in self.sandbox_evasion]}')
-        print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')
-        print(f"\n{Fore.CYAN}Genreated template:\t{Fore.WHITE}{self.evil_sc_template_file}")
-        print(f"{Fore.CYAN}Output:\t\t\t{Fore.WHITE}{self.outfile}")
+        print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{self.sandbox_evasion}')
+        #print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')
+        #print(f"\n{Fore.CYAN}Genreated template:\t{Fore.WHITE}{self.evil_sc_template_file}")
+        print(f"\n{Fore.CYAN}Output:\t\t\t{Fore.WHITE}{self.outfile}")
