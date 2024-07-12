@@ -88,11 +88,10 @@ class esc:
         self.outfile = args.outfile
 
         # TO DO
-        #Do the template engine
-        #Do the encoders + encoders chain
-        #Do compilers
-        #-------->  Make "modules" only one class ! No heritage needed, same modules pour tt
-        # Les modules contienent le code a editer (ex: callComponent etc)
+        # Write a string in shellcode var if Base64 or UUID 
+        # Encryptors: bcrypt all (3DES, RC4, sgn, dictionaire d'association, )
+        # SandBox_evasion: Sleep, NoVMenv
+
         loader = TemplateLoader(vars(self))
         #loader.test()
         loader.write_code()

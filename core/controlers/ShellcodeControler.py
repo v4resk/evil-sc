@@ -63,9 +63,15 @@ class ShellcodeControler:
         return self.encrypted_shellcode_bytes
 
     def get_encrypted_shellcode_c(self):
-        shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
-        shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
-        return shellcode
+        for key, encryptor in self.encryptors_chain.chain.items():
+            if not encryptor.isStringShellcode:
+                return self.get_shellcode_c(self.encrypted_shellcode_bytes)
+            else:
+                print("[*] String shellcode")
+                #return self.get_shellcode_c(encrypted_shellcode_bytes)
+                return "\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\""
+            break
+        #return shellcode
     
     def get_plain_shellcode_c(self):
         shellcode = hexlify(self.shellcode_bytes).decode()

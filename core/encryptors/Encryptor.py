@@ -14,6 +14,7 @@ class Encryptor(ABC):
         self.decoder_in = None
         self.decoder_out = None
         self.order = order
+        self.isStringShellcode = False
         pass
 
     def set_order(self, order):

@@ -3,6 +3,7 @@ from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.engines.IncludeComponent import IncludeComponent
+import string
 
 from core.controlers.Module import Module
 from Crypto.Util import strxor # type: ignore
@@ -17,6 +18,7 @@ class base64(Encryptor):
         self.decoder_in = [bytes]
         self.decoder_out = [bytes]
         self.uuid = uuid.uuid4().hex
+        self.isStringShellcode = True
 
     def encode(self, data):
         if isinstance(data, str):
