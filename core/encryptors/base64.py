@@ -9,6 +9,7 @@ from Crypto.Util import strxor # type: ignore
 from core.config.config import Config
 import uuid
 
+import base64 as base64lib
 
 class base64(Encryptor):
     def __init__(self):
@@ -18,11 +19,14 @@ class base64(Encryptor):
         self.uuid = uuid.uuid4().hex
 
     def encode(self, data):
-        return data
+        if isinstance(data, str):
+            data = bytes(data, 'utf-8')
+        return bytearray(base64lib.b64encode(data))
 
     def decode(self, data):
-
-        return data
+        if isinstance(data, str):
+            data = bytes(data, 'utf-8')
+        return bytearray(base64lib.b64decode(data))
 
 
     def translate(self):

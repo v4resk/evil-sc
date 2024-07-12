@@ -6,6 +6,13 @@ int base64_decode_####UUID####(unsigned char* data, int data_len)
     // Step 1: Convert hex representation to Base64 encoded string
 
     // Get the required size for the base64 encoded string
+    printf("\n");
+    printf("DEBUG:Before B64:");
+    for (size_t i = 0; i < data_len; i++) {
+        printf("0x%02x,", data[i]);
+    }
+    printf("\n\n");
+
     if (!CryptBinaryToStringA(data, data_len, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, NULL, &base64_len)) {
         fprintf(stderr, "Error getting required size for base64 encoding. Error code: %lu\n", GetLastError());
         return -1;
@@ -57,6 +64,13 @@ int base64_decode_####UUID####(unsigned char* data, int data_len)
 
     // Copy the decoded data back to the original data buffer
     memcpy(data, decoded_data, decoded_len);
+
+    printf("\n");
+    printf("DEBUG:After B64:");
+    for (size_t i = 0; i < data_len; i++) {
+        printf("0x%02x,", data[i]);
+    }
+    printf("\n\n");
 
     free(base64_encoded);
     free(decoded_data);
