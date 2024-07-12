@@ -18,7 +18,7 @@ class EncryptorsChain:
         return len(self.chain) == 0
 
     def to_string(self):
-        return "->".join([e.__class__.__name__ for e in self.chain.values()])
+        return "->".join([e.__class__.__name__ for e in reversed(self.chain.values())])
     
     def push(self, value: Encryptor):
         value.order = self.current
@@ -41,7 +41,7 @@ class EncryptorsChain:
         chain = EncryptorsChain()
         if not encryptors or len(encryptors) == 0:
             return chain
-        for e in reverse(encryptors):
+        for e in encryptors:
             try:
                     encoder_class_string = f"core.encryptors.{e}.{e}"
                     encoder_class = locate(encoder_class_string)
