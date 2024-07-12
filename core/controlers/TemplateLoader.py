@@ -49,9 +49,6 @@ class TemplateLoader:
     def load_encryptors_chain(self):
         self.encryptors_chain = EncryptorsChain.from_list(self.encryptors)
         if self.encryptors_chain:
-            #DEBUG
-            #print(self.encryptors_chain.to_string())
-            #END DEBUG
             for key, encryptor in self.encryptors_chain.chain.items():
                 encryptor_module = encryptor.translate()
                 self.call_components.append(encryptor_module.call_component)

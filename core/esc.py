@@ -39,7 +39,7 @@ class esc:
         self.evil_sc_template_file = ""
         self.outfile = ""
 
-        self.valid_encryptors = ["base64","xor","nop"]
+        self.valid_encryptors = ["base64","xor","nop","aes"]
 
 
     def parse_arguments(self):
@@ -108,7 +108,7 @@ class esc:
         # Debug Prints
         print(f'{Fore.GREEN}Shellcode:\t\t{Fore.WHITE} {self.shellcode_variable}')
         print(f'{Fore.GREEN}Method:\t\t\t{Fore.WHITE} {os.path.basename(self.method)}')
-        print(f'{Fore.GREEN}Encryptors:\t\t{Fore.WHITE}{self.encryptors}')
+        print(f'{Fore.GREEN}Encryptors:\t\t{Fore.WHITE}{loader.encryptors_chain.to_string()}')
         print(f'{Fore.GREEN}Encryptors Keys:\t{Fore.WHITE}{self.encryptors_keys}')
         print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{[os.path.basename(file) for file in self.sandbox_evasion]}')
         print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')

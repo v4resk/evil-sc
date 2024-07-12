@@ -41,7 +41,7 @@ class EncryptorsChain:
         chain = EncryptorsChain()
         if not encryptors or len(encryptors) == 0:
             return chain
-        for e in encryptors:
+        for e in reverse(encryptors):
             try:
                     encoder_class_string = f"core.encryptors.{e}.{e}"
                     encoder_class = locate(encoder_class_string)

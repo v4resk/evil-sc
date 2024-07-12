@@ -1,39 +1,81 @@
-    BCRYPT_ALG_HANDLE hAlgAes = NULL;
+int aes_decrypt_####UUID####(unsigned char* encoded, int length) {
+
+    unsigned char key[] = ####KEY####;
+    int key_length = sizeof(key);
+    unsigned char iv[] = ####IV####;
+    int iv_length = sizeof(iv);
+
+    BCRYPT_ALG_HANDLE hAlg = NULL;
     BCRYPT_KEY_HANDLE hKey = NULL;
+    NTSTATUS status;
+    DWORD cbKeyObject, cbData, dwLength = length;
+    PBYTE pbKeyObject = NULL;
 
-    unsigned char key[] = { ###AES_KEY### };
-    unsigned char iv[] = { ###AES_IV### };
-
-    DWORD cbResult = 0;
-    DWORD dwRet = 10;
-
-    printf("DEBUG:Before AES:");
-    for (size_t i = 0; i < sizeof(shellcode); i++) {
-        printf("0x%02x,", shellcode[i]);
+    printf("\n[*] Before AES values: {");
+    for (DWORD i = 0; i < length; i++) {
+        printf("0x%02x", encoded[i]);
+        if (i < length - 1) {
+            printf(",");
+        }
     }
-    printf("\n\n");
+    printf("}\n");
 
-    BCryptOpenAlgorithmProvider(&hAlgAes, BCRYPT_AES_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
-
-    BCryptSetProperty(hAlgAes, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_CBC, sizeof(BCRYPT_CHAIN_MODE_CBC), 0);
-    
-    BCryptGenerateSymmetricKey(hAlgAes, &hKey, NULL, 0, key, sizeof(key), 0);
-
-    BCryptDecrypt(hKey, shellcode, sizeof(shellcode), NULL, iv, sizeof(iv), shellcode, sizeof(shellcode), &cbResult, BCRYPT_BLOCK_PADDING);
-
-    printf("DEBUG:After AES:");
-    for (size_t i = 0; i < sizeof(shellcode); i++) {
-        printf("0x%02x,", shellcode[i]);
+    // Open an algorithm handle
+    status = BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, NULL, 0);
+    if (!BCRYPT_SUCCESS(status)) {
+        printf("[-] BCryptOpenAlgorithmProvider failed\n");
+        return -1;
     }
-    printf("\n\n");
 
-    if (NULL != hKey)
+    // Calculate the size of the buffer to hold the KeyObject
+    status = BCryptGetProperty(hAlg, BCRYPT_OBJECT_LENGTH, (PBYTE)&cbKeyObject, sizeof(DWORD), &cbData, 0);
+    if (!BCRYPT_SUCCESS(status)) {
+        printf("[-] BCryptGetProperty failed\n");
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        return -1;
+    }
+
+    // Allocate the key object
+    pbKeyObject = (PBYTE)HeapAlloc(GetProcessHeap(), 0, cbKeyObject);
+    if (NULL == pbKeyObject) {
+        printf("[-] Memory allocation failed\n");
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        return -1;
+    }
+
+    // Generate the key from supplied input key bytes
+    status = BCryptGenerateSymmetricKey(hAlg, &hKey, pbKeyObject, cbKeyObject, key, key_length, 0);
+    if (!BCRYPT_SUCCESS(status)) {
+        printf("[-] BCryptGenerateSymmetricKey failed\n");
+        HeapFree(GetProcessHeap(), 0, pbKeyObject);
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        return -1;
+    }
+
+    // Decrypt the data
+    status = BCryptDecrypt(hKey, encoded, length, NULL, iv, iv_length, encoded, length, &dwLength, BCRYPT_BLOCK_PADDING);
+    if (!BCRYPT_SUCCESS(status)) {
+        printf("[-] BCryptDecrypt failed\n");
         BCryptDestroyKey(hKey);
+        HeapFree(GetProcessHeap(), 0, pbKeyObject);
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        return -1;
+    }
 
-    if (NULL != hAlgAes)
-        BCryptCloseAlgorithmProvider(hAlgAes, 0);
+    // Debug statement to print the decrypted values
+    printf("\n[*] After AES values: {");
+    for (DWORD i = 0; i < dwLength; i++) {
+        printf("0x%02x", encoded[i]);
+        if (i < dwLength - 1) {
+            printf(",");
+        }
+    }
+    printf("}\n");
 
+    // Clean up
+    BCryptDestroyKey(hKey);
+    HeapFree(GetProcessHeap(), 0, pbKeyObject);
+    BCryptCloseAlgorithmProvider(hAlg, 0);
 
-
-    
-
+    return dwLength;
+}
