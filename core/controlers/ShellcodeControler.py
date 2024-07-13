@@ -7,11 +7,7 @@ class ShellcodeControler:
     def __init__(self, shellcode_variable, encryptors_chain):
         self.encryptors_chain = encryptors_chain
         self.shellcode_bytes = self.file_to_bytes(shellcode_variable)
-        self.debug_mode = Config().get("DEBUG", "SHELLCODE")
-
-        if self.debug_mode == "True":
-            print(f"C Plane Shellcode: {self.get_plain_shellcode_c()}\n")
-    
+        self.debug_mode = Config().get("DEBUG", "SHELLCODE")    
         self.encrypted_shellcode_bytes = self.encrypt_shellcode()
 
 
@@ -36,7 +32,7 @@ class ShellcodeControler:
 
             ### DEBUG ####
             if self.debug_mode == "True":
-                print(f"{encryptor.to_string()}{i} After Encode: {self.get_shellcode_c(encrypted_shellcode_bytes)}")
+                print(f"{encryptor.to_string()} n°{i} After Encode: {self.get_shellcode_c(encrypted_shellcode_bytes)}")
                 print()
                 i = i+1
 

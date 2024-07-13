@@ -1,0 +1,81 @@
+int des3_decrypt_####UUID####(unsigned char* encoded, int length) {
+
+    unsigned char key[] = ####KEY####;
+    int key_length = sizeof(key);
+    unsigned char iv[] = ####IV####;
+    int iv_length = sizeof(iv);
+
+    BCRYPT_ALG_HANDLE hAlg = NULL;
+    BCRYPT_KEY_HANDLE hKey = NULL;
+    NTSTATUS status;
+    DWORD cbKeyObject, cbData, dwLength = length;
+    PBYTE pbKeyObject = NULL;
+
+    printf("\n[*] Before 3DES values: {");
+    for (DWORD i = 0; i < length; i++) {
+        printf("0x%02x", encoded[i]);
+        if (i < length - 1) {
+            printf(",");
+        }
+    }
+    printf("}\n");
+
+    // Open an algorithm handle
+    status = BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_3DES_ALGORITHM, NULL, 0);
+    if (!BCRYPT_SUCCESS(status)) {
+        printf("[-] BCryptOpenAlgorithmProvider failed\n");
+        return -1;
+    }
+
+    // Calculate the size of the buffer to hold the KeyObject
+    status = BCryptGetProperty(hAlg, BCRYPT_OBJECT_LENGTH, (PBYTE)&cbKeyObject, sizeof(DWORD), &cbData, 0);
+    if (!BCRYPT_SUCCESS(status)) {
+        printf("[-] BCryptGetProperty failed\n");
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        return -1;
+    }
+
+    // Allocate the key object
+    pbKeyObject = (PBYTE)HeapAlloc(GetProcessHeap(), 0, cbKeyObject);
+    if (NULL == pbKeyObject) {
+        printf("[-] Memory allocation failed\n");
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        return -1;
+    }
+
+    // Generate the key from supplied input key bytes
+    status = BCryptGenerateSymmetricKey(hAlg, &hKey, pbKeyObject, cbKeyObject, key, key_length, 0);
+    if (!BCRYPT_SUCCESS(status)) {
+        printf("[-] BCryptGenerateSymmetricKey failed\n");
+        HeapFree(GetProcessHeap(), 0, pbKeyObject);
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        return -1;
+    }
+
+    // Decrypt the data
+    status = BCryptDecrypt(hKey, encoded, length, NULL, iv, iv_length, encoded, length, &dwLength, BCRYPT_BLOCK_PADDING);
+    if (!BCRYPT_SUCCESS(status)) {
+        printf("[-] BCryptDecrypt failed\n");
+        BCryptDestroyKey(hKey);
+        HeapFree(GetProcessHeap(), 0, pbKeyObject);
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        return -1;
+    }
+
+    // Debug statement to print the decrypted values
+    printf("\n[*] After 3DES values: {");
+    for (DWORD i = 0; i < dwLength; i++) {
+        printf("0x%02x", encoded[i]);
+        if (i < dwLength - 1) {
+            printf(",");
+        }
+    }
+    printf("}\n");
+
+    // Clean up
+    BCryptDestroyKey(hKey);
+    HeapFree(GetProcessHeap(), 0, pbKeyObject);
+    BCryptCloseAlgorithmProvider(hAlg, 0);
+
+    return dwLength;
+}

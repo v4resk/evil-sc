@@ -38,7 +38,7 @@ class esc:
         self.evil_sc_template_file = ""
         self.outfile = ""
 
-        self.valid_encryptors = ["base64","xor","nop","aes"]
+        self.valid_encryptors = ["base64","xor","nop","aes","des3","rc4"]
 
 
     def parse_arguments(self):
@@ -88,8 +88,7 @@ class esc:
         self.outfile = args.outfile
 
         # TO DO
-        # Write a string in shellcode var if Base64 or UUID 
-        # Encryptors: bcrypt all (3DES, RC4, sgn, dictionaire d'association, )
+        # Encryptors: RC4, sgn, dictionaire d'association
         # SandBox_evasion: Sleep, NoVMenv
 
         loader = TemplateLoader(vars(self))
