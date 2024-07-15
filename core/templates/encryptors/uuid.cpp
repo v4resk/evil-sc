@@ -2,8 +2,19 @@ int uuid_decode_####UUID####(unsigned char* encoded, int length)
 {
 
     size_t uuid_length = 36;
-    size_t uuid_count = ((length + uuid_length - 1) / uuid_length) - 1; // Calcul du nombre de uuids
-
+    //size_t uuid_count = ((length + uuid_length - 1) / uuid_length); // Calcul du nombre de uuids
+    
+    // Define uuid_count dynamicly depending if encoded is a string or hex (looking for printable char)
+    size_t uuid_count = 0;
+    for (int i = 0; i < length; ++i) {
+        if (!(encoded[i] >=32 && encoded[i] <=126)) {
+            uuid_count = ((length + uuid_length - 1) / uuid_length) - 1;
+            break;
+        }else{
+            uuid_count = ((length + uuid_length - 1) / uuid_length);
+        }
+    }
+    
     printf("\n[*] Before UUID values: {");
     for (DWORD i = 0; i < length; i++) {
         printf("0x%02x", encoded[i]);
@@ -11,6 +22,7 @@ int uuid_decode_####UUID####(unsigned char* encoded, int length)
             printf(",");
         }
     }
+
     printf("}\n");
     // Allouer de la mémoire pour le tableau de uuids
     char** uuids = (char**)malloc(uuid_count * sizeof(char*));
@@ -35,6 +47,12 @@ int uuid_decode_####UUID####(unsigned char* encoded, int length)
         uuids[i][length_to_copy] = '\0'; // Ajouter le caractère NULL de fin
 
     }
+
+    //Afficher les UUID
+    //printf("\n[*] Before UUID values (Str): {");
+    //for (size_t i = 0; i < uuid_count; i++) {
+    //    printf("%s\n", uuids[i]);
+    //}
 
     // Allocate memory for the binary UUIDs
     unsigned char* binary_uuids = (unsigned char*)malloc(uuid_count * sizeof(UUID));
@@ -78,5 +96,5 @@ int uuid_decode_####UUID####(unsigned char* encoded, int length)
     // Free the binary UUIDs buffer
     free(binary_uuids);
 
-    return uuid_count * sizeof(UUID); // Return the number of UUIDs as char (adjust the return type as needed)
+    return uuid_count * (sizeof(UUID) + 1); // Return the number of UUIDs as char (adjust the return type as needed)
 }
