@@ -52,7 +52,7 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
 int main()
 {
     //####DELAY####
-    //####ANTIDEBUG####
+    //####SANDBOXEVASION####
     //####ARGS####
 
     esc_main(NULL);

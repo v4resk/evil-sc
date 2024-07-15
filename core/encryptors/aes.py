@@ -40,7 +40,7 @@ class aes(Encryptor):
         return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
 
     def encode(self, data):
-        if not isinstance(data, bytes):
+        if not (isinstance(data, bytes) or isinstance(data, bytearray)):
             data = data.encode()
         cipher = AES.new(self.derived_key, AES.MODE_CBC, self.iv)
         encrypted = cipher.encrypt(pad(data, AES.block_size))

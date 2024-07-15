@@ -104,7 +104,7 @@ class esc:
         print(f'{Fore.GREEN}Shellcode:\t\t{Fore.WHITE}{self.shellcode_variable}')
         print(f'{Fore.GREEN}Method:\t\t\t{Fore.WHITE}{os.path.basename(self.method)}')
         print(f'{Fore.GREEN}Encryptors:\t\t{Fore.WHITE}{loader.encryptors_chain.to_string()}')
-        print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{self.sandbox_evasion}')
+        print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{loader.sandboxEvasion_chain.to_string()}')
         #print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')
         #print(f"\n{Fore.CYAN}Genreated template:\t{Fore.WHITE}{self.evil_sc_template_file}")
         print(f"\n{Fore.CYAN}Output:\t\t\t{Fore.WHITE}{self.outfile}")

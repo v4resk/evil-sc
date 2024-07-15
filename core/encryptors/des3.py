@@ -47,7 +47,7 @@ class des3(Encryptor):
         return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
 
     def encode(self, data):
-        if not isinstance(data, bytes):
+        if not (isinstance(data, bytes) or isinstance(data, bytearray)):
             data = data.encode()
         cipher = DES3.new(self.derived_key, DES3.MODE_CBC, self.iv)
         encrypted = cipher.encrypt(pad(data, DES3.block_size))

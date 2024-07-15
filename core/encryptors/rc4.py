@@ -33,7 +33,7 @@ class rc4(Encryptor):
         return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
 
     def encode(self, data):
-        if not isinstance(data, bytes):
+        if not (isinstance(data, bytes) or isinstance(data, bytearray)):
             data = data.encode()
         cipher = ARC4.new(self.key)
         encrypted = cipher.encrypt(data)

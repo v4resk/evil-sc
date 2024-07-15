@@ -34,6 +34,7 @@ class Module:
         self.include_components = None
         self.define_components = None
         self.mingw_options = None
+        self.sandboxevasion_components = None
 
     def add_component(self, component):
         self.components.append(component)
@@ -45,5 +46,4 @@ class Module:
         pass
 
     def test(self):
-        print(f"CALL: {self.call_component.code}")
-        print(f"CODE: {self.code_components.code}")
+        print(f"Hello from Module")
