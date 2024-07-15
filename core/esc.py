@@ -38,7 +38,7 @@ class esc:
         self.evil_sc_template_file = ""
         self.outfile = ""
 
-        self.valid_encryptors = ["base64","xor","nop","aes","des3","rc4"]
+        self.valid_encryptors = ["base64","xor","nop","aes","des3","rc4","uuid"]
 
 
     def parse_arguments(self):
@@ -88,8 +88,10 @@ class esc:
         self.outfile = args.outfile
 
         # TO DO
-        # Encryptors: RC4, sgn, dictionaire d'association
-        # SandBox_evasion: Sleep, NoVMenv
+        # Encryptors: sgn, dictionaire d'association, MAC / IPv4 / UUID -> https://github.com/EvasionEDR/ObfLoader/tree/main
+        # 
+        # SandBox_evasion: Sleep, NoVMenv, 
+        # EDR_Evasion: API Hash / SysWhispers2 /Indirect Syscall / HellsGate / HellHall ?
 
         loader = TemplateLoader(vars(self))
         #loader.test()

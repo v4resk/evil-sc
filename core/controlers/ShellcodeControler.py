@@ -27,12 +27,11 @@ class ShellcodeControler:
                 print(f"{encryptor.to_string()}{i} Before Encode: {self.get_shellcode_c(encrypted_shellcode_bytes)}")
                 print()
 
-
             encrypted_shellcode_bytes = encryptor.encode(encrypted_shellcode_bytes)
 
             ### DEBUG ####
             if self.debug_mode == "True":
-                print(f"{encryptor.to_string()} n°{i} After Encode: {self.get_shellcode_c(encrypted_shellcode_bytes)}")
+                print(f"{encryptor.to_string()} n°{i} After Encode: {self.get_shellcode_c(encrypted_shellcode_bytes,encryptor.isStringShellcode)}")
                 print()
                 i = i+1
 
@@ -79,8 +78,11 @@ class ShellcodeControler:
         shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
         return shellcode
     
-    def get_shellcode_c(self,shellcode_bytes):
-        shellcode = hexlify(shellcode_bytes).decode()
-        shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
-        return shellcode
+    def get_shellcode_c(self,shellcode_bytes, string = False):
+        if string == False:
+            shellcode = hexlify(shellcode_bytes).decode()
+            shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
+            return shellcode
+        else:
+            return "\"" +shellcode_bytes.decode("utf-8")+"\""
     
