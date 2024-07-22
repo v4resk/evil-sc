@@ -1,4 +1,3 @@
-from core.controlers.EncryptorsChain import EncryptorsChain
 from binascii import hexlify
 from core.config.config import Config
 
@@ -44,11 +43,7 @@ class ShellcodeControler:
         return decrypted_shellcode_bytes
 
     def test(self):
-        print(f"C Plane Shellcode: {self.get_plain_shellcode_c()}")
-        #print()
-        #print(f"Encoded Shellcode: {self.encrypted_shellcode_bytes}")
-        #print()
-        #print(f"Decoded Shellcode: {self.decrypt_shellcode()}")
+        print(f"C Plane Shellcode: {self.get_shellcode_c(self.shellcode_bytes)}")
         print()
         print(f"C Encoded Shellcode: {self.get_encrypted_shellcode_c()}")
         print()
@@ -58,6 +53,8 @@ class ShellcodeControler:
         return self.encrypted_shellcode_bytes
 
     def get_encrypted_shellcode_c(self):
+        if len(self.encryptors_chain.chain.items()) == 0:
+            return self.get_shellcode_c(self.shellcode_bytes) 
         for key, encryptor in self.encryptors_chain.chain.items():
             if not encryptor.isStringShellcode:
                 return self.get_shellcode_c(self.encrypted_shellcode_bytes)
@@ -79,7 +76,7 @@ class ShellcodeControler:
         return shellcode
     
     def get_shellcode_c(self,shellcode_bytes, string = False):
-        if string == False:
+        if string is False:
             shellcode = hexlify(shellcode_bytes).decode()
             shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
             return shellcode

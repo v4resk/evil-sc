@@ -1,6 +1,5 @@
 import configparser
 import os
-import traceback
 from pathlib import Path
 
 from core.utils.utils import get_project_root

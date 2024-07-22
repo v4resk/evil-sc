@@ -1,13 +1,8 @@
 import argparse
 import os
-import random
-import string
 from colorama import init, Fore
-from core.utils.utils import *
 from core.utils.CustomArgFormatter import CustomArgFormatter
-from core.config.config import Config
 from core.controlers.TemplateLoader import TemplateLoader
-from core.controlers.EncryptorsChain import EncryptorsChain
 
 
 def banner():
@@ -31,6 +26,7 @@ class esc:
     def __init__(self):
         self.target_process = ""
         self.shellcode_variable = ""
+        self.syscall_method = ""
         self.method = ""
         self.encoders = []
         self.encryptors = []
@@ -56,10 +52,14 @@ class esc:
 
         parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
                             choices=self.get_available_files("sandboxEvasion"),
-                            help=f'Sandbox evasion technique')
+                            help='Sandbox evasion technique')
+
+        parser.add_argument('-sc', '--syscall', action='append', dest='syscall_method',
+                            choices=["SysWhispers2","SysWhispers3","GetSyscallStub"],
+                            help='Syscall execution method')
 
         parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
-                            help=f'Output filename')
+                            help='Output filename')
 
         parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
                             help='Template-independent encoding method to be applied to the shellcode (default: sgn)')

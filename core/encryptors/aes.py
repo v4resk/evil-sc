@@ -4,18 +4,15 @@ import string
 
 from binascii import hexlify
 
-
 from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.engines.IncludeComponent import IncludeComponent
 from core.controlers.Module import Module
-from core.config.config import Config
 import uuid
 
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
 class aes(Encryptor):

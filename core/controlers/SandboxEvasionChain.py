@@ -1,6 +1,4 @@
 # This class should create the encoders chain
-
-import traceback
 from collections import OrderedDict
 from pydoc import locate
 from core.sandboxEvasion.SandboxEvasion import SandboxEvasion

@@ -5,6 +5,7 @@ from core.controlers.EncryptorsChain import EncryptorsChain
 from core.controlers.SandboxEvasionChain import SandboxEvasionChain
 from core.controlers.ShellcodeControler import ShellcodeControler
 from core.controlers.CompilerControler import CompilerControler
+from core.controlers.SysCallsControler import SysCallsControler
 import shutil
 import os
 
@@ -18,6 +19,7 @@ class TemplateLoader:
         self.code_components = []
         self.include_components = []
         self.define_components = []
+        self.syscall_components = []
         self.sandboxevasion_components = []
         self.mingw_options = []
 
@@ -25,10 +27,16 @@ class TemplateLoader:
 
         #Copy template file to build emplacement
         self.copy_new_template_file()
+
         #Load encryptors chain
         self.load_encryptors_chain()
+
         #Load sandboxEvasion chain
         self.load_sandboxEvasion_chain()
+
+        #Process Syscalls
+        self.process_syscalls()
+
         #Get Build options
         self.get_build_options()
 
@@ -69,6 +77,12 @@ class TemplateLoader:
                 sandboxEvasion_module = sandboxevasion.translate()
                 self.sandboxevasion_components.append(sandboxEvasion_module.sandboxevasion_components)
 
+    def process_syscalls(self):
+        sysCallss = SysCallsControler(self.template_file, self.syscall_method,"False")
+        SysModule = sysCallss.get_syscall_module()
+        self.syscall_components.append(SysModule.syscall_components)
+        self.include_components.append(SysModule.include_components)
+        self.define_components.append(SysModule.define_components)
 
     def write_code(self):
         with open(self.template_file, "r") as template_file:
@@ -115,6 +129,14 @@ class TemplateLoader:
         # Replace Delay
 
         # Replace ARGS
+
+        # Replace Syscalls
+        syscalls_placeholder = Config().get('PLACEHOLDERS', 'SYSCALL')
+        syscalls_components_code = ""
+        for component in self.syscall_components:
+            if component:
+                syscalls_components_code += component.code
+        template_content = template_content.replace(syscalls_placeholder, syscalls_components_code)
 
         # Write to file
         #print(template_content)
