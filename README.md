@@ -5,6 +5,16 @@ Evil-SC is a template-based shellcode loader written in Python. It allows you to
 
 !! WORK IN PROGRESS !!
 
+## Todo
+- DES3 + BASE64 bug
+- Syscall Hash support
+- Syscall name randomization
+- Dynamic syscall header -> Only import necessary functions
+- Fix SW2 support bug
+- Indirect Syscall ?
+- Make new Sandbox evasion templates
+- Make new methods templates
+
 ## Usage
 1. Clone the repository:
 ```bash
