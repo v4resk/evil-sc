@@ -6,6 +6,15 @@ from core.controlers.SandboxEvasionChain import SandboxEvasionChain
 from core.controlers.ShellcodeControler import ShellcodeControler
 from core.controlers.CompilerControler import CompilerControler
 from core.controlers.SysCallsControler import SysCallsControler
+
+from core.engines.CallComponent import CallComponent
+from core.engines.CodeComponent import CodeComponent
+from core.engines.DefineComponent import DefineComponent
+#from core.engines.EvasionComponent import EvasionComponent
+from core.engines.IncludeComponent import IncludeComponent
+from core.engines.SandboxEvasionComponent import SandboxEvasionComponent
+from core.engines.SysCallsComponent import SysCallsComponent
+
 import shutil
 import os
 
@@ -23,6 +32,8 @@ class TemplateLoader:
         self.sandboxevasion_components = []
         self.mingw_options = []
 
+        self.sysCallss = None
+
         self.build_options = ""
 
         #Copy template file to build emplacement
@@ -35,7 +46,7 @@ class TemplateLoader:
         self.load_sandboxEvasion_chain()
 
         #Process Syscalls
-        self.process_syscalls()
+        self.load_syscalls()
 
         #Get Build options
         self.get_build_options()
@@ -63,11 +74,9 @@ class TemplateLoader:
         if self.encryptors_chain:
             for key, encryptor in self.encryptors_chain.chain.items():
                 encryptor_module = encryptor.translate()
-                self.call_components.append(encryptor_module.call_component)
-                self.code_components.append(encryptor_module.code_components)
-                self.include_components.append(encryptor_module.include_components)
-                self.define_components.append(encryptor_module.define_components)
                 self.mingw_options.append(encryptor_module.mingw_options)
+                for component in encryptor_module.components:
+                    self.process_component(component)
 
 
     def load_sandboxEvasion_chain(self):
@@ -75,14 +84,31 @@ class TemplateLoader:
         if self.sandboxEvasion_chain:
             for key, sandboxevasion in self.sandboxEvasion_chain.chain.items():
                 sandboxEvasion_module = sandboxevasion.translate()
-                self.sandboxevasion_components.append(sandboxEvasion_module.sandboxevasion_components)
+                self.mingw_options.append(sandboxEvasion_module.mingw_options)
+                for component in sandboxEvasion_module.components:
+                    self.process_component(component)
 
-    def process_syscalls(self):
-        sysCallss = SysCallsControler(self.template_file, self.syscall_method,"False")
-        SysModule = sysCallss.get_syscall_module()
-        self.syscall_components.append(SysModule.syscall_components)
-        self.include_components.append(SysModule.include_components)
-        self.define_components.append(SysModule.define_components)
+    def load_syscalls(self):
+        self.sysCallss = SysCallsControler(self.template_file, self.syscall_method,"False")
+        if self.sysCallss:
+            SysModule = self.sysCallss.get_syscall_module()
+            self.mingw_options.append(SysModule.mingw_options)
+            for component in SysModule.components:
+                    self.process_component(component)
+
+    def process_component(self,component):
+        if isinstance(component, CallComponent):
+            self.call_components.append(component)
+        elif isinstance(component, CodeComponent):
+            self.code_components.append(component)
+        elif isinstance(component, IncludeComponent):
+            self.include_components.append(component)
+        elif isinstance(component, DefineComponent):
+            self.define_components.append(component)
+        elif isinstance(component, SandboxEvasionComponent):
+            self.sandboxevasion_components.append(component)
+        elif isinstance(component, SysCallsComponent):
+            self.syscall_components.append(component)
 
     def write_code(self):
         with open(self.template_file, "r") as template_file:
@@ -111,6 +137,12 @@ class TemplateLoader:
         template_content = template_content.replace(include_placeholder,include_components_code)
 
         # Replace Defines
+        define_placeholder = Config().get('PLACEHOLDERS', 'DEFINE')
+        define_components_code = ""
+        for component in self.define_components:
+            if component :
+                define_components_code += component.code
+        template_content = template_content.replace(define_placeholder,define_components_code)
 
         # Replace Shellcode
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode')

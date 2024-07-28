@@ -3,7 +3,6 @@ import random
 from core.sandboxEvasion.SandboxEvasion import SandboxEvasion
 from core.engines.SandboxEvasionComponent import SandboxEvasionComponent
 from core.controlers.Module import Module
-from core.config.config import Config
 
 
 class sleep(SandboxEvasion):
@@ -16,7 +15,7 @@ class sleep(SandboxEvasion):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.sandboxevasion_components = SandboxEvasionComponent(code.replace("####2####",str(2)))
+        module.components = [SandboxEvasionComponent(code.replace("####2####",str(2)))]
 
         return module
 

@@ -10,12 +10,10 @@ from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.engines.IncludeComponent import IncludeComponent
 from core.controlers.Module import Module
-from core.config.config import Config
 import uuid
 
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Cipher import DES3
-from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
 class des3(Encryptor):
@@ -62,9 +60,12 @@ class des3(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.call_component = CallComponent(f"length = des3_decrypt_{self.uuid}(encoded, length);")
-        module.code_components = CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv))
-        module.include_components = IncludeComponent("<bcrypt.h>")
+        module.components = [
+            CallComponent(f"length = des3_decrypt_{self.uuid}(encoded, length);"),
+            CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
+            IncludeComponent("<bcrypt.h>")
+        ]
+
         module.mingw_options = "-lbcrypt "
 
         return module

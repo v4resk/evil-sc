@@ -54,7 +54,7 @@ class esc:
                             choices=self.get_available_files("sandboxEvasion"),
                             help='Sandbox evasion technique')
 
-        parser.add_argument('-sc', '--syscall', action='append', dest='syscall_method',
+        parser.add_argument('-sc', '--syscall', dest='syscall_method', default="",
                             choices=["SysWhispers2","SysWhispers3","GetSyscallStub"],
                             help='Syscall execution method')
 
@@ -86,6 +86,7 @@ class esc:
         self.encryptors = args.encryptors
         self.sandbox_evasion = args.sandbox_evasion
         self.outfile = args.outfile
+        self.syscall_method = args.syscall_method
 
         # TO DO
         # Encryptors: sgn, dictionaire d'association, MAC / IPv4 / UUID -> https://github.com/EvasionEDR/ObfLoader/tree/main
@@ -105,6 +106,7 @@ class esc:
         print(f'{Fore.GREEN}Method:\t\t\t{Fore.WHITE}{os.path.basename(self.method)}')
         print(f'{Fore.GREEN}Encryptors:\t\t{Fore.WHITE}{loader.encryptors_chain.to_string()}')
         print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{loader.sandboxEvasion_chain.to_string()}')
+        print(f'{Fore.GREEN}Syscalls :\t\t{Fore.WHITE}{loader.syscall_method}')
         #print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')
         #print(f"\n{Fore.CYAN}Genreated template:\t{Fore.WHITE}{self.evil_sc_template_file}")
         print(f"\n{Fore.CYAN}Output:\t\t\t{Fore.WHITE}{self.outfile}")

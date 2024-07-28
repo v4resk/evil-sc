@@ -1,12 +1,3 @@
-import os
-import re
-import traceback
-from abc import abstractmethod
-from pydoc import locate
-
-from core.config.config import Config
-
-
 class ModuleNotCompatibleException(Exception):
     pass
 
@@ -47,4 +38,5 @@ class Module:
         pass
 
     def test(self):
-        print(f"Hello from Module")
+        print("Hello from Module")
+        print(vars(self))

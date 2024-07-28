@@ -1,4 +1,3 @@
-import re
 from core.config.config import Config
 from core.engines.TemplateModuleComponent import TemplateModuleComponent
 

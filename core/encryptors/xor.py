@@ -3,15 +3,11 @@ import string
 import struct
 from itertools import islice, cycle
 import uuid
-
-
 from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.controlers.Module import Module
-from Crypto.Util import strxor # type: ignore
-from core.config.config import Config
-
+from Crypto.Util import strxor
 
 class xor(Encryptor):
     def __init__(self):
@@ -45,8 +41,10 @@ class xor(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.call_component = CallComponent(f"length = xor_encode_{self.uuid}(encoded, length);")
-        module.code_components = CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####KEY_LENGTH####", str(len(self.key))).replace("####UUID####",str(self.uuid)))
+        module.components = [
+            CallComponent(f"length = xor_encode_{self.uuid}(encoded, length);"),
+            CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####KEY_LENGTH####", str(len(self.key))).replace("####UUID####",str(self.uuid)))
+        ]
         
         return module
 

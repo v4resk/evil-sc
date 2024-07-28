@@ -52,9 +52,12 @@ class aes(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.call_component = CallComponent(f"length = aes_decrypt_{self.uuid}(encoded, length);")
-        module.code_components = CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv))
-        module.include_components = IncludeComponent("<bcrypt.h>")
+        module.components = [
+            CallComponent(f"length = aes_decrypt_{self.uuid}(encoded, length);"),
+            CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
+            IncludeComponent("<bcrypt.h>")
+        ]
+
         module.mingw_options = "-lbcrypt "
 
         return module

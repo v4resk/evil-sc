@@ -3,11 +3,7 @@ from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.engines.IncludeComponent import IncludeComponent
-import string
-
 from core.controlers.Module import Module
-from Crypto.Util import strxor # type: ignore
-from core.config.config import Config
 import uuid
 
 import base64 as base64lib
@@ -36,9 +32,12 @@ class base64(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.call_component = CallComponent(f"length = base64_decode_{self.uuid}(encoded, length);")
-        module.code_components = CodeComponent(code.replace("####UUID####",str(self.uuid)))
-        module.include_components = IncludeComponent("<wincrypt.h>")
+        module.components = [
+            CallComponent(f"length = base64_decode_{self.uuid}(encoded, length);"),
+            CodeComponent(code.replace("####UUID####",str(self.uuid))),
+            IncludeComponent("<wincrypt.h>")
+        ]
+
         module.mingw_options = "-lcrypt32 "
 
         return module

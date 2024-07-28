@@ -3,11 +3,9 @@ from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.engines.IncludeComponent import IncludeComponent
-import string
-from colorama import init, Fore
+from colorama import Fore
 
 from core.controlers.Module import Module
-from core.config.config import Config
 import uuid as uuidlib
 
 
@@ -59,9 +57,12 @@ class uuid(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.call_component = CallComponent(f"length = uuid_decode_{self.uuid}(encoded, length);")
-        module.code_components = CodeComponent(code.replace("####UUID####",str(self.uuid)))
-        module.include_components = IncludeComponent("<rpc.h>")
+        module.components = [
+            CallComponent(f"length = uuid_decode_{self.uuid}(encoded, length);"),
+            CodeComponent(code.replace("####UUID####",str(self.uuid))),
+            IncludeComponent("<rpc.h>")
+        ]
+        
         module.mingw_options = "-lrpcrt4 "
 
         return module
