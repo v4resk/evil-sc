@@ -27,6 +27,7 @@ class esc:
         self.target_process = ""
         self.shellcode_variable = ""
         self.syscall_method = ""
+        self.syswhispers_recovery_method = ""
         self.method = ""
         self.encoders = []
         self.encryptors = []
@@ -55,8 +56,12 @@ class esc:
                             help='Sandbox evasion technique')
 
         parser.add_argument('-sc', '--syscall', dest='syscall_method', default="",
-                            choices=["SysWhispers2","SysWhispers3","GetSyscallStub"],
-                            help='Syscall execution method')
+                            choices=["SysWhispers3","GetSyscallStub"],
+                            help='Syscall execution method for supported templates')
+
+        parser.add_argument('--sw-method', dest='syswhispers_recovery_method', default="jumper_randomized",
+                            choices=["embedded","egg_hunter","jumper","jumper_randomized"],
+                            help='Syscall execution method for supported templates')
 
         parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
                             help='Output filename')
@@ -87,6 +92,7 @@ class esc:
         self.sandbox_evasion = args.sandbox_evasion
         self.outfile = args.outfile
         self.syscall_method = args.syscall_method
+        self.syswhispers_recovery_method = args.syswhispers_recovery_method
 
         # TO DO
         # Encryptors: sgn, dictionaire d'association, MAC / IPv4 / UUID -> https://github.com/EvasionEDR/ObfLoader/tree/main

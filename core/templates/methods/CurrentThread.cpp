@@ -4,7 +4,6 @@
 #include <tlhelp32.h>
 #include <stdlib.h>
 #include <tchar.h>
-#include <winternl.h>
 
 //####INCLUDE####
 
@@ -98,7 +97,7 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
         printf("NtResumeThread resumed created thread successfully.\n");
     }
 
-    res = NewNtWaitForSingleObject(thandle, -1, NULL);   
+    res = NtWaitForSingleObject(thandle, -1, NULL);   
     
     printf("[+] The shellcode finished with a return value: %08X\n", res);
     return 0;

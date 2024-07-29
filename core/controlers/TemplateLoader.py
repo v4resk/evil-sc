@@ -89,7 +89,7 @@ class TemplateLoader:
                     self.process_component(component)
 
     def load_syscalls(self):
-        self.sysCallss = SysCallsControler(self.template_file, self.syscall_method,"False")
+        self.sysCallss = SysCallsControler(self.template_file, self.syscall_method,"False",recovery=self.syswhispers_recovery_method)
         if self.sysCallss:
             SysModule = self.sysCallss.get_syscall_module()
             self.mingw_options.append(SysModule.mingw_options)

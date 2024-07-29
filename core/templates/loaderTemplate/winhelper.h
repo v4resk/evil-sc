@@ -8,11 +8,16 @@
 
 #include <windows.h>
 
-#define SW3_SEED 0x35F7A355
+#ifndef _NTDEF_
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+typedef NTSTATUS* PNTSTATUS;
+#endif
+
+#define SW3_SEED 0xCA85D89D
 #define SW3_ROL8(v) (v << 8 | v >> 24)
 #define SW3_ROR8(v) (v >> 8 | v << 24)
 #define SW3_ROX8(v) ((SW3_SEED % 2) ? SW3_ROL8(v) : SW3_ROR8(v))
-#define SW3_MAX_ENTRIES 500
+#define SW3_MAX_ENTRIES 600
 #define SW3_RVA2VA(Type, DllBase, Rva) (Type)((ULONG_PTR) DllBase + Rva)
 
 // Typedefs are prefixed to avoid pollution.
@@ -21,7 +26,7 @@ typedef struct _SW3_SYSCALL_ENTRY
 {
     DWORD Hash;
     DWORD Address;
-        PVOID SyscallAddress;
+	PVOID SyscallAddress;
 } SW3_SYSCALL_ENTRY, *PSW3_SYSCALL_ENTRY;
 
 typedef struct _SW3_SYSCALL_LIST
@@ -31,80 +36,122 @@ typedef struct _SW3_SYSCALL_LIST
 } SW3_SYSCALL_LIST, *PSW3_SYSCALL_LIST;
 
 typedef struct _SW3_PEB_LDR_DATA {
-        BYTE Reserved1[8];
-        PVOID Reserved2[3];
-        LIST_ENTRY InMemoryOrderModuleList;
+	BYTE Reserved1[8];
+	PVOID Reserved2[3];
+	LIST_ENTRY InMemoryOrderModuleList;
 } SW3_PEB_LDR_DATA, *PSW3_PEB_LDR_DATA;
 
 typedef struct _SW3_LDR_DATA_TABLE_ENTRY {
-        PVOID Reserved1[2];
-        LIST_ENTRY InMemoryOrderLinks;
-        PVOID Reserved2[2];
-        PVOID DllBase;
+	PVOID Reserved1[2];
+	LIST_ENTRY InMemoryOrderLinks;
+	PVOID Reserved2[2];
+	PVOID DllBase;
 } SW3_LDR_DATA_TABLE_ENTRY, *PSW3_LDR_DATA_TABLE_ENTRY;
 
 typedef struct _SW3_PEB {
-        BYTE Reserved1[2];
-        BYTE BeingDebugged;
-        BYTE Reserved2[1];
-        PVOID Reserved3[2];
-        PSW3_PEB_LDR_DATA Ldr;
+	BYTE Reserved1[2];
+	BYTE BeingDebugged;
+	BYTE Reserved2[1];
+	PVOID Reserved3[2];
+	PSW3_PEB_LDR_DATA Ldr;
 } SW3_PEB, *PSW3_PEB;
-
-typedef struct _PS_ATTRIBUTE
-{
-    ULONG  Attribute;
-    SIZE_T Size;
-    union
-    {
-        ULONG Value;
-        PVOID ValuePtr;
-    } u1;
-    PSIZE_T ReturnLength;
-} PS_ATTRIBUTE, *PPS_ATTRIBUTE;
-
-#ifndef InitializeObjectAttributes
-#define InitializeObjectAttributes( p, n, a, r, s ) { \
-    (p)->Length = sizeof( OBJECT_ATTRIBUTES );        \
-    (p)->RootDirectory = r;                           \
-    (p)->Attributes = a;                              \
-    (p)->ObjectName = n;                              \
-    (p)->SecurityDescriptor = s;                      \
-    (p)->SecurityQualityOfService = NULL;             \
-}
-#endif
-
-typedef VOID(KNORMAL_ROUTINE) (
-    IN PVOID NormalContext,
-    IN PVOID SystemArgument1,
-    IN PVOID SystemArgument2);
-
-/*
-typedef enum _PROCESSINFOCLASS
-{
-    ProcessBasicInformation = 0,
-    ProcessDebugPort = 7,
-    ProcessWow64Information = 26,
-    ProcessImageFileName = 27,
-    ProcessBreakOnTermination = 29
-} PROCESSINFOCLASS, *PPROCESSINFOCLASS;
-*/
-
-typedef KNORMAL_ROUTINE* PKNORMAL_ROUTINE;
-
-typedef struct _PS_ATTRIBUTE_LIST
-{
-    SIZE_T       TotalLength;
-    PS_ATTRIBUTE Attributes[1];
-} PS_ATTRIBUTE_LIST, *PPS_ATTRIBUTE_LIST;
 
 DWORD SW3_HashSyscall(PCSTR FunctionName);
 BOOL SW3_PopulateSyscallList();
 EXTERN_C DWORD SW3_GetSyscallNumber(DWORD FunctionHash);
 EXTERN_C PVOID SW3_GetSyscallAddress(DWORD FunctionHash);
 EXTERN_C PVOID internal_cleancall_wow64_gate(VOID);
+typedef struct _UNICODE_STRING
+{
+	USHORT Length;
+	USHORT MaximumLength;
+	PWSTR  Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+
+#ifndef InitializeObjectAttributes
+#define InitializeObjectAttributes( p, n, a, r, s ) { \
+	(p)->Length = sizeof( OBJECT_ATTRIBUTES );        \
+	(p)->RootDirectory = r;                           \
+	(p)->Attributes = a;                              \
+	(p)->ObjectName = n;                              \
+	(p)->SecurityDescriptor = s;                      \
+	(p)->SecurityQualityOfService = NULL;             \
+}
 #endif
-#define JUMPER
+
+typedef struct _PS_ATTRIBUTE
+{
+	ULONG  Attribute;
+	SIZE_T Size;
+	union
+	{
+		ULONG Value;
+		PVOID ValuePtr;
+	} u1;
+	PSIZE_T ReturnLength;
+} PS_ATTRIBUTE, *PPS_ATTRIBUTE;
+
+typedef struct _OBJECT_ATTRIBUTES
+{
+	ULONG           Length;
+	HANDLE          RootDirectory;
+	PUNICODE_STRING ObjectName;
+	ULONG           Attributes;
+	PVOID           SecurityDescriptor;
+	PVOID           SecurityQualityOfService;
+} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+
+typedef struct _PS_ATTRIBUTE_LIST
+{
+	SIZE_T       TotalLength;
+	PS_ATTRIBUTE Attributes[1];
+} PS_ATTRIBUTE_LIST, *PPS_ATTRIBUTE_LIST;
+
+EXTERN_C NTSTATUS NtResumeThread(
+	IN HANDLE ThreadHandle,
+	IN OUT PULONG PreviousSuspendCount OPTIONAL);
+
+EXTERN_C NTSTATUS NtCreateThreadEx(
+	OUT PHANDLE ThreadHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN HANDLE ProcessHandle,
+	IN PVOID StartRoutine,
+	IN PVOID Argument OPTIONAL,
+	IN ULONG CreateFlags,
+	IN SIZE_T ZeroBits,
+	IN SIZE_T StackSize,
+	IN SIZE_T MaximumStackSize,
+	IN PPS_ATTRIBUTE_LIST AttributeList OPTIONAL);
+
+EXTERN_C NTSTATUS NtWriteVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN PVOID Buffer,
+	IN SIZE_T NumberOfBytesToWrite,
+	OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
+
+EXTERN_C NTSTATUS NtWaitForSingleObject(
+	IN HANDLE ObjectHandle,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER TimeOut OPTIONAL);
+
+EXTERN_C NTSTATUS NtAllocateVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID * BaseAddress,
+	IN ULONG ZeroBits,
+	IN OUT PSIZE_T RegionSize,
+	IN ULONG AllocationType,
+	IN ULONG Protect);
+
+EXTERN_C NTSTATUS NtProtectVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID * BaseAddress,
+	IN OUT PSIZE_T RegionSize,
+	IN ULONG NewProtect,
+	OUT PULONG OldProtect);
+
+#endif
 
 #include <stdio.h>
 
@@ -118,110 +165,14 @@ EXTERN_C PVOID internal_cleancall_wow64_gate(VOID) {
     return (PVOID)__readfsdword(0xC0);
 }
 
-// LOCAL_IS_WOW64
+
 
 #endif
-
-EXTERN_C NTSTATUS NewNtQueryInformationProcess(
-    IN HANDLE ProcessHandle,
-    IN PROCESSINFOCLASS ProcessInformationClass,
-    OUT PVOID ProcessInformation,
-    IN ULONG ProcessInformationLength,
-    OUT PULONG ReturnLength OPTIONAL);
-
-EXTERN_C NTSTATUS NtReadVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress OPTIONAL,
-    OUT PVOID Buffer,
-    IN SIZE_T BufferSize,
-    OUT PSIZE_T NumberOfBytesRead OPTIONAL);
-
-EXTERN_C NTSTATUS NtProtectVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID * BaseAddress,
-    IN OUT PSIZE_T RegionSize,
-    IN ULONG NewProtect,
-    OUT PULONG OldProtect);
-
-EXTERN_C NTSTATUS NtWriteVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress,
-    IN PVOID Buffer,
-    IN SIZE_T NumberOfBytesToWrite,
-    OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
-
-EXTERN_C NTSTATUS NtResumeThread(
-    IN HANDLE ThreadHandle,
-    IN OUT PULONG PreviousSuspendCount OPTIONAL);
-
-EXTERN_C NTSTATUS NewNtClose(
-    IN HANDLE Handle);
-
-EXTERN_C NTSTATUS NtOpenProcess(
-    OUT PHANDLE ProcessHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN PCLIENT_ID ClientId OPTIONAL);
-
-EXTERN_C NTSTATUS NtAllocateVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID * BaseAddress,
-    IN ULONG ZeroBits,
-    IN OUT PSIZE_T RegionSize,
-    IN ULONG AllocationType,
-    IN ULONG Protect);
-
-EXTERN_C NTSTATUS NtCreateThreadEx(
-    OUT PHANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN HANDLE ProcessHandle,
-    IN PVOID StartRoutine,
-    IN PVOID Argument OPTIONAL,
-    IN ULONG CreateFlags,
-    IN SIZE_T ZeroBits,
-    IN SIZE_T StackSize,
-    IN SIZE_T MaximumStackSize,
-    IN PPS_ATTRIBUTE_LIST AttributeList OPTIONAL);
-
-EXTERN_C NTSTATUS NewNtWaitForSingleObject(
-    IN HANDLE ObjectHandle,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER TimeOut OPTIONAL);
-
-EXTERN_C NTSTATUS NtQueueApcThread(
-    IN HANDLE ThreadHandle,
-    IN PKNORMAL_ROUTINE ApcRoutine,
-    IN PVOID ApcArgument1 OPTIONAL,
-    IN PVOID ApcArgument2 OPTIONAL,
-    IN PVOID ApcArgument3 OPTIONAL);
-
-EXTERN_C NTSTATUS NtAlertResumeThread(
-    IN HANDLE ThreadHandle,
-    OUT PULONG PreviousSuspendCount OPTIONAL);
-
-EXTERN_C NTSTATUS NtGetContextThread(
-    IN HANDLE ThreadHandle,
-    IN OUT PCONTEXT ThreadContext);
-
-EXTERN_C NTSTATUS NtSetContextThread(
-    IN HANDLE ThreadHandle,
-    IN PCONTEXT Context);
-
-EXTERN_C NTSTATUS NtDelayExecution(
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER DelayInterval);
-
-EXTERN_C NTSTATUS NtFreeVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID * BaseAddress,
-    IN OUT PSIZE_T RegionSize,
-    IN ULONG FreeType);
 
 // Code below is adapted from @modexpblog. Read linked article for more details.
 // https://www.mdsec.co.uk/2020/12/bypassing-user-mode-hooks-and-direct-invocation-of-system-calls-for-red-teams
 
-SW3_SYSCALL_LIST SW3_SyscallList = {0,1};
+SW3_SYSCALL_LIST SW3_SyscallList;
 
 // SEARCH_AND_REPLACE
 #ifdef SEARCH_AND_REPLACE
@@ -237,7 +188,6 @@ DWORD SW3_HashSyscall(PCSTR FunctionName)
     while (FunctionName[i])
     {
         WORD PartialName = *(WORD*)((ULONG_PTR)FunctionName + i++);
-        printf(""); // Bypass Windows Defender Signature
         Hash ^= PartialName + SW3_ROR8(Hash);
     }
 
@@ -272,7 +222,7 @@ PVOID SC_Address(PVOID NtApiAddress)
     #ifdef DEBUG
         printf("[+] Running 32-bit app on x64 (WOW64)\n");
     #endif
-// JUMP_TO_WOW32Reserved
+        return NULL;
     }
   #endif
 
@@ -467,324 +417,3 @@ EXTERN_C PVOID SW3_GetRandomSyscallAddress(DWORD FunctionHash)
     }
     return SW3_SyscallList.Entries[index].SyscallAddress;
 }
-
-#define NewNtQueryInformationProcess NewNtQueryInformationProcess
-__asm__("NewNtQueryInformationProcess: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x05D856C08\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x05D856C08\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtReadVirtualMemory NtReadVirtualMemory
-__asm__("NtReadVirtualMemory: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x401D34F45\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x01D957373\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtProtectVirtualMemory NtProtectVirtualMemory
-__asm__("NtProtectVirtualMemory: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x003952937\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x003952937\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtWriteVirtualMemory NtWriteVirtualMemory
-__asm__("NtWriteVirtualMemory: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x05FCD4943\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x05FCD4943\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtResumeThread NtResumeThread
-__asm__("NtResumeThread: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x0A28D6DA7\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x0A28D6DA7\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NewNtClose NewNtClose
-__asm__("NewNtClose: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x05AD3B39F\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x05AD3B39F\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtOpenProcess NtOpenProcess
-__asm__("NtOpenProcess: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x07FBE6412\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x07FBE6412\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtAllocateVirtualMemory NtAllocateVirtualMemory
-__asm__("NtAllocateVirtualMemory: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x08515839B\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x08515839B\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtCreateThreadEx NtCreateThreadEx
-__asm__("NtCreateThreadEx: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x05CB092E6\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x05CB092E6\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NewNtWaitForSingleObject NewNtWaitForSingleObject
-__asm__("NewNtWaitForSingleObject: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x0F25D0320\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x0F25D0320\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtQueueApcThread NtQueueApcThread
-__asm__("NtQueueApcThread: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x01092DD33\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x01092DD33\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtAlertResumeThread NtAlertResumeThread
-__asm__("NtAlertResumeThread: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x01C26C01D\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x01C26C01D\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtGetContextThread NtGetContextThread
-__asm__("NtGetContextThread: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x014ACDA1E\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x014ACDA1E\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtSetContextThread NtSetContextThread
-__asm__("NtSetContextThread: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x0745F2A9D\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x0745F2A9D\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtDelayExecution NtDelayExecution
-__asm__("NtDelayExecution: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x0F36CD3BE\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x0F36CD3BE\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
-#define NtFreeVirtualMemory NtFreeVirtualMemory
-__asm__("NtFreeVirtualMemory: \n\
-    mov [rsp +8], rcx\n\
-    mov [rsp+16], rdx\n\
-    mov [rsp+24], r8\n\
-    mov [rsp+32], r9\n\
-    sub rsp, 0x28\n\
-    mov ecx, 0x00F812137\n\
-    call SW3_GetRandomSyscallAddress\n\
-    mov r15, rax\n\
-    mov ecx, 0x00F812137\n\
-    call SW3_GetSyscallNumber\n\
-    add rsp, 0x28\n\
-    mov rcx, [rsp+8]\n\
-    mov rdx, [rsp+16]\n\
-    mov r8, [rsp+24]\n\
-    mov r9, [rsp+32]\n\
-    mov r10, rcx\n\
-    jmp r15\n\
-");
