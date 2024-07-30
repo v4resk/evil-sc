@@ -13,7 +13,7 @@ typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 typedef NTSTATUS* PNTSTATUS;
 #endif
 
-#define SW3_SEED 0xCA85D89D
+#define SW3_SEED 0x16CA0750
 #define SW3_ROL8(v) (v << 8 | v >> 24)
 #define SW3_ROR8(v) (v >> 8 | v << 24)
 #define SW3_ROX8(v) ((SW3_SEED % 2) ? SW3_ROL8(v) : SW3_ROR8(v))
@@ -61,12 +61,17 @@ BOOL SW3_PopulateSyscallList();
 EXTERN_C DWORD SW3_GetSyscallNumber(DWORD FunctionHash);
 EXTERN_C PVOID SW3_GetSyscallAddress(DWORD FunctionHash);
 EXTERN_C PVOID internal_cleancall_wow64_gate(VOID);
-typedef struct _UNICODE_STRING
+typedef struct _PS_ATTRIBUTE
 {
-	USHORT Length;
-	USHORT MaximumLength;
-	PWSTR  Buffer;
-} UNICODE_STRING, *PUNICODE_STRING;
+	ULONG  Attribute;
+	SIZE_T Size;
+	union
+	{
+		ULONG Value;
+		PVOID ValuePtr;
+	} u1;
+	PSIZE_T ReturnLength;
+} PS_ATTRIBUTE, *PPS_ATTRIBUTE;
 
 #ifndef InitializeObjectAttributes
 #define InitializeObjectAttributes( p, n, a, r, s ) { \
@@ -79,17 +84,12 @@ typedef struct _UNICODE_STRING
 }
 #endif
 
-typedef struct _PS_ATTRIBUTE
+typedef struct _UNICODE_STRING
 {
-	ULONG  Attribute;
-	SIZE_T Size;
-	union
-	{
-		ULONG Value;
-		PVOID ValuePtr;
-	} u1;
-	PSIZE_T ReturnLength;
-} PS_ATTRIBUTE, *PPS_ATTRIBUTE;
+	USHORT Length;
+	USHORT MaximumLength;
+	PWSTR  Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
 
 typedef struct _OBJECT_ATTRIBUTES
 {
@@ -111,6 +111,28 @@ EXTERN_C NTSTATUS NtResumeThread(
 	IN HANDLE ThreadHandle,
 	IN OUT PULONG PreviousSuspendCount OPTIONAL);
 
+EXTERN_C NTSTATUS NtWriteVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN PVOID Buffer,
+	IN SIZE_T NumberOfBytesToWrite,
+	OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
+
+EXTERN_C NTSTATUS NtProtectVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID * BaseAddress,
+	IN OUT PSIZE_T RegionSize,
+	IN ULONG NewProtect,
+	OUT PULONG OldProtect);
+
+EXTERN_C NTSTATUS NtAllocateVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID * BaseAddress,
+	IN ULONG ZeroBits,
+	IN OUT PSIZE_T RegionSize,
+	IN ULONG AllocationType,
+	IN ULONG Protect);
+
 EXTERN_C NTSTATUS NtCreateThreadEx(
 	OUT PHANDLE ThreadHandle,
 	IN ACCESS_MASK DesiredAccess,
@@ -124,32 +146,10 @@ EXTERN_C NTSTATUS NtCreateThreadEx(
 	IN SIZE_T MaximumStackSize,
 	IN PPS_ATTRIBUTE_LIST AttributeList OPTIONAL);
 
-EXTERN_C NTSTATUS NtWriteVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress,
-	IN PVOID Buffer,
-	IN SIZE_T NumberOfBytesToWrite,
-	OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
-
 EXTERN_C NTSTATUS NtWaitForSingleObject(
 	IN HANDLE ObjectHandle,
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER TimeOut OPTIONAL);
-
-EXTERN_C NTSTATUS NtAllocateVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN OUT PVOID * BaseAddress,
-	IN ULONG ZeroBits,
-	IN OUT PSIZE_T RegionSize,
-	IN ULONG AllocationType,
-	IN ULONG Protect);
-
-EXTERN_C NTSTATUS NtProtectVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN OUT PVOID * BaseAddress,
-	IN OUT PSIZE_T RegionSize,
-	IN ULONG NewProtect,
-	OUT PULONG OldProtect);
 
 #endif
 
@@ -157,7 +157,7 @@ EXTERN_C NTSTATUS NtProtectVirtualMemory(
 
 //#define DEBUG
 
-// JUMPER
+#define JUMPER
 
 #ifdef _M_IX86
 

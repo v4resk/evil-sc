@@ -9,10 +9,12 @@ import shutil
 import os
 import re
 from enum import Enum
+from colorama import init, Fore
 
 
 debug_mode = Config().get("DEBUG", "SYSCALLS")
 
+"""
 class SyscallRecoveryType(Enum):
         EMBEDDED = 0
         EGG_HUNTER = 1
@@ -31,7 +33,7 @@ class SyscallRecoveryType(Enum):
                 return SyscallRecoveryType.JUMPER_RANDOMIZED   
             else:
                  return SyscallRecoveryType.JUMPER_RANDOMIZED            
-
+"""
 class SysCallsControler:
     def __init__(self,evil_sc_template_file,sysCallsType,hashSyscalls,recovery="jumper_randomized"):
         self.evil_sc_template_file = evil_sc_template_file
@@ -81,31 +83,24 @@ class SysCallsControler:
             print("Calling get_GetSyscallStub_module")
             module = self.get_GetSyscallStub_module()
 
-        elif self.sysCallsType == "SysWhispers2":
-            #Copy SW2 headers to build folder
-            self.copy_sycall_header_file("SW2Syscalls.h")
-            #Get_module
-            module = self.get_SysWhispers2_module()
-            
-
         elif self.sysCallsType == "SysWhispers3":
-            print("Calling get_SysWhispers3_module")
-            sw3_basename = f"{self.headers_folder}/SW3Syscalls"
-            sw3_recovery_type = SyscallRecoveryType.from_string(self.recovery)
-            
+            print("Calling get_SysWhispers3_module")            
             ### Import and generate SW3 files
             from core.syscalls.SysWhispers3.syswhispers import SysWhispers
+            from core.syscalls.SysWhispers3.syswhispers import SyscallRecoveryType
+
+            sw3_basename = f"{self.headers_folder}/SW3Syscalls"
+            sw3_recovery_type = SyscallRecoveryType.from_name_or_default(self.recovery)
+
             syswhispers_module =  SysWhispers(compiler="mingw", arch="x64", recovery=sw3_recovery_type)
             syswhispers_module.generate(function_names=self.nt_functions, basename=sw3_basename)
             
-            # Fix SW3 generated files for compilation
-            self.fix_sw3_header(sw3_basename)
+            self.fix_sw3_header(sw3_basename) # Fix SW3 generated files for compilation
+
 
             #Copy SW3 headers to build folder
             self.copy_sycall_header_file("SW3Syscalls.h")
-
-            #Get_module
-            module = self.get_SysWhispers3_module()
+            module = self.get_SysWhispers3_module() #Get_module
         return module
 
     def hashSyscalls(self):
@@ -126,15 +121,6 @@ class SysCallsControler:
         return self.sysModule
 
 
-    def get_SysWhispers2_module(self):
-        module = Module()
-        module.mingw_options = " -s -w -std=c++17 -masm=intel -fpermissive -static -lntdll -lpsapi -Wl,--subsystem,console"
-        module.components = [
-            IncludeComponent("\"winhelper.h\""),
-            SysCallsComponent("")
-        ]
-        return module
-
     def get_SysWhispers3_module(self):
         module = Module()
         module.mingw_options = " -s -w -std=c++17 -masm=intel -fpermissive -static -lntdll -lpsapi -Wl,--subsystem,console"
@@ -147,6 +133,29 @@ class SysCallsControler:
     def get_noSysCall_module(self):
         module = Module()
         return module
+
+    def fix_sw3_header(self, base_file_path): 
+        header_file_path = base_file_path + '.h'
+        source_file_path = base_file_path + '.c'
+        # Step 1: Read and modify SW3.h
+        with open(header_file_path, 'r') as header_file:
+            header_content = header_file.read()
+        header_content = header_content.replace('Sw3Nt', 'Nt') # Replace Sw3Nt with Nt in the header content
+        
+        # Step 2: Read and modify SW3.c
+        with open(source_file_path, 'r') as source_file:
+            source_content = source_file.readlines()
+        print(f"removing {header_file_path}")
+        source_content = [line for line in source_content if not line.startswith('#include "SW3Syscalls.h"')] # Remove the line "#include "SW3S.h"" from source_content
+
+        # Step 3: Concatenate modified content and erase SW3.c
+        combined_content = header_content + '\n' + ''.join(source_content)
+        with open(header_file_path, 'w') as combined_file:
+            combined_file.write(combined_content)
+
+        # Remove SW3.c 
+        os.remove(source_file_path)
+
 
     def get_GetSyscallStub_module(self):
         module = Module()
@@ -435,34 +444,3 @@ class SysCallsControler:
         """)
         ]
         return module
-
-    def fix_sw3_header(self, base_file_path):
-        
-        header_file_path = base_file_path + '.h'
-        source_file_path = base_file_path + '.c'
-        # Step 1: Read and modify SW3.h
-        with open(header_file_path, 'r') as header_file:
-            header_content = header_file.read()
-
-        # Replace Sw3Nt with Nt in the header content
-        header_content = header_content.replace('Sw3Nt', 'Nt')
-
-        # Step 2: Read and modify SW3.c
-        with open(source_file_path, 'r') as source_file:
-            source_content = source_file.readlines()
-
-        # Remove the line "#include "SW3S.h"" from source_content
-        print(f"removing {header_file_path}")
-        source_content = [line for line in source_content if not line.startswith('#include "SW3Syscalls.h"')]
-
-        # Step 3: Concatenate modified content and erase SW3.c
-        combined_content = header_content + '\n' + ''.join(source_content)
-
-        # Write the combined content back to SW3S.h
-        with open(header_file_path, 'w') as combined_file:
-            combined_file.write(combined_content)
-
-        # Remove SW3.c 
-        os.remove(source_file_path)
-
-        print("Header and source files have been modified and concatenated successfully.")
