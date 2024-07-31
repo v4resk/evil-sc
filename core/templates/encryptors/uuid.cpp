@@ -96,5 +96,5 @@ int uuid_decode_####UUID####(unsigned char* encoded, int length)
     // Free the binary UUIDs buffer
     free(binary_uuids);
 
-    return uuid_count * (sizeof(UUID) + 1); // Return the number of UUIDs as char (adjust the return type as needed)
+    return uuid_count * sizeof(UUID); // Return the number of UUIDs as char (adjust the return type as needed)
 }

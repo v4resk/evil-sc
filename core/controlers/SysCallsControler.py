@@ -441,6 +441,7 @@ class SysCallsControler:
     scall = std::string("N") + "t" + "F" + "r" + "e" + "e" + "V" + "i" + "r" + "t" + "u" + "a" + "l" + "M" + "e" + "m" + "o" + "r" + "y";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtFreeVirtualMemory);
     printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
-        """)
+        """),
+        IncludeComponent("<winternl.h>")
         ]
         return module
