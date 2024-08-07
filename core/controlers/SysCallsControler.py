@@ -14,26 +14,6 @@ from colorama import init, Fore
 
 debug_mode = Config().get("DEBUG", "SYSCALLS")
 
-"""
-class SyscallRecoveryType(Enum):
-        EMBEDDED = 0
-        EGG_HUNTER = 1
-        JUMPER = 2
-        JUMPER_RANDOMIZED = 3
-
-        @staticmethod
-        def from_string(label):
-            if label.lower() == "embedded":
-                return SyscallRecoveryType.EMBEDDED
-            elif label.lower() == "egg_hunter":
-                return SyscallRecoveryType.EGG_HUNTER
-            elif label.lower() == "jumper":
-                return SyscallRecoveryType.JUMPER
-            elif label.lower() == "jumper_randomized":
-                return SyscallRecoveryType.JUMPER_RANDOMIZED   
-            else:
-                 return SyscallRecoveryType.JUMPER_RANDOMIZED            
-"""
 class SysCallsControler:
     def __init__(self,evil_sc_template_file,sysCallsType,hashSyscalls,recovery="jumper_randomized"):
         self.evil_sc_template_file = evil_sc_template_file

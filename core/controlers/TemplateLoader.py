@@ -17,6 +17,7 @@ from core.engines.SysCallsComponent import SysCallsComponent
 
 import shutil
 import os
+from colorama import Fore
 
 class TemplateLoader:
     def __init__(self,_vars):
@@ -44,6 +45,9 @@ class TemplateLoader:
 
         #Load sandboxEvasion chain
         self.load_sandboxEvasion_chain()
+
+        #Check Compilers compatibility + options
+        self.check_ollvm()
 
         #Process Syscalls
         self.load_syscalls()
@@ -174,6 +178,14 @@ class TemplateLoader:
         #print(template_content)
         with open(self.template_file, "w") as evil_sc_file:
             evil_sc_file.write(template_content)
+    
+    def check_ollvm(self):
+        if self.llvmo is True:
+            if self.syscall_method == "SysWhispers3":
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}SysWhispers is not compatible with Obfuscator-LLVM. Switching to GetSyscallStub")
+                self.syscall_method = "GetSyscallStub"
+                self.llvmo = False
+    
 
     def get_build_options(self, compiler="mingw"):
         if compiler == "mingw":
@@ -188,7 +200,7 @@ class TemplateLoader:
                 mingw_options += f"{component }"
 
         # Compile using CompilerControler
-        compiler_controler = CompilerControler(self.template_file, self.outfile, mingw_options)
+        compiler_controler = CompilerControler(self.template_file, self.outfile, mingw_options, self.llvmo)
         compiler_controler.compile()
         pass
 

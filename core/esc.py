@@ -48,7 +48,10 @@ class esc:
         parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.valid_encryptors,
                             help='Template-dependent encryption or encoding method to be applied to the shellcode')
 
-        parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="explorer.exe",
+        parser.add_argument('-l', '--llvmo', dest='llvmo', action='store_true',
+                            help='Use Obfuscator-LLVM to compile')
+        
+        parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
                             help='Process name for shellcode injection')
 
         parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
@@ -93,10 +96,9 @@ class esc:
         self.outfile = args.outfile
         self.syscall_method = args.syscall_method
         self.syswhispers_recovery_method = args.syswhispers_recovery_method
+        self.llvmo = args.llvmo
 
         # TO DO
-        # Encryptors: sgn, dictionaire d'association, MAC / IPv4 / UUID -> https://github.com/EvasionEDR/ObfLoader/tree/main
-        # 
         # SandBox_evasion: Sleep, NoVMenv, 
         # EDR_Evasion: API Hash / SysWhispers2 /Indirect Syscall / HellsGate / HellHall ?
 
@@ -113,6 +115,7 @@ class esc:
         print(f'{Fore.GREEN}Encryptors:\t\t{Fore.WHITE}{loader.encryptors_chain.to_string()}')
         print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{loader.sandboxEvasion_chain.to_string()}')
         print(f'{Fore.GREEN}Syscalls :\t\t{Fore.WHITE}{loader.syscall_method}')
+        print(f'{Fore.GREEN}Compiler :\t\t{Fore.WHITE}{"LLVM-Obfuscator" if loader.llvmo else "MinGW"}')
         #print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')
         #print(f"\n{Fore.CYAN}Genreated template:\t{Fore.WHITE}{self.evil_sc_template_file}")
         print(f"\n{Fore.CYAN}Output:\t\t\t{Fore.WHITE}{self.outfile}")
