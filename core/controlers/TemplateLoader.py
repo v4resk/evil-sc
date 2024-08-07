@@ -184,7 +184,6 @@ class TemplateLoader:
             if self.syscall_method == "SysWhispers3":
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}SysWhispers is not compatible with Obfuscator-LLVM. Switching to GetSyscallStub")
                 self.syscall_method = "GetSyscallStub"
-                self.llvmo = False
     
 
     def get_build_options(self, compiler="mingw"):

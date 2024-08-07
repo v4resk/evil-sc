@@ -60,11 +60,9 @@ class SysCallsControler:
             module = self.get_noSysCall_module()
 
         elif self.sysCallsType == "GetSyscallStub":
-            print("Calling get_GetSyscallStub_module")
             module = self.get_GetSyscallStub_module()
 
-        elif self.sysCallsType == "SysWhispers3":
-            print("Calling get_SysWhispers3_module")            
+        elif self.sysCallsType == "SysWhispers3":         
             ### Import and generate SW3 files
             from core.syscalls.SysWhispers3.syswhispers import SysWhispers
             from core.syscalls.SysWhispers3.syswhispers import SyscallRecoveryType
