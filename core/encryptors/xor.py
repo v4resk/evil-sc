@@ -10,8 +10,8 @@ from core.controlers.Module import Module
 from Crypto.Util import strxor
 
 class xor(Encryptor):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, platform):
+        super().__init__(platform)
         self.decoder_in = [bytes]
         self.decoder_out = [bytes]
         self.key = ''.join(secrets.choice(".+-,:;_%=()" + string.ascii_letters + string.digits) for _ in range(12)).encode()

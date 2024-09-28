@@ -7,12 +7,13 @@ from core.config.config import Config
 
 class Encryptor(ABC):
 
-    def __init__(self, order=None):
+    def __init__(self, platform ,order=None):
         self.implementations_dir = Config().get("FOLDERS", "encryptors")
         self.decoder_in = None
         self.decoder_out = None
         self.order = order
         self.isStringShellcode = False
+        self.platform = platform
         pass
 
     def set_order(self, order):
@@ -36,7 +37,7 @@ class Encryptor(ABC):
     # To edit, function that will retreive the .cpp implementation
     def template(self):
         encoder = self.__class__.__name__.lower()
-        source = f"{self.implementations_dir}/{encoder}.cpp"
+        source = f"{self.implementations_dir}/{self.platform}/{encoder}.cpp"
 
         if not os.path.exists(source):
             print(f"[-] {encoder} not supported -> source: {source}")

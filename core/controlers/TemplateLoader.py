@@ -56,7 +56,7 @@ class TemplateLoader:
         self.get_build_options()
 
     def copy_new_template_file(self):
-        src_file = f"{Config().get('FOLDERS', 'methods')}/{self.method}.cpp"
+        src_file = f"{Config().get('FOLDERS', 'methods')}/{self.platform}/{self.method}.cpp"
         dest_file = self.template_file
         try:
             if not os.path.isfile(src_file):
@@ -74,7 +74,7 @@ class TemplateLoader:
             print(f"Error: {e}")
     
     def load_encryptors_chain(self):
-        self.encryptors_chain = EncryptorsChain.from_list(self.encryptors)
+        self.encryptors_chain = EncryptorsChain.from_list(self.encryptors, self.platform)
         if self.encryptors_chain:
             for key, encryptor in self.encryptors_chain.chain.items():
                 encryptor_module = encryptor.translate()
@@ -186,9 +186,12 @@ class TemplateLoader:
                 self.syscall_method = "GetSyscallStub"
     
 
+    ## Adjut build options here if needed
     def get_build_options(self, compiler="mingw"):
-        if compiler == "mingw":
-            return ""
+        if self.platform == "linux":
+            if self.method == "SimpleExec":
+                self.mingw_options += " -z execstack -fno-stack-protector "
+
         return ""
 
     def compile(self):
@@ -196,10 +199,10 @@ class TemplateLoader:
         mingw_options = ""
         for component in self.mingw_options:
             if component:
-                mingw_options += f"{component }"
+                mingw_options += f"{component}"
 
         # Compile using CompilerControler
-        compiler_controler = CompilerControler(self.template_file, self.outfile, mingw_options, self.llvmo)
+        compiler_controler = CompilerControler(self.template_file, self.outfile, mingw_options, self.llvmo, self.platform)
         compiler_controler.compile()
         pass
 

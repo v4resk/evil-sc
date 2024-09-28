@@ -54,6 +54,11 @@ options:
                         Specify sandbox evasion techniques (sleep)
 ```
 
+## Make a template
+
+Windows template should start with "Win_"
+Linux template should start with "Lin_"
+
 ## Resources
 
 There is a lot to come here

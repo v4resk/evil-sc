@@ -17,8 +17,8 @@ class nop(Encryptor):
     Output String
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self,platform):
+        super().__init__(platform)
         self.decoder_in = [bytes]
         self.decoder_out = [bytes]
         self.uuid = uuid.uuid4().hex

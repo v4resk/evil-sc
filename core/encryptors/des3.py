@@ -17,8 +17,8 @@ from Crypto.Cipher import DES3
 from Crypto.Util.Padding import pad, unpad
 
 class des3(Encryptor):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,platform):
+        super().__init__(platform)
         self.decoder_in = [bytes]
         self.decoder_out = [bytes]
 

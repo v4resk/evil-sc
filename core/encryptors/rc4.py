@@ -11,8 +11,8 @@ import uuid
 from Crypto.Cipher import ARC4
 
 class rc4(Encryptor):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,platform):
+        super().__init__(platform)
         self.decoder_in = [bytes]
         self.decoder_out = [bytes]
         # Generate a key for RC4 (typically between 1 and 256 bytes)

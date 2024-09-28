@@ -35,7 +35,7 @@ class EncryptorsChain:
     
     
     @staticmethod
-    def from_list(encryptors: list = None):
+    def from_list(encryptors: list = None, platform="windows"):
         chain = EncryptorsChain()
         if not encryptors or len(encryptors) == 0:
             return chain
@@ -43,7 +43,7 @@ class EncryptorsChain:
             try:
                     encoder_class_string = f"core.encryptors.{e}.{e}"
                     encoder_class = locate(encoder_class_string)
-                    encoder_instance = encoder_class()
+                    encoder_instance = encoder_class(platform)
 
                     if debug_mode == "True":            
                         encoder_instance.translate().test()

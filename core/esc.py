@@ -39,46 +39,84 @@ class esc:
 
 
     def parse_arguments(self):
+        # Create the main argument parser
         parser = argparse.ArgumentParser(description='Template-based shellcode loader', formatter_class=CustomArgFormatter)
-        parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the shellcode variable')
 
-        parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods"),
-                            help='Shellcode-loading method')
+        # Create subparsers for different platforms
+        subparsers = parser.add_subparsers(dest='platform', required=True, help='Target platform (windows or linux)')
 
-        parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.valid_encryptors,
-                            help='Template-dependent encryption or encoding method to be applied to the shellcode')
+        # Windows subparser
+        win_parser = subparsers.add_parser('windows', help='Options for Windows platform')
 
-        parser.add_argument('-l', '--llvmo', dest='llvmo', action='store_true',
-                            help='Use Obfuscator-LLVM to compile')
+        # Add Windows-specific arguments
+        win_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the shellcode variable')
+
+        win_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows"),
+                                help='Shellcode-loading method')
+
+        win_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows"),
+                                help='Template-dependent encryption or encoding method to be applied to the shellcode')
+
+        win_parser.add_argument('-l', '--llvmo', dest='llvmo', action='store_true',
+                                help='Use Obfuscator-LLVM to compile')
+
+        win_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+                                help='Process name for shellcode injection')
+
+        win_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
+                                choices=self.get_available_files("sandboxEvasion", platform="windows"),
+                                help='Sandbox evasion technique')
+
+        win_parser.add_argument('-sc', '--syscall', dest='syscall_method', default="SysWhispers3",
+                                choices=["SysWhispers3", "GetSyscallStub"],
+                                help='Syscall execution method for supported templates')
+
+        win_parser.add_argument('--sw-method', dest='syswhispers_recovery_method', default="jumper_randomized",
+                                choices=["embedded", "egg_hunter", "jumper", "jumper_randomized"],
+                                help='Syscall execution method for supported templates')
+
+        win_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
+                                help='Output filename')
+
+        win_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
+                                help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
+
+        # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
+        lin_parser = subparsers.add_parser('linux', help='Options for Linux platform')
+
+        # Add Linux-specific arguments (you can modify/add Linux-specific arguments)
+        lin_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the shellcode variable')
+
+        lin_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="linux"),
+                                help='Shellcode-loading method')
+
+        lin_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="linux"),
+                                help='Template-dependent encryption or encoding method to be applied to the shellcode')
+
+        lin_parser.add_argument('-l', '--llvmo', dest='llvmo', action='store_true',
+                                help='Use Obfuscator-LLVM to compile')
         
-        parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
-                            help='Process name for shellcode injection')
+        lin_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
+                                choices=self.get_available_files("sandboxEvasion", platform="linux"),
+                                help='Sandbox evasion technique')
 
-        parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
-                            choices=self.get_available_files("sandboxEvasion"),
-                            help='Sandbox evasion technique')
+        lin_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+                                help='Process name for shellcode injection')
 
-        parser.add_argument('-sc', '--syscall', dest='syscall_method', default="",
-                            choices=["SysWhispers3","GetSyscallStub"],
-                            help='Syscall execution method for supported templates')
+        lin_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.elf",
+                                help='Output filename')
 
-        parser.add_argument('--sw-method', dest='syswhispers_recovery_method', default="jumper_randomized",
-                            choices=["embedded","egg_hunter","jumper","jumper_randomized"],
-                            help='Syscall execution method for supported templates')
+        lin_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
+                                help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
 
-        parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
-                            help='Output filename')
-
-        parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
-                            help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
-
+        # Parse arguments
         args = parser.parse_args()
 
         return args
 
     # This method return available .cpp files in a given folder, for Menu options
-    def get_available_files(self, folder):
-        template_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates', folder)
+    def get_available_files(self, folder, platform):
+        template_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates', folder, platform)
         if not os.path.exists(template_folder):
             os.makedirs(template_folder)
         available_files = [file[:-4] for file in os.listdir(template_folder) if file.endswith('.cpp')]
@@ -88,15 +126,8 @@ class esc:
     def run(self):
         # Parsing arguments
         args = self.parse_arguments()
-        self.shellcode_variable = args.shellcode_variable
-        self.target_process = args.target_process
-        self.method = args.method
-        self.encryptors = args.encryptors
-        self.sandbox_evasion = args.sandbox_evasion
-        self.outfile = args.outfile
-        self.syscall_method = args.syscall_method
-        self.syswhispers_recovery_method = args.syswhispers_recovery_method
-        self.llvmo = args.llvmo
+        for key, value in vars(args).items():
+            setattr(self, key, value)
 
         # TO DO
         # SandBox_evasion: Sleep, NoVMenv, 

@@ -10,8 +10,8 @@ import uuid as uuidlib
 
 
 class uuid(Encryptor):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,platform):
+        super().__init__(platform)
         self.decoder_in = [bytes]
         self.decoder_out = [bytes]
         self.uuid = uuidlib.uuid4().hex
