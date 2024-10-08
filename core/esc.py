@@ -34,6 +34,7 @@ class esc:
         self.sandbox_evasion = []
         self.evil_sc_template_file = ""
         self.outfile = ""
+        self.llvmo = False
 
         self.valid_encryptors = ["base64","xor","nop","aes","des3","rc4","uuid"]
 
@@ -43,13 +44,11 @@ class esc:
         parser = argparse.ArgumentParser(description='Template-based shellcode loader', formatter_class=CustomArgFormatter)
 
         # Create subparsers for different platforms
-        subparsers = parser.add_subparsers(dest='platform', required=True, help='Target platform (windows or linux)')
+        subparsers = parser.add_subparsers(dest='platform', required=True, help='Module to be used')
 
         # Windows subparser
-        win_parser = subparsers.add_parser('windows', help='Options for Windows platform')
-
-        # Add Windows-specific arguments
-        win_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the shellcode variable')
+        win_parser = subparsers.add_parser('windows', help='Shellcode loader for Windows platform')
+        win_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
         win_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows"),
                                 help='Shellcode-loading method')
@@ -82,10 +81,8 @@ class esc:
                                 help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
 
         # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
-        lin_parser = subparsers.add_parser('linux', help='Options for Linux platform')
-
-        # Add Linux-specific arguments (you can modify/add Linux-specific arguments)
-        lin_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the shellcode variable')
+        lin_parser = subparsers.add_parser('linux', help='Shellcode loader for Linux platform')
+        lin_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
         lin_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="linux"),
                                 help='Shellcode-loading method')
@@ -108,6 +105,13 @@ class esc:
 
         lin_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
                                 help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
+
+        # Utils subparser 
+        utils_parser = subparsers.add_parser('utils', help='Utility module for shellcodes')
+        utils_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        utils_parser.add_argument('-n', '--name', dest='name', default="shellcode",
+                                help='Shellcode variable name')
 
         # Parse arguments
         args = parser.parse_args()
@@ -133,20 +137,29 @@ class esc:
         # SandBox_evasion: Sleep, NoVMenv, 
         # EDR_Evasion: API Hash / SysWhispers2 /Indirect Syscall / HellsGate / HellHall ?
 
-        loader = TemplateLoader(vars(self))
-        #loader.test()
-        loader.write_code()
-        loader.compile()
-
         print()
 
         # Debug Prints
-        print(f'{Fore.GREEN}Shellcode:\t\t{Fore.WHITE}{self.shellcode_variable}')
-        print(f'{Fore.GREEN}Method:\t\t\t{Fore.WHITE}{os.path.basename(self.method)}')
-        print(f'{Fore.GREEN}Encryptors:\t\t{Fore.WHITE}{loader.encryptors_chain.to_string()}')
-        print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{loader.sandboxEvasion_chain.to_string()}')
-        print(f'{Fore.GREEN}Syscalls :\t\t{Fore.WHITE}{loader.syscall_method}')
-        print(f'{Fore.GREEN}Compiler :\t\t{Fore.WHITE}{"LLVM-Obfuscator" if loader.llvmo else "MinGW"}')
-        #print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')
-        #print(f"\n{Fore.CYAN}Genreated template:\t{Fore.WHITE}{self.evil_sc_template_file}")
-        print(f"\n{Fore.CYAN}Output:\t\t\t{Fore.WHITE}{self.outfile}")
+        if self.platform == "windows" or self.platform == "linux":
+            loader = TemplateLoader(vars(self))
+            #loader.test()
+            loader.write_code()
+            loader.compile()
+            print(f'{Fore.GREEN}Target OS:\t\t{Fore.WHITE}{self.platform}')
+            print(f'{Fore.GREEN}Shellcode:\t\t{Fore.WHITE}{self.shellcode_variable}')
+            print(f'{Fore.GREEN}Method:\t\t\t{Fore.WHITE}{os.path.basename(self.method)}')
+            print(f'{Fore.GREEN}Encryptors:\t\t{Fore.WHITE}{loader.encryptors_chain.to_string()}')
+            print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{loader.sandboxEvasion_chain.to_string()}')
+            print(f'{Fore.GREEN}Syscalls :\t\t{Fore.WHITE}{loader.syscall_method}')
+            print(f'{Fore.GREEN}Compiler :\t\t{Fore.WHITE}{"LLVM-Obfuscator" if loader.llvmo else "MinGW"}')
+            #print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')
+            #print(f"\n{Fore.CYAN}Genreated template:\t{Fore.WHITE}{self.evil_sc_template_file}")
+            print(f"\n{Fore.CYAN}Output:\t\t\t{Fore.WHITE}{self.outfile}")
+        elif self.platform == "utils":
+            from core.utils.utils import file_to_bytearray,bytearray_to_cpp_sc
+            print(f'{Fore.GREEN}Hex Shellcode:\t\t{Fore.WHITE}')
+            print(bytearray_to_cpp_sc(file_to_bytearray(self.shellcode_variable,),method=0, sc_var_name=self.name))
+
+            print(f'\n{Fore.GREEN}Array Shellcode:\t\t{Fore.WHITE}')
+            print(bytearray_to_cpp_sc(file_to_bytearray(self.shellcode_variable,),method=1, sc_var_name=self.name))
+            pass

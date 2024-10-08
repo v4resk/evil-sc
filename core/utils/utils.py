@@ -3,6 +3,7 @@
 # This is a "xxd -i" like function in python
 ####################
 import os
+import subprocess
 from pathlib import Path
 
 def get_project_root() -> Path:
@@ -38,3 +39,4 @@ def bytearray_to_cpp_sc(sc_bytearray,sc_var_name="shellcode", method=0):
     
     if method == 1:
          return  f"unsigned char {sc_var_name}[] = \n{{" + ", ".join([f"0x{byte:02x}" for byte in sc_bytearray]) + "};"
+
