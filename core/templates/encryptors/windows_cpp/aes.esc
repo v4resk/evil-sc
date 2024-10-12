@@ -11,13 +11,13 @@ int aes_decrypt_####UUID####(unsigned char* encoded, int length) {
     DWORD cbKeyObject, cbData, dwLength = length;
     PBYTE pbKeyObject = NULL;
 
-    printf("\n[*] Before AES values: {");
-    for (DWORD i = 0; i < length; i++) {
-        printf("0x%02x", encoded[i]);
-        if (i < length - 1) {
-            printf(",");
-        }
-    }
+//    printf("\n[*] Before AES values: {");
+//    for (DWORD i = 0; i < length; i++) {
+//        printf("0x%02x", encoded[i]);
+//        if (i < length - 1) {
+//            printf(",");
+//        }
+//    }
     printf("}\n");
 
     // Open an algorithm handle
@@ -63,14 +63,14 @@ int aes_decrypt_####UUID####(unsigned char* encoded, int length) {
     }
 
     // Debug statement to print the decrypted values
-    printf("\n[*] After AES values: {");
-    for (DWORD i = 0; i < dwLength; i++) {
-        printf("0x%02x", encoded[i]);
-        if (i < dwLength - 1) {
-            printf(",");
-        }
-    }
-    printf("}\n");
+//    printf("\n[*] After AES values: {");
+//    for (DWORD i = 0; i < dwLength; i++) {
+//        printf("0x%02x", encoded[i]);
+//        if (i < dwLength - 1) {
+//            printf(",");
+//        }
+//    }
+//    printf("}\n");
 
     // Clean up
     BCryptDestroyKey(hKey);

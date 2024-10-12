@@ -28,15 +28,15 @@ def file_to_cpp_sc(file_path, sc_var_name="shellcode"):
 
 
 def bytearray_to_cpp_sc(sc_bytearray,sc_var_name="shellcode", method=0):
-
+    sc_size = len(sc_bytearray)
     if method == 0:
         hex_string = ''.join([format(byte, '02x') for byte in sc_bytearray])
 
-        output = f"unsigned char {sc_var_name}[] = \n\"\\x"
+        output = f"unsigned char {sc_var_name}[{sc_size}] = \n\"\\x"
         output += '\\x'.join([hex_string[i:i+2] for i in range(0, len(hex_string), 2)])
         output += "\";"
         return output
     
     if method == 1:
-         return  f"unsigned char {sc_var_name}[] = \n{{" + ", ".join([f"0x{byte:02x}" for byte in sc_bytearray]) + "};"
+         return  f"unsigned char {sc_var_name}[{sc_size}] = \n{{" + ", ".join([f"0x{byte:02x}" for byte in sc_bytearray]) + "};"
 

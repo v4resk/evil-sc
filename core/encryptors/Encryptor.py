@@ -37,7 +37,7 @@ class Encryptor(ABC):
     # To edit, function that will retreive the .cpp implementation
     def template(self):
         encoder = self.__class__.__name__.lower()
-        source = f"{self.implementations_dir}/{self.platform}/{encoder}.cpp"
+        source = f"{self.implementations_dir}/{self.platform}/{encoder}.esc"
 
         if not os.path.exists(source):
             print(f"[-] {encoder} not supported -> source: {source}")

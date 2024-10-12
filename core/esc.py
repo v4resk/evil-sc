@@ -46,42 +46,67 @@ class esc:
         # Create subparsers for different platforms
         subparsers = parser.add_subparsers(dest='platform', required=True, help='Module to be used')
 
-        # Windows subparser
-        win_parser = subparsers.add_parser('windows', help='Shellcode loader for Windows platform')
-        win_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+        # Windows Native subparser
+        win_cpp_parser = subparsers.add_parser('windows_cpp', help='Windows Native Binaries Loader (C++)')
 
-        win_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows"),
+        win_cpp_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        win_cpp_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_cpp"),
                                 help='Shellcode-loading method')
 
-        win_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows"),
+        win_cpp_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_cpp"),
                                 help='Template-dependent encryption or encoding method to be applied to the shellcode')
 
-        win_parser.add_argument('-l', '--llvmo', dest='llvmo', action='store_true',
+        win_cpp_parser.add_argument('--llvmo', dest='llvmo', action='store_true',
                                 help='Use Obfuscator-LLVM to compile')
 
-        win_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
-                                help='Process name for shellcode injection')
+        #win_cpp_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+        #                        help='Process name for shellcode injection')
 
-        win_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
-                                choices=self.get_available_files("sandboxEvasion", platform="windows"),
+        win_cpp_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
+                                choices=self.get_available_files("sandboxEvasion", platform="windows_cpp"),
                                 help='Sandbox evasion technique')
 
-        win_parser.add_argument('-sc', '--syscall', dest='syscall_method', default="SysWhispers3",
+        win_cpp_parser.add_argument('-sc', '--syscall', dest='syscall_method', default="SysWhispers3",
                                 choices=["SysWhispers3", "GetSyscallStub"],
                                 help='Syscall execution method for supported templates')
 
-        win_parser.add_argument('--sw-method', dest='syswhispers_recovery_method', default="jumper_randomized",
+        win_cpp_parser.add_argument('--sw-method', dest='syswhispers_recovery_method', default="jumper_randomized",
                                 choices=["embedded", "egg_hunter", "jumper", "jumper_randomized"],
                                 help='Syscall execution method for supported templates')
 
-        win_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
+        win_cpp_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
                                 help='Output filename')
 
-        win_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
-                                help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
+        #win_cpp_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
+        #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
+
+        # Windows Dotnet subparser
+        win_cs_parser = subparsers.add_parser('windows_cs', help='Windows Dotnet Binaries Loader (C#)')
+
+        win_cs_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        win_cs_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_cs"),
+                                help='Shellcode-loading method')
+
+        win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_cs"),
+                                help='Template-dependent encryption or encoding method to be applied to the shellcode')
+
+        win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+                                help='Process name for shellcode injection')
+
+        win_cs_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
+                                choices=self.get_available_files("sandboxEvasion", platform="windows_cs"),
+                                help='Sandbox evasion technique')
+
+        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
+                                help='Output filename')
+
+        #win_cs_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
+        #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
 
         # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
-        lin_parser = subparsers.add_parser('linux', help='Shellcode loader for Linux platform')
+        lin_parser = subparsers.add_parser('linux', help='Linux Native Binaries Loader (C++)')
         lin_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
         lin_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="linux"),
@@ -97,14 +122,14 @@ class esc:
                                 choices=self.get_available_files("sandboxEvasion", platform="linux"),
                                 help='Sandbox evasion technique')
 
-        lin_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
-                                help='Process name for shellcode injection')
+        #lin_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+        #                        help='Process name for shellcode injection')
 
         lin_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.elf",
                                 help='Output filename')
 
-        lin_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
-                                help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
+        #lin_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
+        #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
 
         # Utils subparser 
         utils_parser = subparsers.add_parser('utils', help='Utility module for shellcodes')
@@ -123,7 +148,9 @@ class esc:
         template_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates', folder, platform)
         if not os.path.exists(template_folder):
             os.makedirs(template_folder)
-        available_files = [file[:-4] for file in os.listdir(template_folder) if file.endswith('.cpp')]
+
+        available_files = [file[:-4] for file in os.listdir(template_folder) if file.endswith('.esc')]
+        
         return available_files
 
 
@@ -140,7 +167,7 @@ class esc:
         print()
 
         # Debug Prints
-        if self.platform == "windows" or self.platform == "linux":
+        if self.platform != "utils":
             loader = TemplateLoader(vars(self))
             #loader.test()
             loader.write_code()
@@ -155,7 +182,9 @@ class esc:
             #print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')
             #print(f"\n{Fore.CYAN}Genreated template:\t{Fore.WHITE}{self.evil_sc_template_file}")
             print(f"\n{Fore.CYAN}Output:\t\t\t{Fore.WHITE}{self.outfile}")
-        elif self.platform == "utils":
+
+
+        else:
             from core.utils.utils import file_to_bytearray,bytearray_to_cpp_sc
             print(f'{Fore.GREEN}Hex Shellcode:\t\t{Fore.WHITE}')
             print(bytearray_to_cpp_sc(file_to_bytearray(self.shellcode_variable,),method=0, sc_var_name=self.name))

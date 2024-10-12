@@ -8,6 +8,7 @@ class ShellcodeControler:
         self.encryptors_chain = encryptors_chain
         self.shellcode_bytes = self.file_to_bytes(shellcode_variable) 
         self.encrypted_shellcode_bytes = self.encrypt_shellcode()
+        self.shellcode_len = len(self.encrypted_shellcode_bytes)
 
 
 
@@ -51,6 +52,9 @@ class ShellcodeControler:
 
     def get_encrypted_shellcode_bytes(self):
         return self.encrypted_shellcode_bytes
+    
+    def get_encrypted_shellcode_len(self):
+        return self.shellcode_len
 
     def get_encrypted_shellcode_c(self):
         if len(self.encryptors_chain.chain.items()) == 0:
