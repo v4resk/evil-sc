@@ -45,10 +45,18 @@ class nop(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.components = [
-            CallComponent(f"length = nop_decode_{self.uuid}(encoded, length);"),
-            CodeComponent(code.replace("####UUID####",str(self.uuid)))
-        ]
+        if self.platform == "windows_cpp":
+            module.components = [
+                CallComponent(f"length = nop_decode_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)))
+            ]
+
+        elif self.platform == "windows_cs":
+            module.components = [
+                CallComponent(f"buf = NopEncoder_{self.uuid}.Decode(buf);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)))
+            ]
+            pass
         return module
 
     def test(self):

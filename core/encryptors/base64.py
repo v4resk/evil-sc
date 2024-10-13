@@ -14,7 +14,8 @@ class base64(Encryptor):
         self.decoder_in = [bytes]
         self.decoder_out = [bytes]
         self.uuid = uuid.uuid4().hex
-        self.isStringShellcode = True
+        self.isStringShellcode = False if self.platform == "windows_cs" else True
+
 
     def encode(self, data):
         if isinstance(data, str):
@@ -32,13 +33,19 @@ class base64(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.components = [
-            CallComponent(f"length = base64_decode_{self.uuid}(encoded, length);"),
-            CodeComponent(code.replace("####UUID####",str(self.uuid))),
-            IncludeComponent("<wincrypt.h>")
-        ]
-
-        module.mingw_options = "-lcrypt32 "
+        if self.platform == "windows_cpp":
+            module.components = [
+                CallComponent(f"length = base64_decode_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))),
+                IncludeComponent("<wincrypt.h>")
+            ]
+            module.mingw_options = "-lcrypt32 "
+        
+        elif self.platform == "windows_cs":
+            module.components = [
+                CallComponent(f"buf = Base64Encoder_{self.uuid}.Decode(buf);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))),
+            ]
 
         return module
 

@@ -40,12 +40,18 @@ class rc4(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.components = [
-            CallComponent(f"length = rc4_decrypt_{self.uuid}(encoded, length);"),
-            CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key)),
-            IncludeComponent("<bcrypt.h>")
-        ]
-
-        module.mingw_options = "-lbcrypt "
+        if self.platform == "windows_cpp":
+            module.components = [
+                CallComponent(f"length = rc4_decrypt_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key)),
+                IncludeComponent("<bcrypt.h>")
+            ]
+            module.mingw_options = "-lbcrypt "
+        
+        elif self.platform == "windows_cs":
+            module.components = [
+                CallComponent(f"buf = RC4Encryptor_{self.uuid}.Decrypt(buf);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key)),
+            ]
 
         return module

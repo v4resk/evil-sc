@@ -21,9 +21,14 @@ from colorama import Fore
 
 class TemplateLoader:
     def __init__(self,_vars):
-        self.template_file = Config().get('FILES', 'template_file')
+
         for key, value in _vars.items():
             setattr(self, key, value)
+
+        if self.platform == "windows_cs":
+            self.template_file = Config().get('FILES', 'cs_template_file')
+        else: 
+            self.template_file = Config().get('FILES', 'cpp_template_file')
 
         self.call_components = []
         self.code_components = []
@@ -78,6 +83,7 @@ class TemplateLoader:
         if self.encryptors_chain:
             for key, encryptor in self.encryptors_chain.chain.items():
                 encryptor_module = encryptor.translate()
+                #encryptor.print_what_doing()
                 self.mingw_options.append(encryptor_module.mingw_options)
                 for component in encryptor_module.components:
                     self.process_component(component)

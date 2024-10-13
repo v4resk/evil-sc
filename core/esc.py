@@ -113,7 +113,7 @@ class esc:
                                 help='Shellcode-loading method')
 
         lin_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="linux"),
-                                help='Template-dependent encryption or encoding method to be applied to the shellcode')
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
 
         lin_parser.add_argument('-l', '--llvmo', dest='llvmo', action='store_true',
                                 help='Use Obfuscator-LLVM to compile')

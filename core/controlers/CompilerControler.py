@@ -1,5 +1,6 @@
 import os
 from core.config.config import Config
+from colorama import init, Fore
 
 debug_mode = Config().get("DEBUG", "COMPILER")
 
@@ -19,25 +20,25 @@ class CompilerControler:
             self.compile_options += " -static-libgcc -static-libstdc++ "
             if self.llvmo is False:
                 if debug_mode == "True":
-                    print(f"x86_64-w64-mingw32-g++ {self.evil_sc_template_file} -o {self.outfile}{self.compile_options}")
-                os.system(f"x86_64-w64-mingw32-g++ {self.evil_sc_template_file} -o {self.outfile}{self.compile_options}")
+                    print(f"{Fore.GREEN}Compiling: {Fore.WHITE} x86_64-w64-mingw32-g++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options}\n")
+                os.system(f"x86_64-w64-mingw32-g++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options}")
             else:
                 if debug_mode == "True":
-                    print(f"x86_64-w64-mingw32-clang++ {self.evil_sc_template_file} -o {self.outfile}{self.compile_options}{self.llvmo_options}")
-                os.system(f"x86_64-w64-mingw32-clang++ {self.evil_sc_template_file} -o {self.outfile}{self.compile_options}{self.llvmo_options}")
+                    print(f"{Fore.GREEN}Compiling: {Fore.WHITE} x86_64-w64-mingw32-clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}\n")
+                os.system(f"x86_64-w64-mingw32-clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}")
 
         elif(self.platform == "windows_cs"):
             if debug_mode == "True":
-                print(f"mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} -out:{self.outfile}")
+                print(f"{Fore.GREEN}Compiling: {Fore.WHITE} mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} -out:{self.outfile}\n")
             os.system(f"mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} -out:{self.outfile}")
 
         elif(self.platform == "linux"):
             #g++ -o shellcode_loader shellcode_loader.cpp
             if self.llvmo is False:
                 if debug_mode == "True":
-                    print(f"clang++ {self.evil_sc_template_file} -o {self.outfile}{self.compile_options}")
-                os.system(f"clang++ {self.evil_sc_template_file} -o {self.outfile}{self.compile_options}")
+                    print(f"{Fore.GREEN}Compiling: {Fore.WHITE} clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options}\n")
+                os.system(f"clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options}")
             else:
                 if debug_mode == "True":
-                    print(f"clang++ {self.evil_sc_template_file} -o {self.outfile}{self.compile_options}{self.llvmo_options}")
-                os.system(f"clang++ {self.evil_sc_template_file} -o {self.outfile}{self.compile_options}{self.llvmo_options}")
+                    print(f"{Fore.GREEN}Compiling: {Fore.WHITE} clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}")
+                os.system(f"clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}")

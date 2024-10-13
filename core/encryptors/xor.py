@@ -41,10 +41,21 @@ class xor(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.components = [
-            CallComponent(f"length = xor_encode_{self.uuid}(encoded, length);"),
-            CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####KEY_LENGTH####", str(len(self.key))).replace("####UUID####",str(self.uuid)))
-        ]
+        if self.platform == "windows_cpp":
+            module.components = [
+                CallComponent(f"length = xor_encode_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####KEY_LENGTH####", str(len(self.key))).replace("####UUID####",str(self.uuid)))
+            ]
+        elif self.platform == "linux":
+            module.components = [
+                CallComponent(f"length = xor_encode_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####KEY_LENGTH####", str(len(self.key))).replace("####UUID####",str(self.uuid)))
+            ]
+        elif self.platform == "windows_cs":
+            module.components = [
+                CallComponent(f"buf = XorEncoder_{self.uuid}.Decode(buf);"),
+                CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####UUID####",str(self.uuid)))
+            ]            
         
         return module
 

@@ -8,6 +8,7 @@ from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.engines.IncludeComponent import IncludeComponent
+from core.engines.DefineComponent import DefineComponent
 from core.controlers.Module import Module
 import uuid
 
@@ -52,12 +53,21 @@ class aes(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.components = [
-            CallComponent(f"length = aes_decrypt_{self.uuid}(encoded, length);"),
-            CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
-            IncludeComponent("<bcrypt.h>")
-        ]
-
-        module.mingw_options = "-lbcrypt "
+        if self.platform == "windows_cpp":
+            module.components = [
+                CallComponent(f"length = aes_decrypt_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
+                IncludeComponent("<bcrypt.h>")
+            ]
+            module.mingw_options = "-lbcrypt "
+        
+        elif self.platform == "windows_cs":
+            module.components = [
+                DefineComponent("using System.Security.Cryptography;\n"),
+                DefineComponent("using System.IO;\n"),
+                CallComponent(f"buf = AesEncryptor_{self.uuid}.Decrypt(buf);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.decode()).replace("####SALT####", self.salt.decode())),
+                
+            ] 
 
         return module

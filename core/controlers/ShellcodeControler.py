@@ -58,7 +58,9 @@ class ShellcodeControler:
 
     def get_encrypted_shellcode_c(self):
         if len(self.encryptors_chain.chain.items()) == 0:
-            return self.get_shellcode_c(self.shellcode_bytes) 
+            return self.get_shellcode_c(self.shellcode_bytes)
+
+        # Check if some enc should be returned as "String" format
         for key, encryptor in self.encryptors_chain.chain.items():
             if not encryptor.isStringShellcode:
                 return self.get_shellcode_c(self.encrypted_shellcode_bytes)

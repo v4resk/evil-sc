@@ -1,6 +1,7 @@
 import sys
 from abc import ABC, abstractmethod
 import os
+from colorama import init, Fore
 
 from core.config.config import Config
 
@@ -33,6 +34,9 @@ class Encryptor(ABC):
 
     def to_string(self):
         return self.__class__.__name__.lower()
+    
+    def print_what_doing(self):
+        print(f"{Fore.CYAN}[+] {Fore.WHITE}{self.__class__.__name__.upper()} Encrytion Done")
 
     # To edit, function that will retreive the .cpp implementation
     def template(self):
