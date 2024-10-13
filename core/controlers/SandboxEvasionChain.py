@@ -34,7 +34,7 @@ class SandboxEvasionChain:
     
     
     @staticmethod
-    def from_list(sandboxevasion: list = None):
+    def from_list(sandboxevasion: list = None, platform="windows_cpp"):
         chain = SandboxEvasionChain()
         if not sandboxevasion or len(sandboxevasion) == 0:
             return chain
@@ -42,7 +42,7 @@ class SandboxEvasionChain:
             try:
                     sandboxevasion_class_string = f"core.sandboxEvasion.{e}.{e}"
                     sandboxevasion_class = locate(sandboxevasion_class_string)
-                    sandboxevasion_instance = sandboxevasion_class()
+                    sandboxevasion_instance = sandboxevasion_class(platform)
 
                     if debug_mode == "True":
                         print(sandboxevasion_instance.translate().sandboxevasion_components.code)

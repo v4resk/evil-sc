@@ -57,9 +57,8 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
 int main()
 {
     printf("\n[-] LALALA");
-    //####DELAY####
+
     //####SANDBOXEVASION####
-    //####ARGS####
 
     esc_main(NULL);
 }

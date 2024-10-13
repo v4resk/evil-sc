@@ -3,7 +3,8 @@ import os
 from colorama import init, Fore
 from core.utils.CustomArgFormatter import CustomArgFormatter
 from core.controlers.TemplateLoader import TemplateLoader
-
+from core.controlers.EncryptorsChain import EncryptorsChain
+from core.controlers.SandboxEvasionChain import SandboxEvasionChain
 
 def banner():
     init(autoreset=True)
@@ -41,13 +42,13 @@ class esc:
 
     def parse_arguments(self):
         # Create the main argument parser
-        parser = argparse.ArgumentParser(description='Template-based shellcode loader', formatter_class=CustomArgFormatter)
+        parser = argparse.ArgumentParser(description='Template-based Shellcode Loader', formatter_class=CustomArgFormatter)
 
         # Create subparsers for different platforms
         subparsers = parser.add_subparsers(dest='platform', required=True, help='Module to be used')
 
         # Windows Native subparser
-        win_cpp_parser = subparsers.add_parser('windows_cpp', help='Windows Native Binaries Loader (C++)')
+        win_cpp_parser = subparsers.add_parser('windows_cpp', help='Native Windows Shellcode Loader (C++)')
 
         win_cpp_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
@@ -55,7 +56,7 @@ class esc:
                                 help='Shellcode-loading method')
 
         win_cpp_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_cpp"),
-                                help='Template-dependent encryption or encoding method to be applied to the shellcode')
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
 
         win_cpp_parser.add_argument('--llvmo', dest='llvmo', action='store_true',
                                 help='Use Obfuscator-LLVM to compile')
@@ -67,7 +68,7 @@ class esc:
                                 choices=self.get_available_files("sandboxEvasion", platform="windows_cpp"),
                                 help='Sandbox evasion technique')
 
-        win_cpp_parser.add_argument('-sc', '--syscall', dest='syscall_method', default="SysWhispers3",
+        win_cpp_parser.add_argument('-sc', '--syscall', dest='syscall_method', default="",
                                 choices=["SysWhispers3", "GetSyscallStub"],
                                 help='Syscall execution method for supported templates')
 
@@ -82,7 +83,7 @@ class esc:
         #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
 
         # Windows Dotnet subparser
-        win_cs_parser = subparsers.add_parser('windows_cs', help='Windows Dotnet Binaries Loader (C#)')
+        win_cs_parser = subparsers.add_parser('windows_cs', help='Dotnet Windows Shellcode Loader (C#)')
 
         win_cs_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
@@ -90,7 +91,28 @@ class esc:
                                 help='Shellcode-loading method')
 
         win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_cs"),
-                                help='Template-dependent encryption or encoding method to be applied to the shellcode')
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
+
+        win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+                                help='Process name for shellcode injection')
+
+        win_cs_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
+                                choices=self.get_available_files("sandboxEvasion", platform="windows_cs"),
+                                help='Sandbox evasion technique')
+
+        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
+                                help='Output filename')
+
+        # Windows Powershell subparser
+        win_cs_parser = subparsers.add_parser('windows_pwsh', help='Powershell Windows Shellcode Loader')
+
+        win_cs_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        win_cs_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_cs"),
+                                help='Shellcode-loading method')
+
+        win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_cs"),
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
 
         win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
                                 help='Process name for shellcode injection')
@@ -106,7 +128,7 @@ class esc:
         #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
 
         # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
-        lin_parser = subparsers.add_parser('linux', help='Linux Native Binaries Loader (C++)')
+        lin_parser = subparsers.add_parser('linux', help='Linux Shellcode Loader (C++)')
         lin_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
         lin_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="linux"),
@@ -169,13 +191,13 @@ class esc:
 
         #### OUTPUTS  #####
         if self.platform != "utils":
+
             loader = TemplateLoader(vars(self))
-            #loader.test()
-            
+
             fields = [
             ("Target OS", self.platform),
             ("Shellcode", self.shellcode_variable),
-            ("Method", os.path.basename(self.method) if self.method else None),
+            ("Methode", os.path.basename(self.method) if self.method else None),
             ("Encryptors", loader.encryptors_chain.to_string()),
             ("Sandbox Evasion", loader.sandboxEvasion_chain.to_string()),
             ("Syscalls", loader.syscall_method),
@@ -191,10 +213,11 @@ class esc:
 
             print(output)
 
+            # Run Loader Engine
+            
             loader.write_code()
             loader.compile()
-
-
+    
 
         else:
             from core.utils.utils import file_to_bytearray,bytearray_to_cpp_sc

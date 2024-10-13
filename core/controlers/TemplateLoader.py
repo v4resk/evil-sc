@@ -18,6 +18,9 @@ from core.engines.SysCallsComponent import SysCallsComponent
 import shutil
 import os
 from colorama import Fore
+import string
+import random
+import re
 
 class TemplateLoader:
     def __init__(self,_vars):
@@ -54,8 +57,11 @@ class TemplateLoader:
         #Check Compilers compatibility + options
         self.check_ollvm()
 
-        #Process Syscalls
-        self.load_syscalls()
+        # Check if template need syscall and user didn't specified it
+        self.check_syscalls()
+
+        #Process Syscalls --> moved in write_code() for output beatify
+        #self.load_syscalls()
 
         #Get Build options
         self.get_build_options()
@@ -90,7 +96,7 @@ class TemplateLoader:
 
 
     def load_sandboxEvasion_chain(self):
-        self.sandboxEvasion_chain = SandboxEvasionChain.from_list(self.sandbox_evasion)
+        self.sandboxEvasion_chain = SandboxEvasionChain.from_list(self.sandbox_evasion, self.platform)
         if self.sandboxEvasion_chain:
             for key, sandboxevasion in self.sandboxEvasion_chain.chain.items():
                 sandboxEvasion_module = sandboxevasion.translate()
@@ -122,6 +128,7 @@ class TemplateLoader:
             self.syscall_components.append(component)
 
     def write_code(self):
+        self.load_syscalls()
         with open(self.template_file, "r") as template_file:
             template_content = template_file.read()
         
@@ -185,6 +192,18 @@ class TemplateLoader:
                 syscalls_components_code += component.code
         template_content = template_content.replace(syscalls_placeholder, syscalls_components_code)
 
+        # Randomize Syscall names
+        # To adapt for SW3 and 
+        #if (self.platform == "windows_cpp") and self.syscall_method == "GetSyscallStub":
+        #    all_syscalls_function = set(re.findall(r'\b(NewNt\w+|Nt\w+)\b', template_content))
+        #    if all_syscalls_function:
+        #        print(f"{Fore.GREEN}[+] {Fore.WHITE}Randomizing Sycall names")
+        #        for syscall in all_syscalls_function:
+        #            new_syscall = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(7, 15)))
+        #            template_content = template_content.replace(syscall,new_syscall )
+        #            print(f"{syscall}--->{new_syscall}")
+
+
         # Write to file
         #print(template_content)
         with open(self.template_file, "w") as evil_sc_file:
@@ -193,9 +212,16 @@ class TemplateLoader:
     def check_ollvm(self):
         if self.llvmo is True:
             if self.syscall_method == "SysWhispers3":
-                print(f"{Fore.GREEN}[+] {Fore.WHITE}SysWhispers is not compatible with Obfuscator-LLVM. Switching to GetSyscallStub")
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}SysWhispers is not compatible with Obfuscator-LLVM. Switching to GetSyscallStub\n")
                 self.syscall_method = "GetSyscallStub"
     
+    def check_syscalls(self):
+        if self.syscall_method == "":
+            with open(self.template_file, "r") as template_file:
+                template_content = template_file.read()
+                if Config().get('PLACEHOLDERS', 'SYSCALL') in template_content:
+                   print(f"{Fore.GREEN}[+] {Fore.WHITE}Selected template need a Direct Syscall method.... Switching to GetSyscallStub\n")
+                   self.syscall_method = "GetSyscallStub"
 
     ## Adjut build options here if needed
     def get_build_options(self, compiler="mingw"):

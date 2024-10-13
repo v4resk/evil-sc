@@ -10,15 +10,6 @@ int rc4_decrypt_####UUID####(unsigned char* encoded, int length) {
     PBYTE pbKeyObject = NULL;
 
 
-    printf("\n[*] Before RC4 values: {");
-    for (DWORD i = 0; i < length; i++) {
-        printf("0x%02x", encoded[i]);
-        if (i < length - 1) {
-            printf(",");
-        }
-    }
-    printf("}\n");
-
     // Open an algorithm handle
     status = BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_RC4_ALGORITHM, NULL, 0);
     if (!BCRYPT_SUCCESS(status)) {
@@ -60,16 +51,6 @@ int rc4_decrypt_####UUID####(unsigned char* encoded, int length) {
         BCryptCloseAlgorithmProvider(hAlg, 0);
         return -1;
     }
-
-
-    printf("\n[*] After RC4 values: {");
-    for (DWORD i = 0; i < length; i++) {
-        printf("0x%02x", encoded[i]);
-        if (i < length - 1) {
-            printf(",");
-        }
-    }
-    printf("}\n");
 
     // Clean up
     BCryptDestroyKey(hKey);

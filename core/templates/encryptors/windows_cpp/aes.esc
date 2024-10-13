@@ -11,15 +11,6 @@ int aes_decrypt_####UUID####(unsigned char* encoded, int length) {
     DWORD cbKeyObject, cbData, dwLength = length;
     PBYTE pbKeyObject = NULL;
 
-//    printf("\n[*] Before AES values: {");
-//    for (DWORD i = 0; i < length; i++) {
-//        printf("0x%02x", encoded[i]);
-//        if (i < length - 1) {
-//            printf(",");
-//        }
-//    }
-    printf("}\n");
-
     // Open an algorithm handle
     status = BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, NULL, 0);
     if (!BCRYPT_SUCCESS(status)) {
@@ -61,16 +52,6 @@ int aes_decrypt_####UUID####(unsigned char* encoded, int length) {
         BCryptCloseAlgorithmProvider(hAlg, 0);
         return -1;
     }
-
-    // Debug statement to print the decrypted values
-//    printf("\n[*] After AES values: {");
-//    for (DWORD i = 0; i < dwLength; i++) {
-//        printf("0x%02x", encoded[i]);
-//        if (i < dwLength - 1) {
-//            printf(",");
-//        }
-//    }
-//    printf("}\n");
 
     // Clean up
     BCryptDestroyKey(hKey);

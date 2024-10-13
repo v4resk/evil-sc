@@ -35,7 +35,7 @@ class EncryptorsChain:
     
     
     @staticmethod
-    def from_list(encryptors: list = None, platform="windows"):
+    def from_list(encryptors: list = None, platform="windows_cpp"):
         chain = EncryptorsChain()
         if not encryptors or len(encryptors) == 0:
             return chain

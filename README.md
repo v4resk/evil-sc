@@ -6,11 +6,8 @@ Evil-SC is a template-based shellcode loader written in Python. It allows you to
 !! WORK IN PROGRESS !!
 
 ## Todo
-- LLVM compiler --> Bypass SW3 defender detection (HackTool:Win64/NanoDump.LK!MTB) ?
 - Functions name randomization ?
 - uuid + DES3 bug 
-- Indirect Syscall ?
-[....]
 - Make new Sandbox evasion templates
 - Make new methods templates
 

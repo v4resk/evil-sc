@@ -15,14 +15,6 @@ int uuid_decode_####UUID####(unsigned char* encoded, int length)
         }
     }
     
-    printf("\n[*] Before UUID values: {");
-    for (DWORD i = 0; i < length; i++) {
-        printf("0x%02x", encoded[i]);
-        if (i < length - 1) {
-            printf(",");
-        }
-    }
-
     printf("}\n");
     // Allouer de la mémoire pour le tableau de uuids
     char** uuids = (char**)malloc(uuid_count * sizeof(char*));
@@ -76,16 +68,6 @@ int uuid_decode_####UUID####(unsigned char* encoded, int length)
     }
     // Copy the binary UUID data back to the encoded buffer
     memcpy(encoded, binary_uuids, uuid_count * sizeof(UUID));
-
-    // Print the hex dump of the encoded buffer
-    printf("\n[*] After UUID values: {");
-    for (DWORD i = 0; i < length; i++) {
-        printf("0x%02x", encoded[i]);
-        if (i < length - 1) {
-            printf(",");
-        }
-    }
-    printf("}\n");
 
     // Free the UUID string segments
     for (size_t i = 0; i < uuid_count; ++i) {
