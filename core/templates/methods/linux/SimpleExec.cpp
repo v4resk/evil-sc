@@ -54,7 +54,7 @@ void* esc_main(void* lpParameter)
 int main()
 {
     //####DELAY####
-    //####SANDBOXEVASION####
+    //####EVASION####
     //####ARGS####
 
     esc_main(NULL);

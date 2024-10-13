@@ -55,7 +55,13 @@ class xor(Encryptor):
             module.components = [
                 CallComponent(f"buf = XorEncoder_{self.uuid}.Decode(buf);"),
                 CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####UUID####",str(self.uuid)))
-            ]            
+            ]   
+
+        elif self.platform == "windows_pwsh":
+            module.components = [
+                CallComponent(f"$buf = Invoke-Xor{self.uuid} -Data $buf\n"),
+                CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####UUID####",str(self.uuid)))
+            ]    
         
         return module
 

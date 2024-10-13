@@ -68,6 +68,12 @@ class aes(Encryptor):
                 CallComponent(f"buf = AesEncryptor_{self.uuid}.Decrypt(buf);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.decode()).replace("####SALT####", self.salt.decode())),
                 
-            ] 
+            ]
+        elif self.platform == "windows_pwsh":
+            module.components = [
+                CallComponent(f"$buf = Invoke-AesDecrypt{self.uuid} -Data $buf\n"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.decode()).replace("####SALT####", self.salt.decode())),
+                
+            ]
 
         return module

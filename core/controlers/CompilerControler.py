@@ -31,6 +31,11 @@ class CompilerControler:
             if debug_mode == "True":
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} -out:{self.outfile}\n")
             os.system(f"mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} -out:{self.outfile}")
+        
+        elif(self.platform == "windows_pwsh"):
+            if debug_mode == "True":
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting Script: cp {self.evil_sc_template_file} {self.outfile}\n")
+            os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
 
         elif(self.platform == "linux"):
             #g++ -o shellcode_loader shellcode_loader.cpp

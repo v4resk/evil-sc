@@ -4,7 +4,7 @@ from colorama import init, Fore
 from core.utils.CustomArgFormatter import CustomArgFormatter
 from core.controlers.TemplateLoader import TemplateLoader
 from core.controlers.EncryptorsChain import EncryptorsChain
-from core.controlers.SandboxEvasionChain import SandboxEvasionChain
+from core.controlers.EvasionChain import EvasionChain
 
 def banner():
     init(autoreset=True)
@@ -32,7 +32,7 @@ class esc:
         self.method = ""
         self.encoders = []
         self.encryptors = []
-        self.sandbox_evasion = []
+        self.evasions = []
         self.evil_sc_template_file = ""
         self.outfile = ""
         self.llvmo = False
@@ -64,9 +64,9 @@ class esc:
         #win_cpp_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
         #                        help='Process name for shellcode injection')
 
-        win_cpp_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
-                                choices=self.get_available_files("sandboxEvasion", platform="windows_cpp"),
-                                help='Sandbox evasion technique')
+        win_cpp_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="windows_cpp"),
+                                help='Evasion module')
 
         win_cpp_parser.add_argument('-sc', '--syscall', dest='syscall_method', default="",
                                 choices=["SysWhispers3", "GetSyscallStub"],
@@ -96,9 +96,9 @@ class esc:
         win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
                                 help='Process name for shellcode injection')
 
-        win_cs_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
-                                choices=self.get_available_files("sandboxEvasion", platform="windows_cs"),
-                                help='Sandbox evasion technique')
+        win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="windows_cs"),
+                                help='Evasion module')
 
         win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
                                 help='Output filename')
@@ -108,20 +108,20 @@ class esc:
 
         win_cs_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
-        win_cs_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_cs"),
+        win_cs_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_pwsh"),
                                 help='Shellcode-loading method')
 
-        win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_cs"),
+        win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_pwsh"),
                                 help='Encryption/Encoding algorithm to be applied to the shellcode')
 
         win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
                                 help='Process name for shellcode injection')
 
-        win_cs_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
-                                choices=self.get_available_files("sandboxEvasion", platform="windows_cs"),
-                                help='Sandbox evasion technique')
+        win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="windows_pwsh"),
+                                help='Evasion module')
 
-        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
+        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.ps1",
                                 help='Output filename')
 
         #win_cs_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
@@ -140,9 +140,9 @@ class esc:
         lin_parser.add_argument('-l', '--llvmo', dest='llvmo', action='store_true',
                                 help='Use Obfuscator-LLVM to compile')
         
-        lin_parser.add_argument('-se', '--sandbox-evasion', action='append', dest='sandbox_evasion',
-                                choices=self.get_available_files("sandboxEvasion", platform="linux"),
-                                help='Sandbox evasion technique')
+        lin_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="linux"),
+                                help='Evasion module')
 
         #lin_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
         #                        help='Process name for shellcode injection')
@@ -183,6 +183,7 @@ class esc:
             setattr(self, key, value)
 
         # TO DO
+        # Obfuscation for .NET & Powershell
         # SandBox_evasion: Sleep, NoVMenv....
         # SGN Encoder ?
         # Windows Process injection Templates C++/C# 
@@ -199,9 +200,9 @@ class esc:
             ("Shellcode", self.shellcode_variable),
             ("Methode", os.path.basename(self.method) if self.method else None),
             ("Encryptors", loader.encryptors_chain.to_string()),
-            ("Sandbox Evasion", loader.sandboxEvasion_chain.to_string()),
+            ("Evasion Modules", loader.evasion_chain.to_string()),
             ("Syscalls", loader.syscall_method),
-            ("Compiler", "mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if loader.llvmo else "MinGW")),
+            ("Compiler", "" if self.platform == "windows_pwsh" else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if loader.llvmo else "MinGW"))),
             ("Output", self.outfile)
             ]
 

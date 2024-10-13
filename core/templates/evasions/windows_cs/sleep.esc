@@ -2,7 +2,7 @@
             uint meowdream = (uint)meowrand.Next(10000, 20000);
             double deltameow = meowdream / 1000 - 0.5;
             DateTime longbefore = DateTime.Now;
-            Sleep(meowdream);
+            Thread.Sleep((int)meowdream);
             if (DateTime.Now.Subtract(longbefore).TotalSeconds < deltameow)
             {
                 return;

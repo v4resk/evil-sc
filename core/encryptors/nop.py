@@ -57,6 +57,13 @@ class nop(Encryptor):
                 CodeComponent(code.replace("####UUID####",str(self.uuid)))
             ]
             pass
+
+        elif self.platform == "windows_pwsh":
+            module.components = [
+                CallComponent(f"$buf = Invoke-NopDecode{self.uuid} -Data $buf\n"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))),
+            ]
+
         return module
 
     def test(self):

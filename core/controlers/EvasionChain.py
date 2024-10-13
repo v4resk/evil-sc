@@ -1,12 +1,12 @@
 # This class should create the encoders chain
 from collections import OrderedDict
 from pydoc import locate
-from core.sandboxEvasion.SandboxEvasion import SandboxEvasion
+from core.evasions.Evasion import Evasion
 from core.config.config import Config
 
-debug_mode = Config().get("DEBUG", "SANDBOXEVASION")
+debug_mode = Config().get("DEBUG", "EVASION")
 
-class SandboxEvasionChain:
+class EvasionChain:
     def __init__(self):
         self.chain = OrderedDict()
         self.current = 0
@@ -17,12 +17,12 @@ class SandboxEvasionChain:
     def to_string(self):
         return "->".join([e.__class__.__name__ for e in self.chain.values()])
     
-    def push(self, value: SandboxEvasion):
+    def push(self, value: Evasion):
         value.order = self.current
         self.chain[self.current] = value
         self.current += 1
 
-    def pop(self) -> SandboxEvasion:
+    def pop(self) -> Evasion:
         self.current -= 1
         return self.chain.popitem()[1]
 
@@ -34,22 +34,23 @@ class SandboxEvasionChain:
     
     
     @staticmethod
-    def from_list(sandboxevasion: list = None, platform="windows_cpp"):
-        chain = SandboxEvasionChain()
-        if not sandboxevasion or len(sandboxevasion) == 0:
+    def from_list(evasion: list = None, platform="windows_cpp"):
+        chain = EvasionChain()
+        if not evasion or len(evasion) == 0:
             return chain
-        for e in sandboxevasion:
+        for e in evasion:
             try:
-                    sandboxevasion_class_string = f"core.sandboxEvasion.{e}.{e}"
-                    sandboxevasion_class = locate(sandboxevasion_class_string)
-                    sandboxevasion_instance = sandboxevasion_class(platform)
+                    evasion_class_string = f"core.evasions.{e}.{e}"
+                    evasion_class = locate(evasion_class_string)
+                    evasion_instance = evasion_class(platform)
 
                     if debug_mode == "True":
-                        print(sandboxevasion_instance.translate().sandboxevasion_components.code)
+                        print(evasion_instance.translate().evasion_components.code)
                         pass     
 
-                    chain.push(sandboxevasion_instance)
+                    chain.push(evasion_instance)
             except Exception as ex:
+                print("here")
                 print(ex)
                 continue
         return chain

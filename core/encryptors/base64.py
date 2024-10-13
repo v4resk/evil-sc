@@ -47,6 +47,11 @@ class base64(Encryptor):
                 CodeComponent(code.replace("####UUID####",str(self.uuid))),
             ]
 
+        elif self.platform == "windows_pwsh":
+            module.components = [
+                CallComponent(f"$buf = Invoke-Base64Decode{self.uuid} -Data $buf\n"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))),
+            ]
         return module
 
     def test(self):

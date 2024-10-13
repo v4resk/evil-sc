@@ -1,0 +1,16 @@
+function Invoke-Base64Decode####UUID####
+
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$True, Position=0)]
+        [object] $Data
+    )
+
+    if ($Data.GetType().Name -eq "String"){
+        return ([System.Convert]::FromBase64String($Data))
+    }
+    elseif ($Data.GetType().Name -eq "Byte[]"){
+        return ([System.Convert]::FromBase64String([System.Text.Encoding]::UTF8.GetString($Data)))
+    }
+}

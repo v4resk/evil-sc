@@ -2,7 +2,7 @@
 
 from core.config.config import Config
 from core.controlers.EncryptorsChain import EncryptorsChain
-from core.controlers.SandboxEvasionChain import SandboxEvasionChain
+from core.controlers.EvasionChain import EvasionChain
 from core.controlers.ShellcodeControler import ShellcodeControler
 from core.controlers.CompilerControler import CompilerControler
 from core.controlers.SysCallsControler import SysCallsControler
@@ -12,7 +12,7 @@ from core.engines.CodeComponent import CodeComponent
 from core.engines.DefineComponent import DefineComponent
 #from core.engines.EvasionComponent import EvasionComponent
 from core.engines.IncludeComponent import IncludeComponent
-from core.engines.SandboxEvasionComponent import SandboxEvasionComponent
+from core.engines.EvasionComponent import EvasionComponent
 from core.engines.SysCallsComponent import SysCallsComponent
 
 import shutil
@@ -30,6 +30,10 @@ class TemplateLoader:
 
         if self.platform == "windows_cs":
             self.template_file = Config().get('FILES', 'cs_template_file')
+        
+        elif self.platform == "windows_pwsh":
+            self.template_file = Config().get('FILES', 'pwsh_template_file')
+        
         else: 
             self.template_file = Config().get('FILES', 'cpp_template_file')
 
@@ -38,7 +42,7 @@ class TemplateLoader:
         self.include_components = []
         self.define_components = []
         self.syscall_components = []
-        self.sandboxevasion_components = []
+        self.evasion_components = []
         self.mingw_options = []
 
         self.sysCallss = None
@@ -51,8 +55,8 @@ class TemplateLoader:
         #Load encryptors chain
         self.load_encryptors_chain()
 
-        #Load sandboxEvasion chain
-        self.load_sandboxEvasion_chain()
+        #Load Evasion chain
+        self.load_evasion_chain()
 
         #Check Compilers compatibility + options
         self.check_ollvm()
@@ -95,13 +99,13 @@ class TemplateLoader:
                     self.process_component(component)
 
 
-    def load_sandboxEvasion_chain(self):
-        self.sandboxEvasion_chain = SandboxEvasionChain.from_list(self.sandbox_evasion, self.platform)
-        if self.sandboxEvasion_chain:
-            for key, sandboxevasion in self.sandboxEvasion_chain.chain.items():
-                sandboxEvasion_module = sandboxevasion.translate()
-                self.mingw_options.append(sandboxEvasion_module.mingw_options)
-                for component in sandboxEvasion_module.components:
+    def load_evasion_chain(self):
+        self.evasion_chain = EvasionChain.from_list(self.evasions, self.platform)
+        if self.evasion_chain:
+            for key, evasion in self.evasion_chain.chain.items():
+                evasion_module = evasion.translate()
+                self.mingw_options.append(evasion_module.mingw_options)
+                for component in evasion_module.components:
                     self.process_component(component)
 
     def load_syscalls(self):
@@ -122,8 +126,8 @@ class TemplateLoader:
             self.include_components.append(component)
         elif isinstance(component, DefineComponent):
             self.define_components.append(component)
-        elif isinstance(component, SandboxEvasionComponent):
-            self.sandboxevasion_components.append(component)
+        elif isinstance(component, EvasionComponent):
+            self.evasion_components.append(component)
         elif isinstance(component, SysCallsComponent):
             self.syscall_components.append(component)
 
@@ -165,20 +169,23 @@ class TemplateLoader:
         # Replace Shellcode
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode')
         shellcodeControler = ShellcodeControler(self.shellcode_variable, self.encryptors_chain)
-        #shellcodeControler.test()
-        template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_c())
+        if self.platform == "windows_pwsh":
+            template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_pwsh())
+        else:
+            template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_c())
+            
 
         # Replace Shellcode_Len
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode_len')
         template_content = template_content.replace(shellcode_placeholder,str(shellcodeControler.get_encrypted_shellcode_len()))
 
-        # Replace SandboxEvasion
-        sandboxevasion_placeholder = Config().get('PLACEHOLDERS', 'SANDBOXEVASION')
-        sandboxevasion_components_code = ""
-        for component in self.sandboxevasion_components:
+        # Replace Evasion
+        evasion_placeholder = Config().get('PLACEHOLDERS', 'EVASION')
+        evasion_components_code = ""
+        for component in self.evasion_components:
             if component :
-                sandboxevasion_components_code += component.code
-        template_content = template_content.replace(sandboxevasion_placeholder,sandboxevasion_components_code)       
+                evasion_components_code += component.code
+        template_content = template_content.replace(evasion_placeholder,evasion_components_code)       
 
         # Replace Delay
 

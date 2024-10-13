@@ -25,7 +25,7 @@ class Module:
         self.include_components = None
         self.define_components = None
         self.mingw_options = None
-        self.sandboxevasion_components = None
+        self.evasion_components = None
         self.syscall_components = None
 
     def add_component(self, component):

@@ -51,7 +51,7 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
 int main()
 {
     //####DELAY####
-    //####SANDBOXEVASION####
+    //####EVASION####
     //####ARGS####
 
     esc_main(NULL);
