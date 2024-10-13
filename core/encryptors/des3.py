@@ -9,6 +9,7 @@ from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.engines.IncludeComponent import IncludeComponent
+from core.engines.DefineComponent import DefineComponent
 from core.controlers.Module import Module
 import uuid
 
@@ -60,12 +61,19 @@ class des3(Encryptor):
         module.name = self.__class__.__name__
         code = self.template()
 
-        module.components = [
-            CallComponent(f"length = des3_decrypt_{self.uuid}(encoded, length);"),
-            CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
-            IncludeComponent("<bcrypt.h>")
-        ]
+        if self.platform == "windows_cpp":
+            module.components = [
+                CallComponent(f"length = des3_decrypt_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
+                IncludeComponent("<bcrypt.h>")
+            ]
+            module.mingw_options = "-lbcrypt "
 
-        module.mingw_options = "-lbcrypt "
+        elif self.platform == "windows_cs":
+            module.components = [
+                CallComponent(f"buf = TripleDESDecrypt_{self.uuid}.Decrypt(buf);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
+                DefineComponent("using System.Security.Cryptography;\n"),
+            ]
 
         return module

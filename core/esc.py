@@ -161,27 +161,39 @@ class esc:
             setattr(self, key, value)
 
         # TO DO
-        # SandBox_evasion: Sleep, NoVMenv, 
-        # EDR_Evasion: API Hash / SysWhispers2 /Indirect Syscall / HellsGate / HellHall ?
+        # SandBox_evasion: Sleep, NoVMenv....
+        # SGN Encoder ?
+        # Windows Process injection Templates C++/C# 
+        # Linux Process injection Templates C++/C#
 
-        print()
 
-        # Debug Prints
+        #### OUTPUTS  #####
         if self.platform != "utils":
             loader = TemplateLoader(vars(self))
             #loader.test()
+            
+            fields = [
+            ("Target OS", self.platform),
+            ("Shellcode", self.shellcode_variable),
+            ("Method", os.path.basename(self.method) if self.method else None),
+            ("Encryptors", loader.encryptors_chain.to_string()),
+            ("Sandbox Evasion", loader.sandboxEvasion_chain.to_string()),
+            ("Syscalls", loader.syscall_method),
+            ("Compiler", "mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if loader.llvmo else "MinGW")),
+            ("Output", self.outfile)
+            ]
+
+            output = f"{Fore.GREEN}============================================================{Fore.RESET}\n"
+            for label, value in fields:
+                if value:
+                    output += f"{Fore.GREEN}{label:<18}: {Fore.WHITE}{value}{Fore.RESET}\n"
+            output += f"{Fore.GREEN}============================================================\n{Fore.RESET}"
+
+            print(output)
+
             loader.write_code()
             loader.compile()
-            print(f'{Fore.GREEN}Target OS:\t\t{Fore.WHITE}{self.platform}')
-            print(f'{Fore.GREEN}Shellcode:\t\t{Fore.WHITE}{self.shellcode_variable}')
-            print(f'{Fore.GREEN}Method:\t\t\t{Fore.WHITE}{os.path.basename(self.method)}')
-            print(f'{Fore.GREEN}Encryptors:\t\t{Fore.WHITE}{loader.encryptors_chain.to_string()}')
-            print(f'{Fore.GREEN}Sandbox Evasion:\t{Fore.WHITE}{loader.sandboxEvasion_chain.to_string()}')
-            print(f'{Fore.GREEN}Syscalls :\t\t{Fore.WHITE}{loader.syscall_method}')
-            print(f'{Fore.GREEN}Compiler :\t\t{Fore.WHITE}{"LLVM-Obfuscator" if loader.llvmo else "MinGW"}')
-            #print(f'{Fore.GREEN}Target Process:\t\t{Fore.WHITE}{self.target_process}')
-            #print(f"\n{Fore.CYAN}Genreated template:\t{Fore.WHITE}{self.evil_sc_template_file}")
-            print(f"\n{Fore.CYAN}Output:\t\t\t{Fore.WHITE}{self.outfile}")
+
 
 
         else:

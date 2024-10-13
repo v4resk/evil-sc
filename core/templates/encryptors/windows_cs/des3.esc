@@ -1,0 +1,37 @@
+public static class TripleDESDecrypt_####UUID####
+{
+    public static byte[] Decrypt(byte[] cipherText)
+    {
+        // Hardcoded key (24 bytes for TripleDES)
+        byte[] key = ####KEY####;
+
+        // Hardcoded IV (8 bytes for TripleDES)
+        byte[] iv = ####IV####;
+
+        using (TripleDESCryptoServiceProvider tripleDes = new TripleDESCryptoServiceProvider())
+        {
+            tripleDes.Key = key;
+            tripleDes.IV = iv;
+            tripleDes.Mode = CipherMode.CBC;
+            tripleDes.Padding = PaddingMode.PKCS7;
+
+            using (ICryptoTransform decryptor = tripleDes.CreateDecryptor())
+            {
+                return PerformCryptography(cipherText, decryptor);
+            }
+        }
+    }
+
+    private static byte[] PerformCryptography(byte[] data, ICryptoTransform cryptoTransform)
+    {
+        using (MemoryStream memoryStream = new MemoryStream())
+        {
+            using (CryptoStream cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))
+            {
+                cryptoStream.Write(data, 0, data.Length);
+                cryptoStream.FlushFinalBlock();
+                return memoryStream.ToArray();
+            }
+        }
+    }
+}
