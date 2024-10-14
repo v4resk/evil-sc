@@ -40,9 +40,10 @@ class EvasionChain:
             return chain
         for e in evasion:
             try:
+                    
                     evasion_class_string = f"core.evasions.{e}.{e}"
                     evasion_class = locate(evasion_class_string)
-                    evasion_instance = evasion_class(platform)
+                    evasion_instance = evasion_class(platform)     
 
                     if debug_mode == "True":
                         print(evasion_instance.translate().evasion_components.code)

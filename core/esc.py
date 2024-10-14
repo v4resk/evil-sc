@@ -184,7 +184,8 @@ class esc:
 
         # TO DO
         # Obfuscation for .NET & Powershell
-        # SandBox_evasion: Sleep, NoVMenv....
+        # SandBox_evasion: EKKO Sleep, NoVMenv....
+        # AMSI + ETW Patching evasion modules
         # SGN Encoder ?
         # Windows Process injection Templates C++/C# 
         # Linux Process injection Templates C++/C#
@@ -205,7 +206,7 @@ class esc:
             ("Compiler", "" if self.platform == "windows_pwsh" else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if loader.llvmo else "MinGW"))),
             ("Output", self.outfile)
             ]
-
+            
             output = f"{Fore.GREEN}============================================================{Fore.RESET}\n"
             for label, value in fields:
                 if value:
