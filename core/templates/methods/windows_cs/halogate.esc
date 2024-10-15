@@ -13,12 +13,12 @@ using System.Security.Cryptography;
 
 //####DEFINE####
 
-namespace mySharphalo
+namespace proudcat
 {
 
     //####CODE####
 
-    public class SharpHalos
+    public class Program
     {
 
         public bool IsGateReady = false;
@@ -236,7 +236,7 @@ namespace mySharphalo
         }
     }
 
-    public class UsageExample
+    public class catloading
     {
         [Flags]
         public enum AllocationType : ulong

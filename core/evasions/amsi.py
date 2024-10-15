@@ -16,7 +16,7 @@ class amsi(Evasion):
         
         if self.platform == "windows_pwsh":
             module.components = [
-                CodeComponent(code),
+                EvasionComponent(code),
             ]
         
         return module

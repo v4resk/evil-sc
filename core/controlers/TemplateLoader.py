@@ -70,6 +70,9 @@ class TemplateLoader:
         #Get Build options
         self.get_build_options()
 
+        #Initi Shellcode Controler
+        self.shellcodeControler = ShellcodeControler(self.shellcode_variable, self.encryptors_chain, self.platform)
+
     def copy_new_template_file(self):
         src_file = f"{Config().get('FOLDERS', 'methods')}/{self.platform}/{self.method}.esc"
         dest_file = self.template_file
@@ -168,16 +171,13 @@ class TemplateLoader:
 
         # Replace Shellcode
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode')
-        shellcodeControler = ShellcodeControler(self.shellcode_variable, self.encryptors_chain)
-        if self.platform == "windows_pwsh":
-            template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_pwsh())
-        else:
-            template_content = template_content.replace(shellcode_placeholder,shellcodeControler.get_encrypted_shellcode_c())
+        template_content = template_content.replace(shellcode_placeholder,self.shellcodeControler.get_shellcode())
+
             
 
         # Replace Shellcode_Len
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode_len')
-        template_content = template_content.replace(shellcode_placeholder,str(shellcodeControler.get_encrypted_shellcode_len()))
+        template_content = template_content.replace(shellcode_placeholder,str(self.shellcodeControler.get_encrypted_shellcode_len()))
 
         # Replace Evasion
         evasion_placeholder = Config().get('PLACEHOLDERS', 'EVASION')

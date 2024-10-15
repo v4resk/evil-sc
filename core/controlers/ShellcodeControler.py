@@ -4,12 +4,13 @@ from core.config.config import Config
 debug_mode = Config().get("DEBUG", "SHELLCODE")   
 
 class ShellcodeControler:
-    def __init__(self, shellcode_variable, encryptors_chain):
+    def __init__(self, shellcode_variable, encryptors_chain, platform):
         self.encryptors_chain = encryptors_chain
+        self.platform = platform
         self.shellcode_bytes = self.file_to_bytes(shellcode_variable) 
         self.encrypted_shellcode_bytes = self.encrypt_shellcode()
+        self.chain_ending_w_str = self.check_str_encryptors()
         self.shellcode_len = len(self.encrypted_shellcode_bytes)
-
 
 
     def file_to_bytes(self,filepath):
@@ -34,67 +35,63 @@ class ShellcodeControler:
                 print(f"{encryptor.to_string()} n°{i} After Encode: {self.get_shellcode(encrypted_shellcode_bytes,encryptor.isStringShellcode)}")
                 print()
                 i = i+1
-
         return encrypted_shellcode_bytes
 
-    def decrypt_shellcode(self):
-        decrypted_shellcode_bytes = self.encrypted_shellcode_bytes 
-        for key, encryptor in self.encryptors_chain.chain.items():
-            decrypted_shellcode_bytes = encryptor.decode(decrypted_shellcode_bytes)
-        return decrypted_shellcode_bytes
 
-    def test(self):
-        print(f"C Plane Shellcode: {self.get_shellcode(self.shellcode_bytes)}")
-        print()
-        print(f"C Encoded Shellcode: {self.get_encrypted_shellcode_c()}")
-        print()
-        print(f"C Decoded Shellcode: {self.get_decrypted_shellcode_c()}")
-
-    def get_encrypted_shellcode_bytes(self):
-        return self.encrypted_shellcode_bytes
     
-    def get_encrypted_shellcode_len(self):
-        return self.shellcode_len
-
-    def get_encrypted_shellcode_c(self):
+    def check_str_encryptors(self):
         if len(self.encryptors_chain.chain.items()) == 0:
-            return self.get_shellcode(self.shellcode_bytes)
-
-        # Check if some enc should be returned as "String" format
+            return False
         for key, encryptor in self.encryptors_chain.chain.items():
             if not encryptor.isStringShellcode:
-                return self.get_shellcode(self.encrypted_shellcode_bytes)
+                return False
             else:
-                print("[*] String shellcode")
-                #return self.get_shellcode(encrypted_shellcode_bytes)
-                return "\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\""
+                return True
             break
+
+    
+    def get_encrypted_shellcode_len(self):
+        if self.chain_ending_w_str is False:
+            return self.shellcode_len
+        else:
+            return self.shellcode_len + 2
+
+    def get_encrypted_shellcode_c(self):
         #return shellcode
+        # Check if some enc should be returned as "String" format
+        if not self.chain_ending_w_str:
+            return self.get_shellcode(self.encrypted_shellcode_bytes)
+        else:
+            print("[*] String shellcode")
+            #return self.get_shellcode(encrypted_shellcode_bytes)
+            return "\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\""
+
+
+
 
     def get_encrypted_shellcode_pwsh(self):
         return self.get_shellcode(self.encrypted_shellcode_bytes, format="pwsh")
      
-    
-    def get_plain_shellcode_c(self):
-        shellcode = hexlify(self.shellcode_bytes).decode()
-        shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
-        return shellcode
 
-    def get_decrypted_shellcode_c(self):
-        shellcode = hexlify(self.decrypt_shellcode()).decode()
-        shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
-        return shellcode
-    
-    def get_shellcode(self,shellcode_bytes, string = False, format="C"):
-        if format == "C":
-            if string is False:
-                shellcode = hexlify(shellcode_bytes).decode()
+
+    def get_shellcode(self):
+        if self.platform == "windows_cpp" or self.platform == "windows_cs" or self.platform == "linux":
+            if self.chain_ending_w_str is False:
+                shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
                 shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
                 return shellcode
             else:
-                return "\"" +shellcode_bytes.decode("utf-8")+"\""
-        elif format == "pwsh":
-            shellcode = hexlify(shellcode_bytes).decode()
-            shellcode = ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)])
-            return shellcode
+                print("[*] String shellcode")
+                return "\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\\0"+"\""
+
+        
+        elif self.platform == "windows_pwsh":
+            if self.chain_ending_w_str is False:
+                shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
+                shellcode = ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)])
+                shellcode = f"[Byte[]] ({shellcode})"
+                return shellcode
+            else:
+                print("[*] String shellcode")
+                return "\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\""
     
