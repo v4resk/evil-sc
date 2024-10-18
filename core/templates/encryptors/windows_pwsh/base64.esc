@@ -5,11 +5,6 @@ function Invoke-Base64Decode####UUID####
         [object] $Data
     )
 
-    Write-Host $Data.GetType().Name
-    if ($Data.GetType().Name -eq "String"){
-        return ([System.Convert]::FromBase64String($Data))
-    }
-    elseif ($Data.GetType().Name -eq "Byte[]"){
         return [System.Convert]::FromBase64String([System.Text.Encoding]::UTF8.GetString($Data))
-    }
+
 }
