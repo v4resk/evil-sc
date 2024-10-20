@@ -62,7 +62,13 @@ class xor(Encryptor):
                 CallComponent(f"$buf = Invoke-Xor{self.uuid} -Data $buf\n"),
                 CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####UUID####",str(self.uuid)))
             ]    
-        
+
+        elif self.platform == "windows_vba":
+            module.components = [
+                CallComponent(f"XORDecode{self.uuid} buf\n"),
+                CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####UUID####",str(self.uuid)))
+            ]   
+
         return module
 
     def test(self):

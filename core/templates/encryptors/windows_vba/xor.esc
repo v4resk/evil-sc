@@ -1,0 +1,21 @@
+Sub XORDecode####UUID#### (buf As Variant)
+    Dim i As Long
+    Dim keyByte As Byte
+    Dim keyLength As Long
+    Dim keyIndex As Long
+
+    Dim xor_key As String
+    xor_key = "####KEY####"
+    
+    keyLength = Len(xor_key)
+    
+    ' Loop through each byte in the buffer
+    For i = LBound(buf) To UBound(buf)
+        ' Cyclically get the current byte from the XOR key
+        keyIndex = (i Mod keyLength) + 1
+        keyByte = Asc(Mid(xor_key, keyIndex, 1))
+        
+        ' XOR the buffer byte with the key byte
+        buf(i) = buf(i) Xor keyByte
+    Next i
+End Sub

@@ -131,13 +131,16 @@ class esc:
 
         win_vba_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
+        win_vba_parser.add_argument('--x86', metavar='X86_SHELLCODE',dest='shellcode32_variable',
+                                help='Specify a raw x86 shellcode file (if template support it)')
+
         win_vba_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_vba"),
                                 help='Shellcode-loading method')
 
         win_vba_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_vba"),
                                 help='Encryption/Encoding algorithm to be applied to the shellcode')
 
-        win_vba_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+        win_vba_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="",
                                 help='Process name for shellcode injection')
 
         win_vba_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
@@ -218,11 +221,13 @@ class esc:
             loader = TemplateLoader(vars(self))
 
             fields = [
-            ("Target OS", self.platform),
+            ("Module", self.platform),
             ("Shellcode", self.shellcode_variable),
+            ("x86 Shellcode", self.shellcode32_variable),
             ("Methode", os.path.basename(self.method) if self.method else None),
             ("Encryptors", loader.encryptors_chain.to_string()),
             ("Evasion Modules", loader.evasion_chain.to_string()),
+            ("Injection Process", self.target_process),
             ("Syscalls", loader.syscall_method),
             ("Compiler", "" if self.platform == "windows_pwsh" or self.platform == "windows_vba"  else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if loader.llvmo else "MinGW"))),
             ("Output", self.outfile)

@@ -97,14 +97,24 @@ class ShellcodeControler:
     
         elif self.platform == "windows_vba":
             shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
-            #shellcode = "(" + ",".join([str(int(shellcode[i:i + 2], 16)) for i in range(0, len(shellcode), 2)]) + ")"
-            #shellcode = ", _\n".join([shellcode[i:i+50] for i in range(0, len(shellcode), 50)])
-            #shellcode = f"Array{shellcode}"
+            byte_array = [f"{int(shellcode[i:i + 2], 16)}" for i in range(0, len(shellcode), 2)]
 
-            max_line_length = 100
-            lines = [f'buf = "{shellcode[:max_line_length]}"']
-            for i in range(max_line_length, len(shellcode), max_line_length):
-                part = shellcode[i:i + max_line_length]
-                lines.append(f'buf = buf & "{part}"')
-            shellcode = '\n'.join(lines)
-            return shellcode
+            # Split into lines while respecting the VBA line length limitation
+            max_line_length = 75  # Maximum length per line before needing a line continuation
+            lines = []
+            current_line = "Array("
+
+            for byte in byte_array:
+                # Check if adding the byte would exceed the max length
+                if len(current_line) + len(byte) + 1 > max_line_length:  # +1 for the comma
+                    current_line = current_line.rstrip(',') + " _"  # Trim last comma and add continuation
+                    lines.append(current_line)  # Append the current line
+                    current_line = " " * 8 + byte + ", "  # Start a new line with indentation
+                else:
+                    current_line += byte + ", "
+
+            # Add the final line and ensure proper formatting
+            current_line = current_line.rstrip(', ') + ")"
+            lines.append(current_line)
+
+            return "\n".join(lines)  # Join all lines into a single output

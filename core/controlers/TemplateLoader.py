@@ -73,6 +73,9 @@ class TemplateLoader:
         #Initi Shellcode Controler
         self.shellcodeControler = ShellcodeControler(self.shellcode_variable, self.encryptors_chain, self.platform)
 
+        if self.shellcode32_variable:
+            self.shellcode32bControler = ShellcodeControler(self.shellcode32_variable, self.encryptors_chain, self.platform)
+
     def copy_new_template_file(self):
         src_file = f"{Config().get('FOLDERS', 'methods')}/{self.platform}/{self.method}.esc"
         dest_file = self.template_file
@@ -172,9 +175,12 @@ class TemplateLoader:
         # Replace Shellcode
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode')
         template_content = template_content.replace(shellcode_placeholder,self.shellcodeControler.get_shellcode())
-
+        
+        # Replace 32bit Shellcode
+        if self.shellcode32_variable:
+            shellcode32_placeholder = Config().get('PLACEHOLDERS', 'shellcode32')
+            template_content = template_content.replace(shellcode32_placeholder,self.shellcode32bControler.get_shellcode())
             
-
         # Replace Shellcode_Len
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode_len')
         template_content = template_content.replace(shellcode_placeholder,str(self.shellcodeControler.get_encrypted_shellcode_len()))
