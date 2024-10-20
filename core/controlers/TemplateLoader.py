@@ -30,10 +30,10 @@ class TemplateLoader:
 
         if self.platform == "windows_cs":
             self.template_file = Config().get('FILES', 'cs_template_file')
-        
         elif self.platform == "windows_pwsh":
             self.template_file = Config().get('FILES', 'pwsh_template_file')
-        
+        elif self.platform == "windows_vba":
+            self.template_file = Config().get('FILES', 'vba_template_file')        
         else: 
             self.template_file = Config().get('FILES', 'cpp_template_file')
 

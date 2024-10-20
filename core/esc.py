@@ -37,8 +37,6 @@ class esc:
         self.outfile = ""
         self.llvmo = False
 
-        self.valid_encryptors = ["base64","xor","nop","aes","des3","rc4","uuid"]
-
 
     def parse_arguments(self):
         # Create the main argument parser
@@ -127,6 +125,29 @@ class esc:
         #win_cs_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
         #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
 
+
+        # Windows VBA (Macro) subparser
+        win_vba_parser = subparsers.add_parser('windows_vba', help='VBA (Macros) Microsoft Office Shellcode Loader')
+
+        win_vba_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        win_vba_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_vba"),
+                                help='Shellcode-loading method')
+
+        win_vba_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_vba"),
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
+
+        win_vba_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+                                help='Process name for shellcode injection')
+
+        win_vba_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="windows_vba"),
+                                help='Evasion module')
+
+        win_vba_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.vba",
+                                help='Output filename')
+
+
         # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
         lin_parser = subparsers.add_parser('linux', help='Linux Shellcode Loader (C++)')
         lin_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
@@ -203,7 +224,7 @@ class esc:
             ("Encryptors", loader.encryptors_chain.to_string()),
             ("Evasion Modules", loader.evasion_chain.to_string()),
             ("Syscalls", loader.syscall_method),
-            ("Compiler", "" if self.platform == "windows_pwsh" else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if loader.llvmo else "MinGW"))),
+            ("Compiler", "" if self.platform == "windows_pwsh" or self.platform == "windows_vba"  else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if loader.llvmo else "MinGW"))),
             ("Output", self.outfile)
             ]
             

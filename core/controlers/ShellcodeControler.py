@@ -95,3 +95,16 @@ class ShellcodeControler:
                 print("[*] String shellcode")
                 return "\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\""
     
+        elif self.platform == "windows_vba":
+            shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
+            #shellcode = "(" + ",".join([str(int(shellcode[i:i + 2], 16)) for i in range(0, len(shellcode), 2)]) + ")"
+            #shellcode = ", _\n".join([shellcode[i:i+50] for i in range(0, len(shellcode), 50)])
+            #shellcode = f"Array{shellcode}"
+
+            max_line_length = 100
+            lines = [f'buf = "{shellcode[:max_line_length]}"']
+            for i in range(max_line_length, len(shellcode), max_line_length):
+                part = shellcode[i:i + max_line_length]
+                lines.append(f'buf = buf & "{part}"')
+            shellcode = '\n'.join(lines)
+            return shellcode
