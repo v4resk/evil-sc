@@ -34,12 +34,17 @@ class CompilerControler:
         
         elif(self.platform == "windows_pwsh"):
             if debug_mode == "True":
-                print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting Script: cp {self.evil_sc_template_file} {self.outfile}\n")
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting PS1: cp {self.evil_sc_template_file} {self.outfile}\n")
             os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
         
         elif(self.platform == "windows_vba"):
             if debug_mode == "True":
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting Macro: cp {self.evil_sc_template_file} {self.outfile}\n")
+            os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
+        
+        elif self.platform == "windows_js":
+            if debug_mode == "True":
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting JScript: cp {self.evil_sc_template_file} {self.outfile}\n")
             os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
 
         elif(self.platform == "linux"):

@@ -177,10 +177,12 @@ class TemplateLoader:
         template_content = template_content.replace(shellcode_placeholder,self.shellcodeControler.get_shellcode())
         
         # Replace 32bit Shellcode
+        shellcode32_placeholder = Config().get('PLACEHOLDERS', 'shellcode32')
         if self.shellcode32_variable:
-            shellcode32_placeholder = Config().get('PLACEHOLDERS', 'shellcode32')
             template_content = template_content.replace(shellcode32_placeholder,self.shellcode32bControler.get_shellcode())
-            
+        else:
+            template_content = template_content.replace(shellcode32_placeholder,self.shellcodeControler.get_shellcode())
+
         # Replace Shellcode_Len
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode_len')
         template_content = template_content.replace(shellcode_placeholder,str(self.shellcodeControler.get_encrypted_shellcode_len()))

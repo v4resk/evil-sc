@@ -1,0 +1,81 @@
+' Decrypt the binary data using AES
+Sub AESDecrypt####UUID####(buf As Variant)
+
+    Dim prov As LongPtr
+    Dim keyHandle As LongPtr
+    Dim dataLength As LongPtr
+    Dim success As Boolean
+    Dim aesKey(0 To 31) As Byte  ' For AES-256 (32 bytes)
+    Dim aesIV(0 To 15) As Byte    ' For AES (16 bytes)
+    Dim i As Long
+
+    Dim derivedKeyHex As String
+    Dim ivHex As String
+    derivedKeyHex = "####KEY####"
+    ivHex = "####IV####"
+
+    ' Convert hex string to byte array for aesKey
+    For i = 0 To 31
+        aesKey(i) = CByte("&H" & Mid(derivedKeyHex, i * 2 + 1, 2))
+    Next i
+
+    ' Convert hex string to byte array for aesIV
+    For i = 0 To 15
+        aesIV(i) = CByte("&H" & Mid(ivHex, i * 2 + 1, 2))
+    Next i
+
+    ' Acquire a cryptographic provider context
+    success = CryptAcquireContext(prov, vbNullString, "Microsoft Enhanced RSA and AES Cryptographic Provider", 24, 0)
+
+
+    If success Then
+        ' Create the AES key from the provided key and IV
+        success = CreateAESKey####UUID####(prov, aesKey, aesIV, keyHandle)
+
+        If success Then
+            ' Prepare data buffer for decryption
+            dataLength = UBound(buf) + 1
+
+            ' Decrypt the buffer
+            success = CryptDecrypt(keyHandle, 0, True, 0, buf(0), dataLength)
+
+            If Not success Then
+                MsgBox "Decryption failed!"
+            End If
+
+            ' Release the cryptographic context
+            CryptReleaseContext prov, 0
+        Else
+            MsgBox "Key creation failed!"
+        End If
+    Else
+        MsgBox "Cryptographic provider context acquisition failed!"
+    End If
+End Sub
+
+' Function to create AES key from the given key and IV
+Function CreateAESKey####UUID####(hProv As LongPtr, aesKey As Variant, aesIV As Variant, ByRef hKey As LongPtr) As Boolean
+    Dim hHash As LongPtr
+    Dim success As Boolean
+
+    ' Create a hash object
+    success = CryptCreateHash(hProv, 32772, 0, 0, hHash) ' CALG_SHA256
+
+    If success Then
+        ' Hash the key data
+        success = CryptHashData(hHash, ByVal aesKey(0), LenB(aesKey), 0)
+
+        If success Then
+            ' Derive an AES key from the hash
+            success = CryptDeriveKey(hProv, 26126, hHash, 128, hKey) ' CALG_AES
+
+            If success Then
+                ' Set the IV for the derived key
+                success = CryptSetKeyParam(hKey, 2, ByVal aesIV(0), 0) ' KP_IV
+            End If
+        End If
+    End If
+
+    ' Return success status
+    CreateAESKey####UUID#### = success
+End Function

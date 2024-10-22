@@ -1,5 +1,6 @@
 from binascii import hexlify
 from core.config.config import Config
+import base64
 
 debug_mode = Config().get("DEBUG", "SHELLCODE")   
 
@@ -118,3 +119,8 @@ class ShellcodeControler:
             lines.append(current_line)
 
             return "\n".join(lines)  # Join all lines into a single output
+        
+        elif self.platform == "windows_js":
+            shellcode = base64.b64encode(self.encrypted_shellcode_bytes)
+            shellcode = shellcode.decode(encoding="latin-1")
+            return f"\"{shellcode}\""

@@ -27,6 +27,7 @@ class esc:
     def __init__(self):
         self.target_process = ""
         self.shellcode_variable = ""
+        self.shellcode32_variable = ""
         self.syscall_method = ""
         self.syswhispers_recovery_method = ""
         self.method = ""
@@ -127,7 +128,7 @@ class esc:
 
 
         # Windows VBA (Macro) subparser
-        win_vba_parser = subparsers.add_parser('windows_vba', help='VBA (Macros) Microsoft Office Shellcode Loader')
+        win_vba_parser = subparsers.add_parser('windows_vba', help='Microsoft Office Macros Shellcode Loader (VBA)')
 
         win_vba_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
@@ -150,9 +151,29 @@ class esc:
         win_vba_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.vba",
                                 help='Output filename')
 
+        # Windows JScript subparser
+        win_js_parser = subparsers.add_parser('windows_js', help='JScript Windows Shellcode Loader')
+
+        win_js_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        win_js_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_js"),
+                                help='Shellcode-loading method')
+
+        win_js_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_js"),
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
+
+        win_js_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="",
+                                help='Process name for shellcode injection')
+
+        win_js_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="windows_js"),
+                                help='Evasion module')
+
+        win_js_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.js",
+                                help='Output filename')
 
         # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
-        lin_parser = subparsers.add_parser('linux', help='Linux Shellcode Loader (C++)')
+        lin_parser = subparsers.add_parser('linux', help='Native Linux Shellcode Loader (C++)')
         lin_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
         lin_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="linux"),
