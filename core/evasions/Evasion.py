@@ -28,7 +28,7 @@ class Evasion(ABC):
 
     # To edit, function that will retreive the .cpp implementation
     def template(self):
-        sbevasion = self.__class__.__name__.lower()
+        sbevasion = self.__class__.__name__
         source = f"{self.implementations_dir}/{self.platform}/{sbevasion}.esc"
 
         if not os.path.exists(source):

