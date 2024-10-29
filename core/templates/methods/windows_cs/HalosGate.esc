@@ -738,7 +738,7 @@ using System.Security.Cryptography;
             halos.Gate(NTCTEHash);
             NTCTE(out threadHandle, desiredAccess, pObjectAttributes, ProcessHandle, AllocationAddress, lpParameter, createFlags, stackZeroBits, sizeOfStackCommit, sizeOfStackReserve, pBytesBuffer);
 
-            Console.WriteLine("[+] handle {0}! meow executed!", threadHandle.ToString("X4"));
+            Console.WriteLine("[+] handle {0} executed!", threadHandle.ToString("X4"));
 
             WaitForSingleObject(threadHandle, 0xFFFFFFFF);
         }

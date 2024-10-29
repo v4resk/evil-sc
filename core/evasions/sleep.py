@@ -1,5 +1,5 @@
 import random
-
+import uuid
 from core.evasions.Evasion import Evasion
 from core.engines.EvasionComponent import EvasionComponent
 from core.engines.DefineComponent import DefineComponent
@@ -10,7 +10,8 @@ from core.engines.CodeComponent import CodeComponent
 class sleep(Evasion):
     def __init__(self, platform):
         super().__init__(platform)
-        self.sleep_time = random.randrange(0, 30, 1)
+        self.sleep_time = random.randrange(2, 30, 1)
+        self.uuid = uuid.uuid4().hex
 
     def translate(self):
         module = Module()
@@ -22,7 +23,8 @@ class sleep(Evasion):
         
         elif self.platform == "windows_cs":
             module.components = [
-                EvasionComponent(code),
+                EvasionComponent(f"GetTimeInfo{self.uuid}.DoTimeSleep();"),
+                CodeComponent(code.replace("####UUID####", self.uuid)),
                 DefineComponent("using System.Threading;\n")
             ]
 
@@ -34,6 +36,9 @@ class sleep(Evasion):
             ]        
         elif self.platform == "linux":
             module.components = [EvasionComponent(code)]
+
+        elif self.platform == "windows_pwsh":
+            module.components = [EvasionComponent(code.replace("####TIME####", str(self.sleep_time)).replace("####TIME2####", str(self.sleep_time - 0.5)))]
 
         return module
 

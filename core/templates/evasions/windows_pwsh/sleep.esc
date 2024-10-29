@@ -1,0 +1,6 @@
+$starttime = Get-Date -Displayhint Time
+Start-sleep -s ####TIME####
+$finishtime = Get-Date -Displayhint Time
+if ( $finishtime -le $starttime.addseconds(####TIME2####) ) {
+ exit
+}

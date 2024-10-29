@@ -14,6 +14,7 @@ from core.engines.DefineComponent import DefineComponent
 from core.engines.IncludeComponent import IncludeComponent
 from core.engines.EvasionComponent import EvasionComponent
 from core.engines.SysCallsComponent import SysCallsComponent
+from core.utils.utils import verify_file_type
 
 import shutil
 import os
@@ -21,6 +22,7 @@ from colorama import Fore
 import string
 import random
 import re
+
 
 class TemplateLoader:
     def __init__(self,_vars):
@@ -48,6 +50,11 @@ class TemplateLoader:
         self.sysCallss = None
 
         self.build_options = ""
+
+        # Verify template compatibility
+        self.input_file_type = verify_file_type(self.shellcode_variable)
+        #self.verify_template()
+
 
         #Copy template file to build emplacement
         self.copy_new_template_file()
@@ -122,6 +129,11 @@ class TemplateLoader:
                 self.mingw_options.append(SysModule.mingw_options)
                 for component in SysModule.components:
                         self.process_component(component)
+
+
+    def verify_template(self):
+        print(f"File Type: {self.input_file_type}")
+        return 0
 
     def process_component(self,component):
         if isinstance(component, CallComponent):
