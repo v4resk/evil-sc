@@ -42,5 +42,10 @@ Private Declare PtrSafe Sub CopyMem Lib "kernel32" Alias "RtlMoveMemory" (Destin
                 EvasionComponent(f"AMSIBreakPoint{str(self.uuid)}.Program.AddAMSIBreakPoint();")
             ]
         
+        elif self.platform == "windows_js":
+            module.components = [
+                EvasionComponent(code),
+            ]
+        
         return module
 

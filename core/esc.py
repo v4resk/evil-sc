@@ -239,6 +239,7 @@ class esc:
         #### OUTPUTS  #####
         if self.platform != "utils":
 
+            self.compiler = "" if self.platform == "windows_pwsh" or self.platform == "windows_vba"  else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if self.llvmo else "MinGW"))
             loader = TemplateLoader(vars(self))
 
             fields = [

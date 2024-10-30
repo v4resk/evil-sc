@@ -39,6 +39,7 @@ class TemplateLoader:
         else: 
             self.template_file = Config().get('FILES', 'cpp_template_file')
 
+        self.isdll = False
         self.call_components = []
         self.code_components = []
         self.include_components = []
@@ -251,11 +252,24 @@ class TemplateLoader:
                    self.syscall_method = "GetSyscallStub"
 
     ## Adjut build options here if needed
-    def get_build_options(self, compiler="mingw"):
-        if self.platform == "linux":
-            if self.method == "SimpleExec":
-                self.mingw_options += " -z execstack -fno-stack-protector "
+    def get_build_options(self):
 
+        if self.compiler == "mingw":
+            if self.platform == "linux":
+                if self.method == "SimpleExec":
+                    self.mingw_options += " -z execstack -fno-stack-protector "
+
+        elif self.compiler == "mono-csc":
+            if "InstallUtil.dll" in self.method:
+                self.mingw_options += " -r:System.Configuration.Install "
+            
+            if "InstallUtilPwsh.dll" in self.method:
+                header_folder = Config().get('FOLDERS', 'HEADERS')
+                self.mingw_options += f" -r:System.Configuration.Install -r:{header_folder}/System.Management.Automation.dll"
+
+            if ".dll" in self.method:
+                self.mingw_options += " /target:library "
+                self.isdll = True
         return ""
 
     def compile(self):

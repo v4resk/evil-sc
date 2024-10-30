@@ -29,9 +29,9 @@ class CompilerControler:
 
         elif(self.platform == "windows_cs"):
             if debug_mode == "True":
-                print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} -out:{self.outfile}\n")
-            os.system(f"mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} -out:{self.outfile}")
-        
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} {self.compile_options} -out:{self.outfile}\n")
+            os.system(f"mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} {self.compile_options} -out:{self.outfile}")
+
         elif(self.platform == "windows_pwsh"):
             if debug_mode == "True":
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting PS1: cp {self.evil_sc_template_file} {self.outfile}\n")

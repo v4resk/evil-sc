@@ -1,3 +1,5 @@
+//####EVASION####
+
 function setversion() {
 var tact = new ActiveXObject('WScript.shell');
 ver = 'v4.0.30319';
