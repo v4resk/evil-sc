@@ -75,7 +75,7 @@ class esc:
                                 choices=["embedded", "egg_hunter", "jumper", "jumper_randomized"],
                                 help='Syscall execution method for supported templates')
 
-        win_cpp_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
+        win_cpp_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
         #win_cpp_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
@@ -99,7 +99,7 @@ class esc:
                                 choices=self.get_available_files("evasions", platform="windows_cs"),
                                 help='Evasion module')
 
-        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.exe",
+        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
         # Windows Powershell subparser
@@ -120,7 +120,7 @@ class esc:
                                 choices=self.get_available_files("evasions", platform="windows_pwsh"),
                                 help='Evasion module')
 
-        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.ps1",
+        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
         #win_cs_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
@@ -148,7 +148,7 @@ class esc:
                                 choices=self.get_available_files("evasions", platform="windows_vba"),
                                 help='Evasion module')
 
-        win_vba_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.vba",
+        win_vba_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
         # Windows JScript subparser
@@ -169,7 +169,7 @@ class esc:
                                 choices=self.get_available_files("evasions", platform="windows_js"),
                                 help='Evasion module')
 
-        win_js_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.js",
+        win_js_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
         # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
@@ -192,7 +192,7 @@ class esc:
         #lin_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
         #                        help='Process name for shellcode injection')
 
-        lin_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc.elf",
+        lin_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
         #lin_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
@@ -242,25 +242,38 @@ class esc:
             self.compiler = "" if self.platform == "windows_pwsh" or self.platform == "windows_vba"  else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if self.llvmo else "MinGW"))
             loader = TemplateLoader(vars(self))
 
-            fields = [
-            ("Module", self.platform),
-            ("Shellcode", self.shellcode_variable),
-            ("x86 Shellcode", self.shellcode32_variable),
-            ("Methode", os.path.basename(self.method) if self.method else None),
-            ("Encryptors", loader.encryptors_chain.to_string()),
-            ("Evasion Modules", loader.evasion_chain.to_string()),
-            ("Injection Process", self.target_process),
-            ("Syscalls", loader.syscall_method),
-            ("Compiler", "" if self.platform == "windows_pwsh" or self.platform == "windows_vba"  else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if loader.llvmo else "MinGW"))),
-            ("Output", self.outfile)
-            ]
-            
+            sections = {
+                "Inputs": [
+                    ("Module", self.platform),
+                    ("Input File", self.shellcode_variable),
+                    ("x86 Input File", self.shellcode32_variable),
+                    ("Input Format", loader.input_file_type.name if loader.input_file_type else None),
+                ],
+                "Configuration": [
+                    ("Method", os.path.basename(self.method) if self.method else None),
+                    ("Encryptors", loader.encryptors_chain.to_string()),
+                    ("Evasion Modules", loader.evasion_chain.to_string()),
+                    ("Injection Process", self.target_process),
+                    ("Syscalls", loader.syscall_method),
+                ],
+                "Outputs": [
+                    ("Compiler", self.compiler),
+                    ("Output Format", loader.output_format),
+                    ("Output File", f"{self.outfile}{loader.output_format}"),
+                ],
+            }
+        
+            # Construct the output string
             output = f"{Fore.GREEN}============================================================{Fore.RESET}\n"
-            for label, value in fields:
-                if value:
-                    output += f"{Fore.GREEN}{label:<18}: {Fore.WHITE}{value}{Fore.RESET}\n"
+            for section, fields in sections.items():
+                output += f"{Fore.CYAN}{section}{Fore.RESET}:\n"
+                for label, value in fields:
+                    if value:
+                        output += f"  {Fore.GREEN}{label:<20}:{Fore.WHITE} {value}{Fore.RESET}\n"
+                #output += f"{Fore.GREEN}------------------------------------------------------------{Fore.RESET}\n"
             output += f"{Fore.GREEN}============================================================\n{Fore.RESET}"
-
+        
+            # Print the output
             print(output)
 
             # Run Loader Engine

@@ -1,5 +1,6 @@
 import configparser
 import os
+import json
 from pathlib import Path
 
 from core.utils.utils import get_project_root
@@ -8,6 +9,7 @@ from core.utils.utils import get_project_root
 class Config(object):
     def __init__(self, auto_load: bool = True):
         self.config = configparser.ConfigParser(allow_no_value=True, interpolation=configparser.ExtendedInterpolation())
+        self.templates_config = os.path.join(get_project_root(), "config", "templates.json")
         self.default_config = os.path.join(get_project_root(), "config", "default.ini")
         self.file = os.path.join(get_project_root(), "config", "config.ini")
         if not os.path.isfile(self.file):
@@ -105,6 +107,19 @@ class Config(object):
         content = open(self.default_config).read()
         with open(self.file, "w") as default:
             default.write(content)
+
+    
+    def get_template_formats(self, platform, template):
+        """Retrieve expected_format and output_format for a given platform and template."""
+        section = f"{platform}:{template}"
+        if self.config.has_section(section):
+            expected_format = self.config.get(section, "expected_format", fallback="ANY")
+            output_format = self.config.get(section, "output_format", fallback="EXE")
+        else:
+            #print(f"Warning: Template '{template}' not found for platform '{platform}' in config file. Using defaults settings.")
+            expected_format, output_format = "ANY", ".exe"
+
+        return expected_format, output_format
 
 
 if __name__ == "__main__":

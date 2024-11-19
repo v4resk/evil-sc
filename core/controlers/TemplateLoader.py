@@ -6,7 +6,7 @@ from core.controlers.EvasionChain import EvasionChain
 from core.controlers.ShellcodeControler import ShellcodeControler
 from core.controlers.CompilerControler import CompilerControler
 from core.controlers.SysCallsControler import SysCallsControler
-
+from core.utils.enums.inputType import inputType
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.engines.DefineComponent import DefineComponent
@@ -39,7 +39,6 @@ class TemplateLoader:
         else: 
             self.template_file = Config().get('FILES', 'cpp_template_file')
 
-        self.isdll = False
         self.call_components = []
         self.code_components = []
         self.include_components = []
@@ -52,9 +51,24 @@ class TemplateLoader:
 
         self.build_options = ""
 
-        # Verify template compatibility
+        # Verify template x64 compatibility 
+        self.expected_formats, self.output_format = Config().get_template_formats(self.platform, self.method)
         self.input_file_type = verify_file_type(self.shellcode_variable)
-        #self.verify_template()
+        self.is_input_compatible = self.verify_template()
+
+        if self.shellcode32_variable:
+            self.x86_expected_formats, self.output_format = Config().get_template_formats(self.platform, self.method)
+            self.x86_input_file_type = verify_file_type(self.shellcode32_variable)
+            self.x86_is_input_compatible = self.verify_template()
+        else:
+            self.x86_is_input_compatible = True
+
+        if (self.is_input_compatible is False) or (self.x86_is_input_compatible is False):
+            print(f"{Fore.RED}[-] {Fore.WHITE}Incompatible options for method {Fore.RED}{self.method}{Fore.WHITE}")
+            print(f"{Fore.RED}[-] {Fore.WHITE}The input format {Fore.RED}{self.input_file_type.name}{Fore.WHITE} is incompatible with the expected formats: {Fore.RED}{self.expected_formats}{Fore.WHITE}")
+            exit()
+
+        self.outfile = f"{self.outfile}{self.output_format}"
 
 
         #Copy template file to build emplacement
@@ -131,10 +145,6 @@ class TemplateLoader:
                 for component in SysModule.components:
                         self.process_component(component)
 
-
-    def verify_template(self):
-        print(f"File Type: {self.input_file_type}")
-        return 0
 
     def process_component(self,component):
         if isinstance(component, CallComponent):
@@ -253,29 +263,58 @@ class TemplateLoader:
 
     ## Adjut build options here if needed
     def get_build_options(self):
-        
-        if self.compiler == "MinGW":
-            if self.platform == "linux":
-                if self.method == "SimpleExec":
-                    self.mingw_options += " -z execstack -fno-stack-protector "
-                elif self.method == "LD_PRELOAD.so":
-                    self.mingw_options += " -z execstack -fPIC -shared -ldl -fpermissive "
-                elif self.method == "LD_LIBRARY_PATH.so":
-                    self.mingw_options += " -z execstack -Wall -fPIC -shared -ldl -fpermissive "
 
-        elif self.compiler == "mono-csc":
-            if "InstallUtil.dll" in self.method:
+        # DLL Compile options
+        if self.platform == "linux" and self.output_format == ".so":
+            self.mingw_options += " -fPIC -shared -ldl -fpermissive "
+        if self.platform == "windows_cs" and self.output_format == ".dll":
+            self.mingw_options += " /target:library "
+
+        # Template specific options
+        if self.platform == "linux":
+            if self.method == "SimpleExec":
+                self.mingw_options += " -z execstack -fno-stack-protector "
+            elif self.method == "LD_PRELOAD.so":
+                self.mingw_options += " -z execstack "
+            elif self.method == "LD_LIBRARY_PATH.so":
+                self.mingw_options += " -z execstack -Wall "
+
+        elif self.platform == "windows_cs":
+            if "InstallUtil" in self.method:
                 self.mingw_options += " -r:System.Configuration.Install "
             
             if "InstallUtilPwsh.dll" in self.method:
                 header_folder = Config().get('FOLDERS', 'HEADERS')
-                self.mingw_options += f" -r:System.Configuration.Install -r:{header_folder}/System.Management.Automation.dll"
+                self.mingw_options += f" -r:{header_folder}/System.Management.Automation.dll"
 
-            if ".dll" in self.method:
-                self.mingw_options += " /target:library "
-                self.isdll = True
-        
         return ""
+
+    def verify_template(self):
+        """
+        Verify if the input format matches any of the expected formats or if expected_formats include 'ALL'.
+
+        Args:
+            input_format (inputType): The actual input format as an inputType enum.
+            expected_formats (str): A comma-separated string of expected formats or 'ALL'.
+
+        Returns:
+            bool: True if the input format matches one of the expected formats, False otherwise.
+        """
+        
+        # Handle 'ALL' case
+        if "ANY" in self.expected_formats.upper():
+            return True
+
+        # Split expected formats into a list and map them to enums
+        expected_enums = [
+            inputType.from_string(fmt.strip()) for fmt in self.expected_formats.split(",")
+        ]
+
+        # Remove any None values from the list (for invalid formats)
+        expected_enums = [fmt for fmt in expected_enums if fmt is not None]
+
+        # Check if the input format matches any of the expected enums
+        return self.input_file_type in expected_enums
 
     def compile(self):
         # Add build options from encryptchains

