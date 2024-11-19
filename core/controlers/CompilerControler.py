@@ -5,12 +5,13 @@ from colorama import init, Fore
 debug_mode = Config().get("DEBUG", "COMPILER")
 
 class CompilerControler:
-    def __init__(self,evil_sc_template_file,outfile,compile_options, llvmo , platform):
+    def __init__(self,evil_sc_template_file,outfile,compile_options, llvmo , platform, custom_output):
         self.evil_sc_template_file = evil_sc_template_file
         self.outfile = outfile
         self.llvmo = llvmo
         self.platform = platform
         self.compile_options = compile_options
+        self.custom_output = custom_output
         self.llvmo_options = " -Xclang -flto-visibility-public-std -mllvm -bcf -mllvm -sub -mllvm -fla -mllvm -split -mllvm -bcf_loop=3 -mllvm -sub_loop=2"
 
     def compile(self):
@@ -57,3 +58,8 @@ class CompilerControler:
                 if debug_mode == "True":
                     print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}")
                 os.system(f"clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}")
+
+        if self.custom_output:
+            custom_output_with_newlines = self.custom_output.replace("\\n", "\n")
+            for line in custom_output_with_newlines.splitlines():
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}{line}")

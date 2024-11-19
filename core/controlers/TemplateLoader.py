@@ -52,12 +52,13 @@ class TemplateLoader:
         self.build_options = ""
 
         # Verify template x64 compatibility 
-        self.expected_formats, self.output_format = Config().get_template_formats(self.platform, self.method)
+        self.expected_formats, self.output_format, self.custom_output, self.compiler_args = Config().get_template_formats(self.platform, self.method)
         self.input_file_type = verify_file_type(self.shellcode_variable)
         self.is_input_compatible = self.verify_template()
 
+        # Verify template x86 compatibility
         if self.shellcode32_variable:
-            self.x86_expected_formats, self.output_format = Config().get_template_formats(self.platform, self.method)
+            self.x86_expected_formats, self.x86_output_format, self.x86_custom_output, self.x86_compiler_args = Config().get_template_formats(self.platform, self.method)
             self.x86_input_file_type = verify_file_type(self.shellcode32_variable)
             self.x86_is_input_compatible = self.verify_template()
         else:
@@ -69,7 +70,7 @@ class TemplateLoader:
             exit()
 
         self.outfile = f"{self.outfile}{self.output_format}"
-
+        self.mingw_options.append(self.compiler_args)
 
         #Copy template file to build emplacement
         self.copy_new_template_file()
@@ -270,23 +271,6 @@ class TemplateLoader:
         if self.platform == "windows_cs" and self.output_format == ".dll":
             self.mingw_options += " /target:library "
 
-        # Template specific options
-        if self.platform == "linux":
-            if self.method == "SimpleExec":
-                self.mingw_options += " -z execstack -fno-stack-protector "
-            elif self.method == "LD_PRELOAD.so":
-                self.mingw_options += " -z execstack "
-            elif self.method == "LD_LIBRARY_PATH.so":
-                self.mingw_options += " -z execstack -Wall "
-
-        elif self.platform == "windows_cs":
-            if "InstallUtil" in self.method:
-                self.mingw_options += " -r:System.Configuration.Install "
-            
-            if "InstallUtilPwsh.dll" in self.method:
-                header_folder = Config().get('FOLDERS', 'HEADERS')
-                self.mingw_options += f" -r:{header_folder}/System.Management.Automation.dll"
-
         return ""
 
     def verify_template(self):
@@ -324,7 +308,7 @@ class TemplateLoader:
                 mingw_options += f"{component}"
 
         # Compile using CompilerControler
-        compiler_controler = CompilerControler(self.template_file, self.outfile, mingw_options, self.llvmo, self.platform)
+        compiler_controler = CompilerControler(self.template_file, self.outfile, mingw_options, self.llvmo, self.platform, self.custom_output)
         compiler_controler.compile()
         pass
 

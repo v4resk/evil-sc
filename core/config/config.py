@@ -115,11 +115,13 @@ class Config(object):
         if self.config.has_section(section):
             expected_format = self.config.get(section, "expected_format", fallback="ANY")
             output_format = self.config.get(section, "output_format", fallback="EXE")
+            custom_output = self.config.get(section, "custom_output", fallback="")
+            compiler_args = self.config.get(section, "compiler_args", fallback="")
         else:
             #print(f"Warning: Template '{template}' not found for platform '{platform}' in config file. Using defaults settings.")
-            expected_format, output_format = "ANY", ".exe"
+            expected_format, output_format, custom_output,compiler_args = "ANY", ".exe", "", ""
 
-        return expected_format, output_format
+        return expected_format, output_format, custom_output, compiler_args
 
 
 if __name__ == "__main__":
