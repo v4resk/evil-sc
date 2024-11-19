@@ -15,7 +15,11 @@ class CompilerControler:
         self.llvmo_options = " -Xclang -flto-visibility-public-std -mllvm -bcf -mllvm -sub -mllvm -fla -mllvm -split -mllvm -bcf_loop=3 -mllvm -sub_loop=2"
 
     def compile(self):
-        
+        if self.custom_output:
+            custom_output_with_newlines = self.custom_output.replace("\\n", "\n")
+            for line in custom_output_with_newlines.splitlines():
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}{line}")
+                
         if(self.platform == "windows_cpp"):
             # If not using LLVM Obf
             self.compile_options += " -static-libgcc -static-libstdc++ "
@@ -58,8 +62,3 @@ class CompilerControler:
                 if debug_mode == "True":
                     print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}")
                 os.system(f"clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}")
-
-        if self.custom_output:
-            custom_output_with_newlines = self.custom_output.replace("\\n", "\n")
-            for line in custom_output_with_newlines.splitlines():
-                print(f"{Fore.GREEN}[+] {Fore.WHITE}{line}")
