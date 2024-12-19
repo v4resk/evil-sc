@@ -164,7 +164,7 @@ namespace proudcat
                 return;
             }
 
-            Console.WriteLine($"[+] Successfully injected shellcode into remote process ({processName}, {processId})");
+            Console.WriteLine("[+] Successfully injected shellcode into remote process ({processName}, {processId})");
 
             // Clean up
             NtUnmapViewOfSection(hLocalProcess, baseAddressL);
