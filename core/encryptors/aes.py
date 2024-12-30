@@ -100,7 +100,7 @@ class aes(Encryptor):
             module.components = [
                 CallComponent(f"length = aes_decrypt_{self.uuid}(encoded, length);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
-                IncludeComponent("<bcrypt.h>")
+                IncludeComponent("#include <bcrypt.h>")
             ]
             module.mingw_options = "-lbcrypt "
         
@@ -108,6 +108,14 @@ class aes(Encryptor):
             module.components = [
                 DefineComponent("using System.Security.Cryptography;\n"),
                 DefineComponent("using System.IO;\n"),
+                CallComponent(f"buf = AesEncryptor_{self.uuid}.Decrypt(buf);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.decode()).replace("####SALT####", self.salt.decode())),
+                
+            ]
+        elif self.platform == "windows_aspx":
+            module.components = [
+                IncludeComponent("<%@ Import Namespace=\"System.Security.Cryptography\" %>\n"),
+                IncludeComponent("<%@ Import Namespace=\"System.IO\" %>\n"),
                 CallComponent(f"buf = AesEncryptor_{self.uuid}.Decrypt(buf);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.decode()).replace("####SALT####", self.salt.decode())),
                 

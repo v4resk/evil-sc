@@ -76,7 +76,7 @@ class ShellcodeControler:
 
 
     def get_shellcode(self):
-        if self.platform == "windows_cpp" or self.platform == "windows_cs" or self.platform == "linux":
+        if self.platform == "windows_cpp" or self.platform == "windows_cs" or self.platform == "windows_aspx" or self.platform == "linux":
             if self.chain_ending_w_str is False:
                 shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
                 shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"

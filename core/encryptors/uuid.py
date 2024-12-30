@@ -60,7 +60,7 @@ class uuid(Encryptor):
         module.components = [
             CallComponent(f"length = uuid_decode_{self.uuid}(encoded, length);"),
             CodeComponent(code.replace("####UUID####",str(self.uuid))),
-            IncludeComponent("<rpc.h>")
+            IncludeComponent("#include <rpc.h>")
         ]
         
         module.mingw_options = "-lrpcrt4 "

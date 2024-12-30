@@ -37,7 +37,7 @@ class base64(Encryptor):
             module.components = [
                 CallComponent(f"length = base64_decode_{self.uuid}(encoded, length);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid))),
-                IncludeComponent("<wincrypt.h>")
+                IncludeComponent("#include <wincrypt.h>")
             ]
             module.mingw_options = "-lcrypt32 "
         

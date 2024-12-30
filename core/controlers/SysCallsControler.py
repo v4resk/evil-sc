@@ -103,7 +103,7 @@ class SysCallsControler:
         module = Module()
         module.mingw_options = " -s -w -std=c++17 -masm=intel -fpermissive -static -lntdll -lpsapi -Wl,--subsystem,console"
         module.components = [
-            IncludeComponent("\"winhelper.h\""),
+            IncludeComponent("#include \"winhelper.h\""),
             SysCallsComponent("")
         ]
         return module
@@ -420,6 +420,6 @@ class SysCallsControler:
     StubFound = GetSyscallStub(scall, exportDirectory, fileData, textSection, rdataSection, syscallStub_NtFreeVirtualMemory);
 
         """),
-        IncludeComponent("<winternl.h>")
+        IncludeComponent("#include <winternl.h>")
         ]
         return module

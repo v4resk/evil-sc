@@ -10,4 +10,4 @@ class IncludeComponent(TemplateModuleComponent):
 
     @property
     def code(self):
-        return f"#include {self.__code}\n"
+        return f"{self.__code}\n"

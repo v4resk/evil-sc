@@ -44,7 +44,7 @@ class rc4(Encryptor):
             module.components = [
                 CallComponent(f"length = rc4_decrypt_{self.uuid}(encoded, length);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key)),
-                IncludeComponent("<bcrypt.h>")
+                IncludeComponent("#include <bcrypt.h>")
             ]
             module.mingw_options = "-lbcrypt "
         

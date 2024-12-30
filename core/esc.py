@@ -172,6 +172,26 @@ class esc:
         win_js_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
+        # Windows ASPX subparser
+        win_cs_parser = subparsers.add_parser('windows_aspx', help='Dotnet Windows Shellcode Loader (C#)')
+
+        win_cs_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        win_cs_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_aspx"),
+                                help='Shellcode-loading method')
+
+        win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_aspx"),
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
+
+        win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+                                help='Process name for shellcode injection')
+
+        win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="windows_aspx"),
+                                help='Evasion module')
+
+        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
+                                help='Output filename')
         # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
         lin_parser = subparsers.add_parser('linux', help='Native Linux Shellcode Loader (C++)')
         lin_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')

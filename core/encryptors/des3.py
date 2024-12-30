@@ -65,7 +65,7 @@ class des3(Encryptor):
             module.components = [
                 CallComponent(f"length = des3_decrypt_{self.uuid}(encoded, length);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
-                IncludeComponent("<bcrypt.h>")
+                IncludeComponent("#include <bcrypt.h>")
             ]
             module.mingw_options = "-lbcrypt "
 

