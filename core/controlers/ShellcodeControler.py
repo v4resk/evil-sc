@@ -101,7 +101,7 @@ class ShellcodeControler:
             byte_array = [f"{int(shellcode[i:i + 2], 16)}" for i in range(0, len(shellcode), 2)]
 
             # Split into lines while respecting the VBA line length limitation
-            max_line_length = 120  # Maximum length per line before needing a line continuation
+            max_line_length = 350  # Maximum length per line before needing a line continuation
             lines = []
             current_line = "Array("
 

