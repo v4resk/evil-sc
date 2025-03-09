@@ -1,5 +1,6 @@
 int rc4_decrypt_####UUID####(unsigned char* encoded, int length) {
 
+    printf("\n[-] Hello from RC4\n");
     unsigned char key[] = ####KEY####;
     int key_length = sizeof(key);
 

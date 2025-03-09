@@ -75,10 +75,13 @@ class SysCallsControler:
             
             self.fix_sw3_header(sw3_basename) # Fix SW3 generated files for compilation
 
-
             #Copy SW3 headers to build folder
             self.copy_sycall_header_file("SW3Syscalls.h")
             module = self.get_SysWhispers3_module() #Get_module
+        
+        elif self.sysCallsType == "NullGate":
+            module = self.get_noSysCall_module()
+            
         return module
 
     def hashSyscalls(self):

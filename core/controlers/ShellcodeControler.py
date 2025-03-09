@@ -26,14 +26,14 @@ class ShellcodeControler:
             
             ### DEBUG ####
             if debug_mode == "True":
-                print(f"{encryptor.to_string()}{i} Before Encode: {self.get_shellcode(encrypted_shellcode_bytes)}")
+                print(f"{encryptor.to_string()}{i} Before Encode: {self.get_shellcode()}")
                 print()
 
             encrypted_shellcode_bytes = encryptor.encode(encrypted_shellcode_bytes)
 
             ### DEBUG ####
             if debug_mode == "True":
-                print(f"{encryptor.to_string()} n°{i} After Encode: {self.get_shellcode(encrypted_shellcode_bytes,encryptor.isStringShellcode)}")
+                print(f"{encryptor.to_string()} n°{i} After Encode: {self.get_shellcode()}")
                 print()
                 i = i+1
         return encrypted_shellcode_bytes

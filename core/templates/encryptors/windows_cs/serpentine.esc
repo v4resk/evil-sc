@@ -1,0 +1,60 @@
+public static class SerpentineDecrypt_####UUID#### {
+    private static readonly byte[] key =  ####KEY####;
+
+    public static byte[] Decrypt(byte[] encoded) {
+        int length = encoded.Length;
+        
+        // Generate round keys
+        byte[][] roundKeys = new byte[16][];
+        byte[] currentKey = new byte[8];
+        
+        // Initialize arrays properly
+        for(int i = 0; i < 16; i++) {
+            roundKeys[i] = new byte[8];
+        }
+        
+        Array.Copy(key, currentKey, Math.Min(8, key.Length));
+        
+        for(int i = 0; i < 16; i++) {
+            for(int j = 0; j < 8; j++) {
+                roundKeys[i][j] = (byte)(currentKey[j] ^ key[(i*8 + j) % key.Length]);
+                roundKeys[i][j] = (byte)(((roundKeys[i][j] * 167) + 13) & 0xFF);
+            }
+            Array.Copy(roundKeys[i], currentKey, 8);
+        }
+        
+        byte[] result = new byte[encoded.Length];
+        Array.Copy(encoded, result, encoded.Length);
+        
+        // Process each block
+        for(int block = 0; block < length; block += 8) {
+            // Process block through all rounds in reverse
+            for(int round = 15; round >= 0; round--) {
+                // Unmix bytes
+                for(int j = 6; j >= 0; j--) {
+                    result[block + j + 1] ^= result[block + j];
+                }
+                
+                // Rotate bits back
+                for(int j = 0; j < 8; j++) {
+                    result[block + j] = (byte)(((result[block + j] >> 3) | (result[block + j] << 5)) & 0xFF);
+                }
+                
+                // Remove round key
+                for(int j = 0; j < 8; j++) {
+                    result[block + j] ^= roundKeys[round][j];
+                }
+            }
+        }
+        
+        // Remove padding if present
+        if(length > 0) {
+            byte padding = result[length - 1];
+            if(padding < 8) {
+                return result.Take(length - padding).ToArray();
+            }
+        }
+        
+        return result;
+    }
+}

@@ -74,6 +74,7 @@ class des3(Encryptor):
                 CallComponent(f"buf = TripleDESDecrypt_{self.uuid}.Decrypt(buf);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
                 DefineComponent("using System.Security.Cryptography;\n"),
+                DefineComponent("using System.IO;\n"),
             ]
 
         return module

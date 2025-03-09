@@ -1,0 +1,49 @@
+int vortex_decrypt_####UUID####(unsigned char* encoded, int length) {
+    printf("\n[-] Hello from Vortex Cipher\n");
+    unsigned char key[] = ####KEY####;
+    unsigned char nonce[] = ####NONCE####;
+    
+    // Initialize counter from nonce
+    unsigned char counter[16];
+    memcpy(counter, nonce, 16);
+    
+    // Temporary buffer for keystream
+    unsigned char keystream[16];
+    
+    // Process each block
+    for(int block = 0; block < length; block += 16) {
+        // Generate keystream block
+        for(int i = 0; i < 16; i++) {
+            unsigned char x = counter[i];
+            // Apply key-dependent transformations
+            for(int j = 0; j < 8; j++) {
+                unsigned char k = key[(i * 8 + j) % sizeof(key)];
+                x = ((x << 1) | (x >> 7)) & 0xFF;  // rotate left
+                x = (x + k) & 0xFF;                // add key byte
+                x ^= ((x << 4) | (x >> 4)) & 0xFF; // mix bits
+            }
+            keystream[i] = x;
+        }
+        
+        // XOR block with keystream
+        for(int i = 0; i < 16 && (block + i) < length; i++) {
+            encoded[block + i] ^= keystream[i];
+        }
+        
+        // Increment counter
+        for(int i = 15; i >= 0; i--) {
+            counter[i] = (counter[i] + 1) & 0xFF;
+            if(counter[i] != 0) break;
+        }
+    }
+    
+    // Remove padding
+    if(length > 0) {
+        unsigned char padding = encoded[length - 1];
+        if(padding <= 16) {
+            length -= padding;
+        }
+    }
+    
+    return length;
+}

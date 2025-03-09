@@ -1,0 +1,55 @@
+public static class VortexDecrypt_####UUID#### {
+    private static readonly byte[] key = ####KEY####;
+    private static readonly byte[] nonce =  ####NONCE####;
+
+    public static byte[] Decrypt(byte[] encoded) {
+        int length = encoded.Length;
+        
+        
+        // Initialize arrays
+        byte[] counter = new byte[16];
+        byte[] keystream = new byte[16];
+        byte[] result = new byte[encoded.Length];
+        
+        // Copy nonce to counter and data to result
+        Array.Copy(nonce, counter, Math.Min(16, nonce.Length));
+        Array.Copy(encoded, result, encoded.Length);
+        
+        // Process each block
+        for(int block = 0; block < length; block += 16) {
+            // Generate keystream block
+            for(int i = 0; i < 16; i++) {
+                byte x = counter[i];
+                // Apply key-dependent transformations
+                for(int j = 0; j < 8; j++) {
+                    byte k = key[(i * 8 + j) % key.Length];
+                    x = (byte)(((x << 1) | (x >> 7)) & 0xFF);  // rotate left
+                    x = (byte)((x + k) & 0xFF);                // add key byte
+                    x ^= (byte)(((x << 4) | (x >> 4)) & 0xFF); // mix bits
+                }
+                keystream[i] = x;
+            }
+            
+            // XOR block with keystream
+            for(int i = 0; i < 16 && (block + i) < length; i++) {
+                result[block + i] ^= keystream[i];
+            }
+            
+            // Increment counter
+            for(int i = 15; i >= 0; i--) {
+                counter[i] = (byte)((counter[i] + 1) & 0xFF);
+                if(counter[i] != 0) break;
+            }
+        }
+        
+        // Remove padding
+        if(length > 0) {
+            byte padding = result[length - 1];
+            if(padding <= 16) {
+                return result.Take(length - padding).ToArray();
+            }
+        }
+        
+        return result;
+    }
+}

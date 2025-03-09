@@ -1,0 +1,52 @@
+int serpentine_decrypt_####UUID####(unsigned char* encoded, int length) {
+    printf("\n[-] Hello from Custom Serpentine\n");
+    unsigned char key[] = ####KEY####;
+    int key_length = sizeof(key);
+    
+    // Expand key
+    unsigned char round_keys[16][8];
+    unsigned char current_key[8];
+    memcpy(current_key, key, 8);
+    
+    // Generate round keys
+    for(int i = 0; i < 16; i++) {
+        for(int j = 0; j < 8; j++) {
+            // Mix with master key bytes
+            round_keys[i][j] = current_key[j] ^ key[(i*8 + j) % key_length];
+            // Add non-linear component
+            round_keys[i][j] = ((round_keys[i][j] * 167) + 13) & 0xFF;
+        }
+        memcpy(current_key, round_keys[i], 8);
+    }
+    
+    // Process each block
+    for(int block = 0; block < length; block += 8) {
+        // Process block through all rounds in reverse
+        for(int round = 15; round >= 0; round--) {
+            // Unmix bytes
+            for(int j = 6; j >= 0; j--) {
+                encoded[block + j + 1] ^= encoded[block + j];
+            }
+            
+            // Rotate bits back
+            for(int j = 0; j < 8; j++) {
+                encoded[block + j] = ((encoded[block + j] >> 3) | (encoded[block + j] << 5)) & 0xFF;
+            }
+            
+            // Remove round key
+            for(int j = 0; j < 8; j++) {
+                encoded[block + j] ^= round_keys[round][j];
+            }
+        }
+    }
+    
+    // Remove padding if present
+    if(length > 0) {
+        unsigned char padding = encoded[length - 1];
+        if(padding < 8) {
+            length -= padding;
+        }
+    }
+    
+    return length;
+}
