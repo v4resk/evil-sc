@@ -1,57 +1,72 @@
 public static class Base64Encoder_####UUID####
 {
-    [DllImport("crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern bool CryptStringToBinary(
-        string pszString,
-        int cchString,
-        uint dwFlags,
-        [Out] byte[] pbBinary,
-        ref int pcbBinary,
-        IntPtr pdwSkip,
-        IntPtr pdwFlags);
-
-    private const uint CRYPT_STRING_BASE64 = 0x00000001;
-
     public static byte[] Decode(object input)
     {
-        Console.WriteLine("[-] Decoding from Base64 using WinAPI");
-        
-        if (!(input is byte[] inputBytes))
-        {
-            throw new ArgumentException("Input must be a byte array");
-        }
-
+        Console.WriteLine("[+] Decrypting from Base64");
         try 
         {
-            // Convert byte array to string
-            string base64String = System.Text.Encoding.UTF8.GetString(inputBytes);
-            
-            // First call to get the required buffer size
-            int outputLength = 0;
-            CryptStringToBinary(base64String, base64String.Length, CRYPT_STRING_BASE64, 
-                                null, ref outputLength, IntPtr.Zero, IntPtr.Zero);
-            
-            if (outputLength == 0)
+            // Handle byte array input
+            if (input is byte[] inputBytes)
             {
-                int error = Marshal.GetLastWin32Error();
-                throw new Exception($"Failed to calculate decoded size. Error code: {error}");
+                // Convert byte array to string
+                string base64String = System.Text.Encoding.UTF8.GetString(inputBytes);
+                
+                // Check for invalid characters
+                for (int i = 0; i < base64String.Length; i++)
+                {
+                    char c = base64String[i];
+                    if (!IsValidBase64Char(c))
+                    {
+                        // Remove the last character if it's invalid
+                        if (i == base64String.Length - 1)
+                        {
+                            base64String = base64String.Substring(0, base64String.Length - 1);
+                        }
+                    }
+                }
+                
+                // Use .NET's built-in Base64 decoder with cleaned string
+                return System.Convert.FromBase64String(base64String);
             }
-            
-            // Allocate buffer and decode
-            byte[] decodedBytes = new byte[outputLength];
-            if (!CryptStringToBinary(base64String, base64String.Length, CRYPT_STRING_BASE64, 
-                                    decodedBytes, ref outputLength, IntPtr.Zero, IntPtr.Zero))
+            else
             {
-                int error = Marshal.GetLastWin32Error();
-                throw new Exception($"Failed to decode Base64. Error code: {error}");
+                throw new ArgumentException("Input must be a byte array");
             }
-            
-            return decodedBytes;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[-] Error decoding Base64: {ex.Message}");
-            throw;
+            throw new Exception($"Error decoding Base64: {ex.Message}", ex);
         }
+    }
+    
+    private static bool IsValidBase64Char(char c)
+    {
+        return (c >= 'A' && c <= 'Z') || 
+               (c >= 'a' && c <= 'z') || 
+               (c >= '0' && c <= '9') || 
+               c == '+' || c == '/' || c == '=';
+    }
+    
+    private static string CleanBase64String(string input)
+    {
+        // Remove any characters that aren't valid in base64
+        System.Text.StringBuilder sb = new System.Text.StringBuilder(input.Length);
+        foreach (char c in input)
+        {
+            if (IsValidBase64Char(c))
+            {
+                sb.Append(c);
+            }
+        }
+        
+        // Ensure proper padding
+        string result = sb.ToString().TrimEnd('=');
+        int mod = result.Length % 4;
+        if (mod != 0)
+        {
+            result = result.PadRight(result.Length + (4 - mod), '=');
+        }
+        
+        return result;
     }
 }

@@ -45,7 +45,7 @@ public static class AesEncryptor_####UUID####
 
     public static byte[] Decrypt(byte[] data)
     {
-        Console.WriteLine("[-] Decrypting from Custom AES");
+        Console.WriteLine("[+] Decrypting from Custom AES");
         byte[] result = new byte[data.Length];
         Array.Copy(data, result, data.Length);
         byte[] prevBlock = iv;

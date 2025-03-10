@@ -4,7 +4,7 @@ public static class RC4Encryptor_####UUID####
 
     public static byte[] Decrypt(byte[] input)
     {
-        Console.WriteLine("[-] Decrypting from RC4");
+        Console.WriteLine("[+] Decrypting from RC4");
         return RC4(input, Key);
     }
 

@@ -45,7 +45,7 @@ public static class RC4Encryptor_####UUID####
 
     public static byte[] Decrypt(byte[] data)
     {
-        Console.WriteLine("[-] Decrypting from RC4");
+        Console.WriteLine("[+] Decrypting from RC4");
         IntPtr hProv = IntPtr.Zero;
         IntPtr hKey = IntPtr.Zero;
         byte[] result = new byte[data.Length];
