@@ -1,22 +1,17 @@
 function Invoke-Xor####UUID#### {
-    [CmdletBinding()]
-
-    param
-    (
-        [Parameter(Mandatory=$True)]
+    param(
+        [Parameter(Mandatory=$true)]
         [byte[]]$Data
     )
+
+    Write-Host "[-] Decrypting from XOR"
     $key = [System.Text.Encoding]::UTF8.GetBytes("####KEY####")
 
-    $encoded = $(for ($i = 0; $i -lt $Data.length; ) {
-        for ($j = 0; $j -lt $key.length; $j++) {
-            $Data[$i] -bxor $key[$j]
-            $i++
-            if ($i -ge $Data.Length) {
-                $j = $key.length
-            }
-        }
-    })
+    [byte[]]$encoded = New-Object byte[] $Data.Length
+    
+    for ($i = 0; $i -lt $Data.Length; $i++) {
+        $encoded[$i] = [byte]($Data[$i] -bxor $key[$i % $key.Length])
+    }
 
     return $encoded
 }

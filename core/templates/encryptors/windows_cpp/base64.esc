@@ -1,7 +1,7 @@
 int base64_decode_####UUID####(unsigned char* encoded, int length)
  {
 
-    printf("\n[-] Hello frome b64\n");
+    printf("\n[-] Decrypting frome b64\n");
     DWORD dwDecodedSize = 0;
     BOOL result = CryptStringToBinaryA((LPCSTR)encoded, length, CRYPT_STRING_BASE64, NULL, &dwDecodedSize, NULL, NULL);
     if (!result) {

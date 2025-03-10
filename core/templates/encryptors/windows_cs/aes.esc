@@ -2,6 +2,7 @@ public static class AesEncryptor_####UUID####
 {
     public static byte[] Decrypt(byte[] cipherBytes)
     {
+        Console.WriteLine("[-] Decrypting from Custom AES");
         byte[] clearBytes;
         string DecryptionKey = "####KEY####";
         using (Aes encryptor = Aes.Create())

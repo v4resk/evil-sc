@@ -2,6 +2,7 @@ class NopEncoder_####UUID####
 {
     public static byte[] Decode(byte[] data)
     {
+        Console.WriteLine("[-] Decrypting from Nop");
         int buf_len = data.Length/2 + 1;
         if (data.Length % 2 == 0){
             buf_len = data.Length/2;

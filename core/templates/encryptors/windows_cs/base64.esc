@@ -2,6 +2,7 @@ public static class Base64Encoder_####UUID####
 {
     public static byte[] Decode(string data)
     {
+        Console.WriteLine("[-] Decrypting from Base64");
         return Convert.FromBase64String(data);
     }
 

@@ -1,6 +1,6 @@
 int base64_decode_####UUID####(unsigned char* encoded, int length)
 {
-    printf("\n[-] Hello from Custom b64\n");
+    printf("\n[-] Decrypting from Custom b64\n");
     
     // Base64 decoding table
     const unsigned char b64_table[256] = {

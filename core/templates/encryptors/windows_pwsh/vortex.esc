@@ -1,0 +1,54 @@
+function Invoke-VortexDecrypt_####UUID#### {
+    param(
+        [Parameter(Mandatory=$true)]
+        [byte[]]$Data
+    )
+
+    Write-Host "[-] Decrypting from Vortex"
+    [byte[]]$Key = ####KEY####
+    [byte[]]$Nonce = ####NONCE####
+    
+    # Initialize arrays
+    [byte[]]$counter = New-Object byte[] 16
+    [byte[]]$keystream = New-Object byte[] 16
+    [byte[]]$result = New-Object byte[] $Data.Length
+    
+    # Copy nonce to counter and data to result
+    [Array]::Copy($Nonce, $counter, [Math]::Min(16, $Nonce.Length))
+    [Array]::Copy($Data, $result, $Data.Length)
+    
+    # Process each block
+    for($block = 0; $block -lt $Data.Length; $block += 16) {
+        # Generate keystream block
+        for($i = 0; $i -lt 16; $i++) {
+            [byte]$x = $counter[$i]
+            # Apply key-dependent transformations
+            for($j = 0; $j -lt 8; $j++) {
+                [byte]$k = $Key[($i * 8 + $j) % $Key.Length]
+                $x = [byte]((($x -shl 1) -bor ($x -shr 7)) -band 0xFF)  # rotate left
+                $x = [byte](($x + $k) -band 0xFF)                        # add key byte
+                $x = [byte]($x -bxor ((($x -shl 4) -bor ($x -shr 4)) -band 0xFF)) # mix bits
+            }
+            $keystream[$i] = $x
+        }
+        
+        # XOR block with keystream
+        for($i = 0; $i -lt 16 -and ($block + $i) -lt $Data.Length; $i++) {
+            $result[$block + $i] = [byte]($result[$block + $i] -bxor $keystream[$i])
+        }
+        
+        # Increment counter
+        for($i = 15; $i -ge 0; $i--) {
+            $counter[$i] = [byte](($counter[$i] + 1) -band 0xFF)
+            if($counter[$i] -ne 0) { break }
+        }
+    }
+    
+    # Remove padding
+    $padding = $result[$result.Length - 1]
+    if($padding -le 16) {
+        return $result[0..($result.Length - $padding - 1)]
+    }
+    
+    return $result
+}

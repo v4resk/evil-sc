@@ -36,7 +36,15 @@ class aes(Encryptor):
     def c_iv(self):
         k = hexlify(self.iv).decode()
         return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
-
+    
+    @property
+    def pwsh_key(self):
+        return "@(" + ",".join([str(b) for b in self.key]) + ")"
+    
+    @property
+    def c_iv_pwsh(self):
+        return "@(" + ",".join([str(b) for b in self.iv]) + ")"
+    
     @property
     def vba_iv(self):
         k = hexlify(self.iv).decode()
@@ -122,7 +130,7 @@ class aes(Encryptor):
             ]
         elif self.platform == "windows_pwsh":
             module.components = [
-                CallComponent(f"$buf = Invoke-AesDecrypt{self.uuid} -Data $buf\n"),
+                CallComponent(f"$buf = Invoke-AesDecrypt_{self.uuid} -Data $buf\n"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.decode()).replace("####SALT####", self.salt.decode())),
                 
             ]

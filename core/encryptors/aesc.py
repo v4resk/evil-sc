@@ -26,15 +26,6 @@ class aesc(Encryptor):
         self.c_key = "{" + ",".join([hex(x) for x in self.key]) + "}"
         self.c_iv = "{" + ",".join([hex(x) for x in self.iv]) + "}"
 
-    #@property
-    #def c_key(self):
-    #    k = hexlify(self.key).decode()
-    #    return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
-#
-    #@property
-    #def c_iv(self):
-    #    k = hexlify(self.iv).decode()
-    #    return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
 
     def encode(self, data):
         if not isinstance(data, (bytes, bytearray)):
@@ -70,6 +61,18 @@ class aesc(Encryptor):
                 CodeComponent(code.replace("####UUID####",str(self.uuid))
                                 .replace("####KEY####", f"new byte[] {{{','.join([str(b) for b in self.key])}}}")
                                 .replace("####IV####", f"new byte[] {{{','.join([str(b) for b in self.iv])}}}"))
+            ]
+        
+        elif self.platform == "windows_pwsh":
+            # Format byte arrays as explicit [byte] casts
+            key_str = "[byte[]]@(" + ",".join([str(b) for b in self.key]) + ")"
+            iv_str = "[byte[]]@(" + ",".join([str(b) for b in self.iv]) + ")"
+            
+            module.components = [
+                CallComponent(f"$buf = Invoke-AesDecrypt_{self.uuid} -Data $buf\n"),
+                CodeComponent(code.replace("####UUID####", str(self.uuid))
+                                .replace("####KEY####", key_str)
+                                .replace("####IV####", iv_str))
             ]
         
         return module

@@ -1,6 +1,6 @@
 int nop_decode_####UUID####(unsigned char* encoded, int length)
 {
-    printf("\n[-] Hello from NOP\n");
+    printf("\n[-] Decrypting from NOP\n");
     int data_len = 0;
     for (int i = 0; i < length; i++) {
         if (i % 2 == 0){

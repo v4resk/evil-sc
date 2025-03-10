@@ -118,5 +118,12 @@ class vortex(Encryptor):
                             .replace("####KEY####", self.c_key)
                             .replace("####NONCE####", self.c_nonce)),
             ]
+        elif self.platform == "windows_pwsh":
+            module.components = [
+                CallComponent(f"$buf = Invoke-VortexDecrypt_{self.uuid} -Data $buf\n"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))
+                            .replace("####KEY####", f"@({','.join([str(b) for b in self.key])})")
+                            .replace("####NONCE####", f"@({','.join([str(b) for b in self.nonce])})"))
+            ]
 
         return module

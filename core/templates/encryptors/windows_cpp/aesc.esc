@@ -18,7 +18,7 @@ void AddRoundKey_####UUID####(unsigned char state[4][4], const unsigned char* ro
 }
 
 int aesc_decrypt_####UUID####(unsigned char* encoded, int length) {
-    printf("\n[-] Hello from Custom AES\n");
+    printf("\n[-] Decrypting from Custom AES\n");
     unsigned char key[] = ####KEY####;
     unsigned char iv[] = ####IV####;
 

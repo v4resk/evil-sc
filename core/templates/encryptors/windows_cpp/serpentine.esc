@@ -1,5 +1,5 @@
 int serpentine_decrypt_####UUID####(unsigned char* encoded, int length) {
-    printf("\n[-] Hello from Custom Serpentine\n");
+    printf("\n[-] Decrypting from Custom Serpentine\n");
     unsigned char key[] = ####KEY####;
     int key_length = sizeof(key);
     

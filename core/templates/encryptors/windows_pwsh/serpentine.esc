@@ -1,0 +1,60 @@
+function Invoke-SerpentineDecrypt_####UUID#### {
+    param(
+        [Parameter(Mandatory=$true)]
+        [byte[]]$Data
+    )
+
+    Write-Host "[-] Decrypting from Serpentine"
+    [byte[]]$Key = ####KEY####
+    
+    # Generate round keys
+    [byte[][]]$roundKeys = New-Object 'byte[][]' 16
+    [byte[]]$currentKey = New-Object byte[] 8
+    
+    # Initialize arrays
+    for($i = 0; $i -lt 16; $i++) {
+        $roundKeys[$i] = New-Object byte[] 8
+    }
+    
+    [Array]::Copy($Key, $currentKey, [Math]::Min(8, $Key.Length))
+    
+    for($i = 0; $i -lt 16; $i++) {
+        for($j = 0; $j -lt 8; $j++) {
+            $roundKeys[$i][$j] = [byte]($currentKey[$j] -bxor $Key[($i*8 + $j) % $Key.Length])
+            $roundKeys[$i][$j] = [byte]((($roundKeys[$i][$j] * 167) + 13) -band 0xFF)
+        }
+        [Array]::Copy($roundKeys[$i], $currentKey, 8)
+    }
+    
+    [byte[]]$result = New-Object byte[] $Data.Length
+    [Array]::Copy($Data, $result, $Data.Length)
+    
+    # Process each block
+    for($block = 0; $block -lt $Data.Length; $block += 8) {
+        # Process block through all rounds in reverse
+        for($round = 15; $round -ge 0; $round--) {
+            # Unmix bytes
+            for($j = 6; $j -ge 0; $j--) {
+                $result[$block + $j + 1] = [byte]($result[$block + $j + 1] -bxor $result[$block + $j])
+            }
+            
+            # Rotate bits back
+            for($j = 0; $j -lt 8; $j++) {
+                $result[$block + $j] = [byte]((($result[$block + $j] -shr 3) -bor ($result[$block + $j] -shl 5)) -band 0xFF)
+            }
+            
+            # Remove round key
+            for($j = 0; $j -lt 8; $j++) {
+                $result[$block + $j] = [byte]($result[$block + $j] -bxor $roundKeys[$round][$j])
+            }
+        }
+    }
+    
+    # Remove padding
+    $padding = $result[$result.Length - 1]
+    if($padding -lt 8) {
+        return $result[0..($result.Length - $padding - 1)]
+    }
+    
+    return $result
+}

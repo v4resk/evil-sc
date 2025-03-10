@@ -1,5 +1,6 @@
 function Invoke-Base64Decode####UUID####
 {
+    Write-Host "[-] Decrypting from Base64"
     param(
         [Parameter(Mandatory=$True, Position=0)]
         [object] $Data

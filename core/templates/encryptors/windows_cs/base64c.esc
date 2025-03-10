@@ -25,6 +25,7 @@ public static class Base64Encoder_####UUID####
 
     public static byte[] Decode(byte[] data)
     {
+        Console.WriteLine("[-] Decrypting from Custom Base64");
         return Decode(System.Text.Encoding.UTF8.GetString(data));
     }
 

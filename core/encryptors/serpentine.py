@@ -127,5 +127,12 @@ class serpentine(Encryptor):
                 CodeComponent(code.replace("####UUID####",str(self.uuid))
                             .replace("####KEY####", self.c_key)),
             ]
+        
+        elif self.platform == "windows_pwsh":
+            module.components = [
+                CallComponent(f"$buf = Invoke-SerpentineDecrypt_{self.uuid} -Data $buf\n"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))
+                            .replace("####KEY####", f"@({','.join([str(b) for b in self.key])})"))
+            ]
 
         return module

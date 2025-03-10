@@ -3,6 +3,7 @@ public static class VortexDecrypt_####UUID#### {
     private static readonly byte[] nonce =  ####NONCE####;
 
     public static byte[] Decrypt(byte[] encoded) {
+        Console.WriteLine("[-] Decrypting from Vortex");
         int length = encoded.Length;
         
         

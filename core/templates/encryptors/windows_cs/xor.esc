@@ -2,6 +2,7 @@ public static class XorEncoder_####UUID####
 {
     public static byte[] Decode(byte[] data)
     {
+        Console.WriteLine("[-] Decrypting from XOR");
         byte[] decoded = new byte[data.Length];
         byte[] key = System.Text.Encoding.UTF8.GetBytes("####KEY####");
         for (int i = 0; i < data.Length; i++)

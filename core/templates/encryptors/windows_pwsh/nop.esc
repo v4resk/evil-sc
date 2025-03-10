@@ -1,4 +1,5 @@
 function Invoke-NopDecode####UUID#### {
+    Write-Host "[-] Decrypting from Nop"
     [CmdletBinding()]
 
     param

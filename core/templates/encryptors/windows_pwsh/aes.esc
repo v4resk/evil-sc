@@ -1,44 +1,38 @@
-function Invoke-AesDecrypt####UUID####
-{
-    [CmdletBinding()]
-    param
-    (
-    [Parameter(Mandatory=$True)]
-    [byte[]]$Data,
-    [Parameter(Mandatory=$False)]
-    [string]$Key
+function Invoke-AesDecrypt_####UUID#### {
+    param(
+        [Parameter(Mandatory=$true)]
+        [byte[]]$Data
     )
 
-    $DecryptionKey = '####KEY####'
+    Write-Host "[-] Decrypting from AES"
+    $DecryptionKey = "####KEY####"
+    $Salt = [System.Text.Encoding]::UTF8.GetBytes("####SALT####")
 
-    if(-not([string]::IsNullOrEmpty($Key))){
-        $DecryptionKey = $Key
+    # Create AES object
+    $aes = [System.Security.Cryptography.Aes]::Create()
+    
+    # Generate key and IV using PBKDF2 (same as C# implementation)
+    $pdb = New-Object System.Security.Cryptography.Rfc2898DeriveBytes $DecryptionKey, $Salt
+    $aes.Key = $pdb.GetBytes(32)  # 256 bits
+    $aes.IV = $pdb.GetBytes(16)   # 128 bits
+    $aes.Padding = [System.Security.Cryptography.PaddingMode]::None
+
+    # Create decryptor transform
+    $decryptor = $aes.CreateDecryptor()
+    
+    # Create streams for decryption
+    $ms = New-Object System.IO.MemoryStream
+    $cs = New-Object System.Security.Cryptography.CryptoStream $ms, $decryptor, "Write"
+    
+    try {
+        # Decrypt
+        $cs.Write($Data, 0, $Data.Length)
+        $cs.FlushFinalBlock()
+        return $ms.ToArray()
     }
-
-    $salt = [System.Text.Encoding]::UTF8.GetBytes("####SALT####");
-    $pdb = New-Object System.Security.Cryptography.Rfc2898DeriveBytes($DecryptionKey, $salt)
-
-    $AESKey = $pdb.GetBytes(32);
-    $AESIV = $pdb.GetBytes(16);
-    $AES = New-Object Security.Cryptography.AesManaged
-    $AES.Mode = [System.Security.Cryptography.CipherMode]::CBC
-    $AES.Padding = [System.Security.Cryptography.PaddingMode]::None
-    $AES.BlockSize = 128
-    $AES.KeySize = 256
-
-
-    $ms = [System.IO.MemoryStream]::new()
-
-    $cs = New-Object System.Security.Cryptography.CryptoStream(
-        $ms,
-        $AES.CreateDecryptor($AESKey, $AESIV),
-        [System.Security.Cryptography.CryptoStreamMode]::Write
-        );
-
-    $cs.Write($Data, 0, $Data.Length)
-    $cs.Close()
-    $decrypted = $ms.ToArray()
-    $ms.Dispose()
-
-    return $decrypted;
+    finally {
+        if ($cs) { $cs.Dispose() }
+        if ($ms) { $ms.Dispose() }
+        if ($aes) { $aes.Dispose() }
+    }
 }

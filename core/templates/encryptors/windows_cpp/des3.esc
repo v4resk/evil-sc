@@ -1,5 +1,5 @@
 int des3_decrypt_####UUID####(unsigned char* encoded, int length) {
-    printf("\n[-] Hello from DES3\n");
+    printf("\n[-] Decrypting from DES3\n");
     unsigned char key[] = ####KEY####;
     int key_length = sizeof(key);
     unsigned char iv[] = ####IV####;

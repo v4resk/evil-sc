@@ -2,6 +2,7 @@ public static class TripleDESDecrypt_####UUID####
 {
     public static byte[] Decrypt(byte[] cipherText)
     {
+        Console.WriteLine("[-] Decrypting from TripleDES");
         // Hardcoded key (24 bytes for TripleDES)
         byte[] key = ####KEY####;
 

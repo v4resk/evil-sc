@@ -2,6 +2,7 @@ public static class SerpentineDecrypt_####UUID#### {
     private static readonly byte[] key =  ####KEY####;
 
     public static byte[] Decrypt(byte[] encoded) {
+        Console.WriteLine("[-] Decrypting from Serpentine");
         int length = encoded.Length;
         
         // Generate round keys
