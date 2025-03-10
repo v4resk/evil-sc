@@ -4,7 +4,7 @@ function Invoke-Xor####UUID#### {
         [byte[]]$Data
     )
 
-    Write-Host "[-] Decrypting from XOR"
+    Write-Host "[+] Decrypting from XOR"
     $key = [System.Text.Encoding]::UTF8.GetBytes("####KEY####")
 
     [byte[]]$encoded = New-Object byte[] $Data.Length

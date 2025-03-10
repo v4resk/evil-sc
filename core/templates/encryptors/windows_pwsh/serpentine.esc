@@ -4,7 +4,7 @@ function Invoke-SerpentineDecrypt_####UUID#### {
         [byte[]]$Data
     )
 
-    Write-Host "[-] Decrypting from Serpentine"
+    Write-Host "[+] Decrypting from Serpentine"
     [byte[]]$Key = ####KEY####
     
     # Generate round keys

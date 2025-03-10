@@ -4,7 +4,7 @@ function Invoke-Base64Decode####UUID#### {
         [object]$Data
     )
 
-    Write-Host "[-] Decoding from Base64"
+    Write-Host "[+] Decoding from Base64"
 
     # Handle string input
     if ($Data -is [string]) {

@@ -4,7 +4,7 @@ function Invoke-AesDecrypt_####UUID#### {
         [byte[]]$Data
     )
 
-    Write-Host "[-] Decrypting from AES"
+    Write-Host "[+] Decrypting from AES"
     $DecryptionKey = "####KEY####"
     $Salt = [System.Text.Encoding]::UTF8.GetBytes("####SALT####")
 

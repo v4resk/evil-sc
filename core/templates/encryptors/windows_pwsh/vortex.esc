@@ -4,7 +4,7 @@ function Invoke-VortexDecrypt_####UUID#### {
         [byte[]]$Data
     )
 
-    Write-Host "[-] Decrypting from Vortex"
+    Write-Host "[+] Decrypting from Vortex"
     [byte[]]$Key = ####KEY####
     [byte[]]$Nonce = ####NONCE####
     
