@@ -1,5 +1,6 @@
 int xor_encode_####UUID####(unsigned char* data, int data_len)
 {
+    printf("\n[-] Hello from XOR\n");
     const char* key = "####KEY####";
     int key_len = ####KEY_LENGTH####;
     

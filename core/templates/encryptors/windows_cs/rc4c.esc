@@ -1,0 +1,50 @@
+public static class RC4Encryptor_####UUID####
+{
+    public static byte[] Key = ####KEY####;
+
+    public static byte[] Decrypt(byte[] input)
+    {
+        return RC4(input, Key);
+    }
+
+    public static byte[] RC4(byte[] data, byte[] key)
+    {
+        int[] S = new int[256];
+        byte[] K = new byte[256];
+        byte[] result = new byte[data.Length];
+
+        // Initialize the key
+        for (int i = 0; i < 256; i++)
+        {
+            S[i] = i;
+            K[i] = key[i % key.Length];
+        }
+
+        // Scramble the S array
+        for (int i = 0, j = 0; i < 256; i++)
+        {
+            j = (j + S[i] + K[i]) % 256;
+            Swap(S, i, j);
+        }
+
+        // Generate the keystream and encrypt/decrypt the data
+        for (int i = 0, j = 0, k = 0; k < data.Length; k++)
+        {
+            i = (i + 1) % 256;
+            j = (j + S[i]) % 256;
+            Swap(S, i, j);
+            int T = (S[i] + S[j]) % 256;
+            result[k] = (byte)(data[k] ^ S[T]);
+        }
+
+        return result;
+    }
+
+    // Swap method for the S array
+    public static void Swap(int[] S, int i, int j)
+    {
+        int temp = S[i];
+        S[i] = S[j];
+        S[j] = temp;
+    }
+}

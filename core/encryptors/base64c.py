@@ -38,6 +38,11 @@ class base64c(Encryptor):
                 CallComponent(f"length = base64_decode_{self.uuid}(encoded, length);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid))),
             ]
+        elif self.platform == "windows_cs":
+            module.components = [
+                CallComponent(f"buf = Base64Encoder_{self.uuid}.Decode(buf);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))),
+            ]
         return module
 
     def test(self):

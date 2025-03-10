@@ -1,6 +1,6 @@
 int uuid_decode_####UUID####(unsigned char* encoded, int length)
 {
-
+    printf("\n[-] Hello from UUID\n");
     size_t uuid_length = 36;
     //size_t uuid_count = ((length + uuid_length - 1) / uuid_length); // Calcul du nombre de uuids
     

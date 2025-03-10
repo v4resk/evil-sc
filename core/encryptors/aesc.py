@@ -1,6 +1,6 @@
-
 import secrets
 import string
+import os
 
 from binascii import hexlify
 
@@ -17,78 +17,38 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 
 class aesc(Encryptor):
-    def __init__(self,platform):
+    def __init__(self, platform):
         super().__init__(platform)
-        self.decoder_in = [bytes]
-        self.decoder_out = [bytes]
-        self.key = ''.join(secrets.choice(".+-,:;_%=()" + string.ascii_letters + string.digits) for _ in range(36)).encode()
-        self.salt = ''.join(secrets.choice(".+-,:;_%=()" + string.ascii_letters + string.digits) for _ in range(18)).encode()
-        self.derived_key = PBKDF2(self.key.decode(), self.salt, 32, 1000)
-        self.iv = PBKDF2(self.key.decode(), self.salt, 48, 1000)[32:]
+
+        self.key = os.urandom(16)
+        self.iv = os.urandom(16)
         self.uuid = uuid.uuid4().hex
+        self.c_key = "{" + ",".join([hex(x) for x in self.key]) + "}"
+        self.c_iv = "{" + ",".join([hex(x) for x in self.iv]) + "}"
 
-    @property
-    def c_key(self):
-        k = hexlify(self.derived_key).decode()
-        return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
-
-    @property
-    def c_iv(self):
-        k = hexlify(self.iv).decode()
-        return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
-
-    @property
-    def vba_iv(self):
-        k = hexlify(self.iv).decode()
-        byte_array = [f"{int(k[i:i + 2], 16)}" for i in range(0, len(k), 2)]
-        max_line_length = 75  # Maximum length per line before needing a line continuation
-        lines = []
-        current_line = "Array("
-        for byte in byte_array:
-            # Check if adding the byte would exceed the max length
-            if len(current_line) + len(byte) + 1 > max_line_length:  # +1 for the comma
-                current_line = current_line.rstrip(',') + " _"  # Trim last comma and add continuation
-                lines.append(current_line)  # Append the current line
-                current_line = " " * 8 + byte + ", "  # Start a new line with indentation
-            else:
-                current_line += byte + ", "
-        # Add the final line and ensure proper formatting
-        current_line = current_line.rstrip(', ') + ")"
-        lines.append(current_line)
-        return "\n".join(lines)  # Join all lines into a single output
-
-
-    @property
-    def vba_key(self):
-        k = hexlify(self.iv).decode()
-        byte_array = [f"{int(k[i:i + 2], 16)}" for i in range(0, len(k), 2)]
-        max_line_length = 75  # Maximum length per line before needing a line continuation
-        lines = []
-        current_line = "Array("
-        for byte in byte_array:
-            # Check if adding the byte would exceed the max length
-            if len(current_line) + len(byte) + 1 > max_line_length:  # +1 for the comma
-                current_line = current_line.rstrip(',') + " _"  # Trim last comma and add continuation
-                lines.append(current_line)  # Append the current line
-                current_line = " " * 8 + byte + ", "  # Start a new line with indentation
-            else:
-                current_line += byte + ", "
-        # Add the final line and ensure proper formatting
-        current_line = current_line.rstrip(', ') + ")"
-        lines.append(current_line)
-        return "\n".join(lines)  # Join all lines into a single output
-
-
+    #@property
+    #def c_key(self):
+    #    k = hexlify(self.key).decode()
+    #    return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
+#
+    #@property
+    #def c_iv(self):
+    #    k = hexlify(self.iv).decode()
+    #    return "{" + ",".join([f"0x{k[i:i+2]}" for i in range(0, len(k), 2)]) + "}"
 
     def encode(self, data):
-        if not (isinstance(data, bytes) or isinstance(data, bytearray)):
+        if not isinstance(data, (bytes, bytearray)):
             data = data.encode()
-        cipher = AES.new(self.derived_key, AES.MODE_CBC, self.iv)
-        encrypted = cipher.encrypt(pad(data, AES.block_size))
+        
+        # Create AES cipher in CBC mode
+        cipher = AES.new(self.key, AES.MODE_CBC, iv=self.iv)
+        # Pad the data using PKCS7 and encrypt
+        padded_data = pad(data, AES.block_size)
+        encrypted = cipher.encrypt(padded_data)
         return encrypted
 
     def decode(self, data):
-        cipher = AES.new(self.derived_key, AES.MODE_CBC, self.iv)
+        cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
         return unpad(cipher.decrypt(data), AES.block_size)
 
     def translate(self):
@@ -98,45 +58,20 @@ class aesc(Encryptor):
 
         if self.platform == "windows_cpp":
             module.components = [
-                CallComponent(f"length = aes_decrypt_{self.uuid}(encoded, length);"),
-                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
+                CallComponent(f"length = aesc_decrypt_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))
+                                .replace("####KEY####", self.c_key)
+                                .replace("####IV####", self.c_iv))
             ]
         
         elif self.platform == "windows_cs":
             module.components = [
-                DefineComponent("using System.Security.Cryptography;\n"),
-                DefineComponent("using System.IO;\n"),
                 CallComponent(f"buf = AesEncryptor_{self.uuid}.Decrypt(buf);"),
-                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.decode()).replace("####SALT####", self.salt.decode())),
-                
-            ]
-        elif self.platform == "windows_aspx":
-            module.components = [
-                IncludeComponent("<%@ Import Namespace=\"System.Security.Cryptography\" %>\n"),
-                IncludeComponent("<%@ Import Namespace=\"System.IO\" %>\n"),
-                CallComponent(f"buf = AesEncryptor_{self.uuid}.Decrypt(buf);"),
-                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.decode()).replace("####SALT####", self.salt.decode())),
-                
-            ]
-        elif self.platform == "windows_pwsh":
-            module.components = [
-                CallComponent(f"$buf = Invoke-AesDecrypt{self.uuid} -Data $buf\n"),
-                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.decode()).replace("####SALT####", self.salt.decode())),
-                
+                CodeComponent(code.replace("####UUID####",str(self.uuid))
+                                .replace("####KEY####", f"new byte[] {{{','.join([str(b) for b in self.key])}}}")
+                                .replace("####IV####", f"new byte[] {{{','.join([str(b) for b in self.iv])}}}"))
             ]
         
-        elif self.platform == "windows_vba":
-            module.components = [
-                CallComponent(f"AESDecrypt{self.uuid} buf\n"),
-                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.key.hex()).replace("####IV####", self.iv.hex())),
-                DefineComponent("""
-Private Declare PtrSafe Function CryptAcquireContext Lib "advapi32.dll" Alias "CryptAcquireContextA" (phProv As LongPtr, ByVal pszContainer As String, ByVal pszProvider As String, ByVal dwProvType As LongPtr, ByVal dwFlags As LongPtr) As Boolean
-Private Declare PtrSafe Function CryptReleaseContext Lib "advapi32.dll" (ByVal hProv As LongPtr, ByVal dwFlags As LongPtr) As Boolean
-Private Declare PtrSafe Function CryptCreateHash Lib "advapi32.dll" (ByVal hProv As LongPtr, ByVal Algid As Long, ByVal hKey As LongPtr, ByVal dwFlags As LongPtr, phHash As LongPtr) As Boolean
-Private Declare PtrSafe Function CryptHashData Lib "advapi32.dll" (ByVal hHash As LongPtr, pbData As Any, ByVal dwDataLen As LongPtr, ByVal dwFlags As LongPtr) As Boolean
-Private Declare PtrSafe Function CryptDeriveKey Lib "advapi32.dll" (ByVal hProv As LongPtr, ByVal Algid As Long, ByVal hBaseData As LongPtr, ByVal dwFlags As LongPtr, phKey As LongPtr) As Boolean
-Private Declare PtrSafe Function CryptDecrypt Lib "advapi32.dll" (ByVal hKey As LongPtr, ByVal hHash As LongPtr, ByVal Final As Boolean, ByVal dwFlags As LongPtr, pbData As Any, pdwDataLen As LongPtr) As Boolean
-""")
-            ]            
-
         return module
+
+    

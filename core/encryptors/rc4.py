@@ -6,6 +6,7 @@ from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
 from core.engines.IncludeComponent import IncludeComponent
+from core.engines.DefineComponent import DefineComponent
 from core.controlers.Module import Module
 import uuid
 from Crypto.Cipher import ARC4
@@ -52,6 +53,7 @@ class rc4(Encryptor):
             module.components = [
                 CallComponent(f"buf = RC4Encryptor_{self.uuid}.Decrypt(buf);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key)),
+                DefineComponent("using System.Runtime.InteropServices;\n"),
             ]
 
         return module

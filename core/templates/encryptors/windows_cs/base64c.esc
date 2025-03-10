@@ -1,0 +1,80 @@
+public static class Base64Encoder_####UUID####
+{
+    private static readonly char[] Base64Chars = {
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
+    };
+
+    private static readonly int[] Base64Index = new int[128];
+
+    static Base64Encoder_####UUID####()
+    {
+        // Initialize lookup table
+        for (int i = 0; i < Base64Index.Length; i++)
+        {
+            Base64Index[i] = -1;
+        }
+        for (int i = 0; i < Base64Chars.Length; i++)
+        {
+            Base64Index[Base64Chars[i]] = i;
+        }
+    }
+
+    public static byte[] Decode(byte[] data)
+    {
+        return Decode(System.Text.Encoding.UTF8.GetString(data));
+    }
+
+    public static byte[] Decode(string input)
+    {
+        // Remove padding manually
+        int paddingCount = 0;
+        while (input.Length > paddingCount && input[input.Length - 1 - paddingCount] == '=')
+        {
+            paddingCount++;
+        }
+        
+        string cleanInput = input.Substring(0, input.Length - paddingCount);
+        int padding = cleanInput.Length % 4;
+        if (padding > 0)
+        {
+            cleanInput = cleanInput.PadRight(cleanInput.Length + (4 - padding), '=');
+        }
+
+        byte[] output = new byte[cleanInput.Length * 3 / 4];
+        int outputIndex = 0;
+
+        for (int i = 0; i < cleanInput.Length; i += 4)
+        {
+            int val1 = GetBase64Value(cleanInput[i]);
+            int val2 = GetBase64Value(cleanInput[i + 1]);
+            int val3 = GetBase64Value(cleanInput[i + 2]);
+            int val4 = GetBase64Value(cleanInput[i + 3]);
+
+            output[outputIndex++] = (byte)((val1 << 2) | (val2 >> 4));
+            if (val3 != -1)
+                output[outputIndex++] = (byte)(((val2 & 15) << 4) | (val3 >> 2));
+            if (val4 != -1)
+                output[outputIndex++] = (byte)(((val3 & 3) << 6) | val4);
+        }
+
+        if (outputIndex != output.Length)
+        {
+            byte[] trimmed = new byte[outputIndex];
+            Array.Copy(output, trimmed, outputIndex);
+            return trimmed;
+        }
+
+        return output;
+    }
+
+    private static int GetBase64Value(char c)
+    {
+        if (c == '=') return -1;
+        if (c >= 128) return -1;
+        return Base64Index[c];
+    }
+}

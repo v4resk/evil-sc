@@ -45,7 +45,11 @@ class rc4c(Encryptor):
                 CallComponent(f"length = rc4_decrypt_{self.uuid}(encoded, length);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key)),
             ]
-            
+        elif self.platform == "windows_cs":
+            module.components = [
+                CallComponent(f"buf = RC4Encryptor_{self.uuid}.Decrypt(buf);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key))
+            ]
         
 
         return module

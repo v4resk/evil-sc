@@ -1,4 +1,5 @@
 int aes_decrypt_####UUID####(unsigned char* encoded, int length) {
+    printf("\n[-] Hello from AES\n");
 
     unsigned char key[] = ####KEY####;
     int key_length = sizeof(key);

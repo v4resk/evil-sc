@@ -1,50 +1,112 @@
 public static class RC4Encryptor_####UUID####
 {
-    public static byte[] Key = ####KEY####;
+    private static readonly byte[] key = ####KEY####;
 
-    public static byte[] Decrypt(byte[] input)
-    {
-        return RC4(input, Key);
-    }
+    // CryptoAPI Constants
+    private const uint PROV_RSA_FULL = 1;
+    private const uint CRYPT_VERIFYCONTEXT = 0xF0000000;
+    private const uint ALG_CLASS_DATA_ENCRYPT = (3u << 13);
+    private const uint ALG_TYPE_STREAM = (4u << 9);
+    private const uint ALG_SID_RC4 = 1;
+    private const uint CALG_RC4 = (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM | ALG_SID_RC4);
+    private const uint CRYPT_EXPORTABLE = 0x00000001;
 
-    public static byte[] RC4(byte[] data, byte[] key)
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool CryptAcquireContext(
+        out IntPtr phProv,
+        string pszContainer,
+        string pszProvider,
+        uint dwProvType,
+        uint dwFlags);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool CryptImportKey(
+        IntPtr hProv,
+        byte[] pbData,
+        uint dwDataLen,
+        IntPtr hPubKey,
+        uint dwFlags,
+        out IntPtr phKey);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool CryptDecrypt(
+        IntPtr hKey,
+        IntPtr hHash,
+        bool Final,
+        uint dwFlags,
+        byte[] pbData,
+        ref uint pdwDataLen);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool CryptDestroyKey(IntPtr hKey);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool CryptReleaseContext(IntPtr hProv, uint dwFlags);
+
+    public static byte[] Decrypt(byte[] data)
     {
-        int[] S = new int[256];
-        byte[] K = new byte[256];
+        IntPtr hProv = IntPtr.Zero;
+        IntPtr hKey = IntPtr.Zero;
         byte[] result = new byte[data.Length];
+        Array.Copy(data, result, data.Length);
 
-        // Initialize the key
-        for (int i = 0; i < 256; i++)
+        try
         {
-            S[i] = i;
-            K[i] = key[i % key.Length];
-        }
+            // Acquire crypto context
+            if (!CryptAcquireContext(out hProv, null, null, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+            {
+                throw new Exception("Failed to acquire crypto context");
+            }
 
-        // Scramble the S array
-        for (int i = 0, j = 0; i < 256; i++)
+            // Create BLOBHEADER structure
+            byte[] keyBlob = new byte[key.Length + 12];
+            // bType
+            keyBlob[0] = 0x08; // PLAINTEXTKEYBLOB
+            // bVersion
+            keyBlob[1] = 0x02;
+            // reserved
+            keyBlob[2] = 0x00;
+            keyBlob[3] = 0x00;
+            // aiKeyAlg
+            keyBlob[4] = (byte)(CALG_RC4 & 0xFF);
+            keyBlob[5] = (byte)((CALG_RC4 >> 8) & 0xFF);
+            keyBlob[6] = (byte)((CALG_RC4 >> 16) & 0xFF);
+            keyBlob[7] = (byte)((CALG_RC4 >> 24) & 0xFF);
+            // dwKeyLength
+            keyBlob[8] = (byte)(key.Length & 0xFF);
+            keyBlob[9] = (byte)((key.Length >> 8) & 0xFF);
+            keyBlob[10] = (byte)((key.Length >> 16) & 0xFF);
+            keyBlob[11] = (byte)((key.Length >> 24) & 0xFF);
+            // Key data
+            Array.Copy(key, 0, keyBlob, 12, key.Length);
+
+            // Import the key
+            if (!CryptImportKey(hProv, keyBlob, (uint)keyBlob.Length, IntPtr.Zero, CRYPT_EXPORTABLE, out hKey))
+            {
+                throw new Exception("Failed to import key");
+            }
+
+            // Decrypt the data
+            uint dataLen = (uint)result.Length;
+            if (!CryptDecrypt(hKey, IntPtr.Zero, true, 0, result, ref dataLen))
+            {
+                throw new Exception("Failed to decrypt data");
+            }
+
+            // If the decrypted data is shorter, trim the array
+            if (dataLen < result.Length)
+            {
+                byte[] trimmed = new byte[dataLen];
+                Array.Copy(result, trimmed, dataLen);
+                return trimmed;
+            }
+
+            return result;
+        }
+        finally
         {
-            j = (j + S[i] + K[i]) % 256;
-            Swap(S, i, j);
+            if (hKey != IntPtr.Zero) CryptDestroyKey(hKey);
+            if (hProv != IntPtr.Zero) CryptReleaseContext(hProv, 0);
         }
-
-        // Generate the keystream and encrypt/decrypt the data
-        for (int i = 0, j = 0, k = 0; k < data.Length; k++)
-        {
-            i = (i + 1) % 256;
-            j = (j + S[i]) % 256;
-            Swap(S, i, j);
-            int T = (S[i] + S[j]) % 256;
-            result[k] = (byte)(data[k] ^ S[T]);
-        }
-
-        return result;
-    }
-
-    // Swap method for the S array
-    public static void Swap(int[] S, int i, int j)
-    {
-        int temp = S[i];
-        S[i] = S[j];
-        S[j] = temp;
     }
 }

@@ -8,7 +8,18 @@ from core.controlers.Module import Module
 import uuid
 
 #####
-# https://github.com/b-mueller/serpentine
+# Custom symmetric block cipher implementation that:
+# - Uses 8-byte (64-bit) blocks with PKCS7 padding
+# - Employs a 32-byte key for encryption/decryption
+# - Performs 16 rounds of encryption per block using:
+#   1. Key mixing (XOR operations)
+#   2. Bit rotations (3 positions)
+#   3. Byte mixing (forward/backward propagation)
+# - Includes key scheduling with non-linear transformations
+# - Supports both Windows C++ and C# implementations
+#
+# Note: This is a custom encryption algorithm for educational/research purposes.
+# For production security, use standard cryptographic algorithms (e.g., AES).
 #####
 
 class serpentine(Encryptor):
