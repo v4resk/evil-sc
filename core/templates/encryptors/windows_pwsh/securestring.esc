@@ -1,0 +1,49 @@
+function Invoke-SecureStringDecrypt_####UUID#### {
+    param(
+        [Parameter(Mandatory=$true)]
+        [object]$Data
+    )
+
+    Write-Host "[-] Decrypting from SecureString"
+    
+    # Get the key as byte array
+    [byte[]]$Key = ####KEY####
+    
+    try {
+        # Handle string input directly
+        if ($Data -is [string]) {
+            Write-Host "[-] Processing string input"
+            $encryptedString = $Data
+        }
+        # Handle byte array input by converting to string first
+        elseif ($Data -is [byte[]]) {
+            Write-Host "[-] Processing byte array input"
+            $encryptedString = [System.Text.Encoding]::UTF8.GetString($Data)
+        }
+        else {
+            throw "Invalid input type. Expected string or byte array."
+        }
+        
+        Write-Host "[-] Encrypted string length: $($encryptedString.Length)"
+        
+        # Convert the encrypted string back to a secure string using the key
+        $secureString = ConvertTo-SecureString -String $encryptedString -Key $Key
+        
+        # Convert secure string back to plain text
+        $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureString)
+        $plainText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+        [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($BSTR)
+        
+        Write-Host "[-] Decrypted text length: $($plainText.Length)"
+        
+        # Convert the plain text to bytes
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($plainText)
+        Write-Host "[-] Returning byte array of length: $($bytes.Length)"
+        
+        return $bytes
+    }
+    catch {
+        Write-Host "[-] Error decrypting SecureString: $_"
+        throw
+    }
+}

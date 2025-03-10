@@ -1,13 +1,57 @@
 public static class Base64Encoder_####UUID####
 {
-    public static byte[] Decode(string data)
-    {
-        Console.WriteLine("[-] Decrypting from Base64");
-        return Convert.FromBase64String(data);
-    }
+    [DllImport("crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern bool CryptStringToBinary(
+        string pszString,
+        int cchString,
+        uint dwFlags,
+        [Out] byte[] pbBinary,
+        ref int pcbBinary,
+        IntPtr pdwSkip,
+        IntPtr pdwFlags);
 
-    public static byte[] Decode(byte[] data)
+    private const uint CRYPT_STRING_BASE64 = 0x00000001;
+
+    public static byte[] Decode(object input)
     {
-        return Convert.FromBase64String(System.Text.Encoding.UTF8.GetString(data));
+        Console.WriteLine("[-] Decoding from Base64 using WinAPI");
+        
+        if (!(input is byte[] inputBytes))
+        {
+            throw new ArgumentException("Input must be a byte array");
+        }
+
+        try 
+        {
+            // Convert byte array to string
+            string base64String = System.Text.Encoding.UTF8.GetString(inputBytes);
+            
+            // First call to get the required buffer size
+            int outputLength = 0;
+            CryptStringToBinary(base64String, base64String.Length, CRYPT_STRING_BASE64, 
+                                null, ref outputLength, IntPtr.Zero, IntPtr.Zero);
+            
+            if (outputLength == 0)
+            {
+                int error = Marshal.GetLastWin32Error();
+                throw new Exception($"Failed to calculate decoded size. Error code: {error}");
+            }
+            
+            // Allocate buffer and decode
+            byte[] decodedBytes = new byte[outputLength];
+            if (!CryptStringToBinary(base64String, base64String.Length, CRYPT_STRING_BASE64, 
+                                    decodedBytes, ref outputLength, IntPtr.Zero, IntPtr.Zero))
+            {
+                int error = Marshal.GetLastWin32Error();
+                throw new Exception($"Failed to decode Base64. Error code: {error}");
+            }
+            
+            return decodedBytes;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[-] Error decoding Base64: {ex.Message}");
+            throw;
+        }
     }
 }

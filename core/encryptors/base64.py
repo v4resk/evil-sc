@@ -14,7 +14,7 @@ class base64(Encryptor):
         self.decoder_in = [bytes]
         self.decoder_out = [bytes]
         self.uuid = uuid.uuid4().hex
-        self.isStringShellcode = False if self.platform == "windows_pwsh" else True
+        self.isStringShellcode = True
 
 
     def encode(self, data):

@@ -1,11 +1,21 @@
-function Invoke-Base64Decode####UUID####
-{
-    Write-Host "[-] Decrypting from Base64"
+function Invoke-Base64Decode####UUID#### {
     param(
-        [Parameter(Mandatory=$True, Position=0)]
-        [object] $Data
+        [Parameter(Mandatory=$true)]
+        [object]$Data
     )
 
-        return [System.Convert]::FromBase64String([System.Text.Encoding]::UTF8.GetString($Data))
+    Write-Host "[-] Decoding from Base64"
 
+    # Handle string input
+    if ($Data -is [string]) {
+        return [Convert]::FromBase64String($Data)
+    }
+    
+    # Handle byte array input by converting to string first
+    if ($Data -is [byte[]]) {
+        $base64String = [System.Text.Encoding]::UTF8.GetString($Data)
+        return [Convert]::FromBase64String($base64String)
+    }
+
+    throw "Invalid input type. Expected string or byte array."
 }

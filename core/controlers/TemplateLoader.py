@@ -198,19 +198,27 @@ class TemplateLoader:
 
         # Replace Shellcode
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode')
-        template_content = template_content.replace(shellcode_placeholder,self.shellcodeControler.get_shellcode())
+        shellcode = self.shellcodeControler.get_shellcode()
+        template_content = template_content.replace(shellcode_placeholder,shellcode)
         
         # Replace 32bit Shellcode
         shellcode32_placeholder = Config().get('PLACEHOLDERS', 'shellcode32')
         if self.shellcode32_variable:
             template_content = template_content.replace(shellcode32_placeholder,self.shellcode32bControler.get_shellcode())
         else:
-            template_content = template_content.replace(shellcode32_placeholder,self.shellcodeControler.get_shellcode())
+            template_content = template_content.replace(shellcode32_placeholder,shellcode)
 
         # Replace Shellcode_Len
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode_len')
         template_content = template_content.replace(shellcode_placeholder,str(self.shellcodeControler.get_encrypted_shellcode_len()))
 
+        # Replace Shellcode_type
+        shellcodetype_placeholder = Config().get('PLACEHOLDERS', 'shellcode_type')
+
+        shellcode_type = self.shellcodeControler.get_shellcode_type()
+        template_content = template_content.replace(shellcodetype_placeholder,str(shellcode_type))
+
+        
         # Replace Evasion
         evasion_placeholder = Config().get('PLACEHOLDERS', 'EVASION')
         evasion_components_code = ""

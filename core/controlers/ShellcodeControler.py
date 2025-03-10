@@ -76,7 +76,7 @@ class ShellcodeControler:
 
 
     def get_shellcode(self):
-        if self.platform == "windows_cpp" or self.platform == "windows_cs" or self.platform == "windows_aspx" or self.platform == "linux":
+        if self.platform == "windows_cpp" or self.platform == "windows_aspx" or self.platform == "linux":
             if self.chain_ending_w_str is False:
                 shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
                 shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
@@ -84,6 +84,15 @@ class ShellcodeControler:
             else:
                 print("[*] String shellcode")
                 return "\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\\0"+"\""
+            
+        if self.platform == "windows_cs":
+            if self.chain_ending_w_str is False:
+                shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
+                shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
+                return shellcode
+            else:
+                print("[*] String shellcode")
+                return ";System.Text.Encoding.ASCII.GetBytes(\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\\0"+"\").CopyTo(buf, 0)"        
 
         
         elif self.platform == "windows_pwsh":
@@ -94,7 +103,7 @@ class ShellcodeControler:
                 return shellcode
             else:
                 print("[*] String shellcode")
-                return "\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\""
+                return f"\"{self.encrypted_shellcode_bytes.decode('utf-8')}\""
     
         elif self.platform == "windows_vba":
             shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
@@ -124,3 +133,31 @@ class ShellcodeControler:
             shellcode = base64.b64encode(self.encrypted_shellcode_bytes)
             shellcode = shellcode.decode(encoding="latin-1")
             return f"\"{shellcode}\""
+        
+    def get_shellcode_type(self):
+        """
+        Returns the appropriate shellcode type declaration based on platform and encoding chain
+        """
+        if self.platform == "windows_pwsh":
+            if self.chain_ending_w_str:
+                return " "
+            else:
+                return "[Byte[]]"
+        elif self.platform == "windows_cs" or self.platform == "windows_aspx":
+            if self.chain_ending_w_str:
+                return "string"
+            else:
+                return "byte[]"
+        elif self.platform == "windows_cpp":
+            if self.chain_ending_w_str:
+                return "char*"
+            else:
+                return "unsigned char*"
+        elif self.platform == "linux":
+            if self.chain_ending_w_str:
+                return "char*"
+            else:
+                return "unsigned char*"
+        else:
+            # Default case
+            return "byte[]"
