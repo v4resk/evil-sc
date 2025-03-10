@@ -1,4 +1,3 @@
-
 from core.encryptors.Encryptor import Encryptor
 from core.engines.CallComponent import CallComponent
 from core.engines.CodeComponent import CodeComponent
@@ -18,33 +17,24 @@ class uuid(Encryptor):
         self.isStringShellcode = True
 
     def encode(self, data):
-        if isinstance(data, str):
-            data = bytes(data, 'utf-8')
+        # Convert data to bytearray if it's not already
+        if not isinstance(data, bytearray):
+            data = bytearray(data)
         
-        if len(data) % 16 != 0:
-            print(f"{Fore.GREEN}[+] {Fore.WHITE}Shellcode's length not multiplies of 16 bytes - Needed for UUID encoding")
-            print(f"{Fore.GREEN}[+] {Fore.WHITE}Adding nullbytes at the end of shellcode, this might break your shellcode.")
-
-            addNullbyte =  b"\x90" * (16-(len(data)%16))
-            data += addNullbyte 
-
+        # Calculate padding needed
+        padding_needed = (16 - (len(data) % 16)) % 16
+        if padding_needed > 0:
+            data.extend(b'\x00' * padding_needed)
+        
+        # Process data in chunks of 16 bytes
         uuid_str = ""
-        chunk_size = 16  # Each UUID is 16 bytes
-        # Iterate over the byte array in chunks of 16 bytes
-        for i in range(0, len(data), chunk_size):
-            data_chunk = data[i:i + chunk_size]
-            
-            # Pad the chunk if it is less than 16 bytes
-            if len(data_chunk) < chunk_size:
-                padding = chunk_size - len(data_chunk)
-                data_chunk += (b'\x90' * padding)
-    
-            # Convert the chunk to UUID
-            uuid_str += f'{uuidlib.UUID(bytes_le=data_chunk)}'
-    
-        # Remove the trailing newline character
-        uuid_str = uuid_str.rstrip('\n')
-        return bytearray(uuid_str,'utf-8')
+        for i in range(0, len(data), 16):
+            uuid_str += f'{uuidlib.UUID(bytes_le=bytes(data[i:i+16]))}'
+        
+        print(f"{Fore.GREEN}[+] {Fore.WHITE}Shellcode's length not multiplies of 16 bytes - Needed for UUID encoding")
+        print(f"{Fore.GREEN}[+] {Fore.WHITE}Adding nullbytes at the end of shellcode, this might break your shellcode.")
+        print()
+        return bytearray(uuid_str.encode())
     
 
 

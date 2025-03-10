@@ -1,76 +1,84 @@
-int uuid_decode_####UUID####(unsigned char* encoded, int length)
-{
-    printf("\n[-] Hello from UUID\n");
-    size_t uuid_length = 36;
-    //size_t uuid_count = ((length + uuid_length - 1) / uuid_length); // Calcul du nombre de uuids
+int uuid_decode_####UUID####(unsigned char* encoded, int length) {
+    printf("\n[-] Decoding from UUID\n");
     
-    // Define uuid_count dynamicly depending if encoded is a string or hex (looking for printable char)
-    size_t uuid_count = 0;
-    for (int i = 0; i < length; ++i) {
-        if (!(encoded[i] >=32 && encoded[i] <=126)) {
-            uuid_count = ((length + uuid_length - 1) / uuid_length) - 1;
-            break;
-        }else{
-            uuid_count = ((length + uuid_length - 1) / uuid_length);
-        }
+    // Count the number of UUIDs in the string (each UUID is 36 characters)
+    int uuid_count = length / 36;
+    if (uuid_count == 0) {
+        printf("[-] No valid UUIDs found in the input\n");
+        return -1;
     }
     
-    printf("}\n");
-    // Allouer de la mémoire pour le tableau de uuids
+    printf("[+] Found %d UUIDs to decode\n", uuid_count);
+    
+    // Allocate memory for UUID strings
     char** uuids = (char**)malloc(uuid_count * sizeof(char*));
-    if (uuids == NULL) {
-        perror("Failed to allocate memory");
-        exit(EXIT_FAILURE);
+    if (!uuids) {
+        perror("Failed to allocate memory for UUID array");
+        return -1;
     }
-
-    // Découper la chaîne en uuids
-    for (size_t i = 0; i < uuid_count; ++i) {
-        // Allouer de la mémoire pour chaque segment (uuid_length + 1 pour le caractère NULL)
-        uuids[i] = (char*)malloc(uuid_length + 1);
-        if (uuids[i] == NULL) {
-            perror("Failed to allocate memory");
-            exit(EXIT_FAILURE);
-        }
-
-        // Copier la partie de la chaîne dans le segment
-        size_t start_index = i * uuid_length;
-        size_t length_to_copy = (length - start_index < uuid_length) ? (length - start_index) : uuid_length;
-        strncpy(uuids[i], (const char*)(encoded + start_index), length_to_copy);
-        uuids[i][length_to_copy] = '\0'; // Ajouter le caractère NULL de fin
-
-    }
-
-    //Afficher les UUID
-    //printf("\n[*] Before UUID values (Str): {");
-    //for (size_t i = 0; i < uuid_count; i++) {
-    //    printf("%s\n", uuids[i]);
-    //}
-
-    // Allocate memory for the binary UUIDs
-    unsigned char* binary_uuids = (unsigned char*)malloc(uuid_count * sizeof(UUID));
-    if (binary_uuids == NULL) {
-        perror("Failed to allocate memory");
-        exit(EXIT_FAILURE);
-    }
-
-    // Convert the UUID strings to binary format and store them in the binary_uuids buffer
-    for (size_t i = 0; i < uuid_count; ++i) {
-        RPC_STATUS status = UuidFromStringA((RPC_CSTR)uuids[i], (UUID*)(binary_uuids + i * sizeof(UUID)));
-        if (status != RPC_S_OK) {
-            printf("UuidFromStringA n°%d failed with status %d\n", i,status);
-            free(binary_uuids);
-            for (size_t j = 0; j < uuid_count; ++j) {
+    
+    // Parse UUID strings
+    char* uuid_str = (char*)encoded;
+    for (int i = 0; i < uuid_count; i++) {
+        // Allocate memory for this UUID string (36 chars + null terminator)
+        uuids[i] = (char*)malloc(37);
+        if (!uuids[i]) {
+            perror("Failed to allocate memory for UUID string");
+            // Free previously allocated memory
+            for (int j = 0; j < i; j++) {
                 free(uuids[j]);
             }
             free(uuids);
-            exit(EXIT_FAILURE);
+            return -1;
         }
+        
+        // Copy UUID string (36 characters)
+        strncpy(uuids[i], uuid_str + (i * 36), 36);
+        uuids[i][36] = '\0';
     }
+    
+    // Allocate memory for binary UUIDs
+    unsigned char* binary_uuids = (unsigned char*)malloc(uuid_count * 16);
+    if (!binary_uuids) {
+        perror("Failed to allocate memory");
+        for (int i = 0; i < uuid_count; i++) {
+            free(uuids[i]);
+        }
+        free(uuids);
+        return -1;
+    }
+
+    // Convert the UUID strings to binary format and store them in the binary_uuids buffer
+    for (int i = 0; i < uuid_count; i++) {
+        UUID uuid;
+        RPC_STATUS status = UuidFromStringA((RPC_CSTR)uuids[i], &uuid);
+        if (status != RPC_S_OK) {
+            printf("UuidFromStringA n°%d failed with status %d\n", i, status);
+            free(binary_uuids);
+            for (int j = 0; j < uuid_count; j++) {
+                free(uuids[j]);
+            }
+            free(uuids);
+            return -1;
+        }
+        memcpy(binary_uuids + (i * 16), &uuid, 16);
+    }
+    
+    // Calculate the actual decoded size
+    int decoded_size = uuid_count * 16;
+    
+    // Ensure the decoded size is a multiple of 8 (DES3 block size)
+    // This is critical for DES3 decryption to work properly
+    if (decoded_size % 8 != 0) {
+        printf("[!] Warning: Decoded size %d is not a multiple of 8 (DES3 block size)\n", decoded_size);
+        // We don't need to pad here as the data should already be properly padded
+    }
+    
     // Copy the binary UUID data back to the encoded buffer
-    memcpy(encoded, binary_uuids, uuid_count * sizeof(UUID));
+    memcpy(encoded, binary_uuids, decoded_size);
 
     // Free the UUID string segments
-    for (size_t i = 0; i < uuid_count; ++i) {
+    for (int i = 0; i < uuid_count; i++) {
         free(uuids[i]);
     }
     free(uuids); // Free the array of UUID strings
@@ -78,5 +86,8 @@ int uuid_decode_####UUID####(unsigned char* encoded, int length)
     // Free the binary UUIDs buffer
     free(binary_uuids);
 
-    return uuid_count * sizeof(UUID); // Return the number of UUIDs as char (adjust the return type as needed)
+    printf("[+] UUID decoded %d bytes successfully\n", decoded_size);
+    
+    // Return the actual size of the decoded data
+    return decoded_size;
 }

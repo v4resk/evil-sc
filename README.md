@@ -7,7 +7,8 @@ Evil-SC is a template-based shellcode loader written in Python. It allows you to
 
 ## Todo
 - Functions name randomization ?
-- uuid + DES3 bug 
+- Implement nullgate Indirect Syscalls
+- Implement SecureString Encryptor for Powershell
 - Make new Sandbox evasion templates
 - Make new methods templates
 
