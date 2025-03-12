@@ -22,7 +22,7 @@ class CompilerControler:
                 
         if(self.platform == "windows_cpp"):
             # If not using LLVM Obf
-            self.compile_options += " -static-libgcc -static-libstdc++ "
+            self.compile_options += " -static-libgcc -static-libstdc++ -static -s -O3 "
             if self.llvmo is False:
                 if debug_mode == "True":
                     print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: x86_64-w64-mingw32-g++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options}\n")

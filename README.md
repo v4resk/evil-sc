@@ -3,25 +3,24 @@
 ## Introduction
 Evil-SC is a template-based shellcode loader written in Python. It allows you to generate loader files for injecting shellcode into a target process, using different methods and encoders.
 
-!! WORK IN PROGRESS !!
+> WORK IN PROGRESS !
 
 ## Todo
 - Functions name randomization ?
 - Implement nullgate Indirect Syscalls
-- Implement SecureString Encryptor for Powershell
 - Make new Sandbox evasion templates
 - Make new methods templates
 
 ## Usage
 1. Clone the repository:
 ```bash
-git clone https://github.com/your_username/evil-sc.git
+git clone https://github.com/v4resk/evil-sc.git
 cd evil-sc
 ```
 
 2. Install dependencies
 ```
-sudo apt install mono-complete, mingw-w64
+sudo apt install mono-complete, mingw-w64, powershell
 ```
 
 3. Run the script

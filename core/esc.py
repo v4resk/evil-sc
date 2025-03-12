@@ -68,12 +68,12 @@ class esc:
                                 help='Evasion module')
 
         win_cpp_parser.add_argument('-sc', '--syscall', dest='syscall_method', default="",
-                                choices=["SysWhispers3", "GetSyscallStub"],
+                                choices=["SysWhispers3", "GetSyscallStub", "NullGate"],
                                 help='Syscall execution method for supported templates')
 
         win_cpp_parser.add_argument('--sw-method', dest='syswhispers_recovery_method', default="jumper_randomized",
                                 choices=["embedded", "egg_hunter", "jumper", "jumper_randomized"],
-                                help='Syscall execution method for supported templates')
+                                help='Syscall recovery method for SysWhispers3 SysWhispers')
 
         win_cpp_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
@@ -275,6 +275,7 @@ class esc:
                     ("Evasion Modules", loader.evasion_chain.to_string()),
                     ("Injection Process", self.target_process),
                     ("Syscalls", loader.syscall_method),
+                    ("SysWhispers Mode", self.syswhispers_recovery_method if loader.syscall_method == "SysWhispers3" else None),
                 ],
                 "Outputs": [
                     ("Compiler", self.compiler),
