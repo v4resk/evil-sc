@@ -36,9 +36,9 @@ class SysCallsControler:
             print(vars(self))
             print()
 
-    def copy_sycall_header_file(self,src_header):
+    def copy_sycall_header_file(self,src_header, dst_header="winhelper.h"):
         src_file = f"{self.headers_folder}/{src_header}"
-        dest_file = f"{self.loader_folder}/winhelper.h"
+        dest_file = f"{self.loader_folder}/{dst_header}"
         try:
             if not os.path.isfile(src_file):
                 raise FileNotFoundError(f"The source file {src_file} does not exist.")
@@ -80,7 +80,13 @@ class SysCallsControler:
             module = self.get_SysWhispers3_module() #Get_module
         
         elif self.sysCallsType == "NullGate":
-            module = self.get_noSysCall_module()
+            
+            #Fix Template with NullGate syscalls types
+            
+            #Copy Nullgate headers & ASM to build folder
+            self.copy_sycall_header_file("NullGate.hpp")
+            self.copy_sycall_header_file("NullGate.S", "winhelper.S")
+            module = self.get_NullGate_module() #Get_module
             
         return module
 
@@ -101,19 +107,29 @@ class SysCallsControler:
     def get_syscall_module(self):
         return self.sysModule
 
+    def get_NullGate_module(self):
+        module = Module()
+        module.mingw_options = " -s -O3 -w -std=c++20 -static ./core/templates/loaderTemplate/winhelper.S "
+        module.components = [
+            IncludeComponent("#include \"winhelper.h\""),
+            SysCallsComponent("ng::syscalls syscalls;"),
+            DefineComponent("namespace ng = nullgate;")
+        ]
+        return module
 
     def get_SysWhispers3_module(self):
         module = Module()
         module.mingw_options = " -s -w -std=c++17 -masm=intel -fpermissive -static -lntdll -lpsapi -Wl,--subsystem,console"
         module.components = [
             IncludeComponent("#include \"winhelper.h\""),
-            SysCallsComponent("")
+            SysCallsComponent(""),
         ]
         return module
 
     def get_noSysCall_module(self):
         module = Module()
         return module
+    
 
     def fix_sw3_header(self, base_file_path): 
         header_file_path = base_file_path + '.h'
@@ -136,6 +152,57 @@ class SysCallsControler:
 
         # Remove SW3.c 
         os.remove(source_file_path)
+
+    def process_template_NullGate_syscalls(self, template_content):
+        """Replace syscalls in the template based on the syscall method"""
+        if self.sysCallsType == "NullGate":
+            # Process line by line to handle complex cases
+            lines = template_content.split('\n')
+            for i, line in enumerate(lines):
+                # Look for Nt function calls - both with assignment and without
+                nt_call_pattern = r'((\w+)\s*=\s*)?(Nt\w+)\s*\('
+                match = re.search(nt_call_pattern, line)
+                
+                if match:
+                    assignment = match.group(1) or ''  # This will be empty if there's no assignment
+                    func_name = match.group(3)
+                    
+                    # Handle the case with no arguments
+                    if re.search(r'((\w+)\s*=\s*)?' + func_name + r'\s*\(\s*\)', line):
+                        new_line = line.replace(
+                            func_name + '()', 
+                            f'syscalls.Call(ng::obfuscation::fnv1Const("{func_name}"))'
+                        )
+                    else:
+                        # Handle the case with arguments
+                        # Find the opening and closing parentheses for the function call
+                        open_idx = line.find('(', line.find(func_name))
+                        close_idx = -1
+                        paren_count = 1
+                        for j in range(open_idx + 1, len(line)):
+                            if line[j] == '(':
+                                paren_count += 1
+                            elif line[j] == ')':
+                                paren_count -= 1
+                                if paren_count == 0:
+                                    close_idx = j
+                                    break
+                        
+                        if close_idx != -1:
+                            args = line[open_idx + 1:close_idx]
+                            original = f'{func_name}({args})'
+                            replacement = f'syscalls.Call(ng::obfuscation::fnv1Const("{func_name}"), {args})'
+                            new_line = line.replace(original, replacement)
+                        else:
+                            # If we can't find the closing parenthesis, leave the line unchanged
+                            new_line = line
+                    
+                    lines[i] = new_line
+            
+            return '\n'.join(lines)
+        else:
+            # Handle other syscall methods or return unchanged
+            return template_content
 
 
     def get_GetSyscallStub_module(self):

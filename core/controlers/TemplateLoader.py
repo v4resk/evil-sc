@@ -238,6 +238,10 @@ class TemplateLoader:
             if component:
                 syscalls_components_code += component.code
         template_content = template_content.replace(syscalls_placeholder, syscalls_components_code)
+        
+        # Replace NullGate Syscalls
+        if self.syscall_method == "NullGate":
+            template_content = self.sysCallss.process_template_NullGate_syscalls(template_content)
 
         # Randomize Syscall names
         # To adapt for SW3 and 

