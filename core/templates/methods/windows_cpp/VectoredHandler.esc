@@ -11,12 +11,6 @@
 
 //####CODE####
 
-// Global variables
-PVOID g_ShellcodeAddress = NULL;
-SIZE_T g_ShellcodeSize = 0;
-BOOL g_ExecutionComplete = FALSE;
-
-
 DWORD WINAPI esc_main(LPVOID lpParameter)
 {
     DWORD dwSize;
