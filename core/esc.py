@@ -59,9 +59,12 @@ class esc:
 
         win_cpp_parser.add_argument('--llvmo', dest='llvmo', action='store_true',
                                 help='Use Obfuscator-LLVM to compile')
-
-        #win_cpp_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
-        #                        help='Process name for shellcode injection')
+        
+        win_cpp_parser.add_argument('-i' ,'--inject', dest='injection', action='store_true', default=False,
+                        help='Enable process injection for templates that support it')
+        
+        win_cpp_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="explorer.exe",
+                        help='Process name for shellcode injection (use "self" for current process)')
 
         win_cpp_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
                                 choices=self.get_available_files("evasions", platform="windows_cpp"),
@@ -183,7 +186,7 @@ class esc:
         win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_aspx"),
                                 help='Encryption/Encoding algorithm to be applied to the shellcode')
 
-        win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+        win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="False",
                                 help='Process name for shellcode injection')
 
         win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
@@ -262,6 +265,8 @@ class esc:
             self.compiler = "" if self.platform == "windows_pwsh" or self.platform == "windows_vba"  else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if self.llvmo else "MinGW"))
             loader = TemplateLoader(vars(self))
 
+            mode = "Injection" if loader.injection else "Execution"
+            
             sections = {
                 "Inputs": [
                     ("Module", self.platform),
@@ -270,10 +275,11 @@ class esc:
                     ("Input Format", loader.input_file_type.name if loader.input_file_type else None),
                 ],
                 "Configuration": [
+                    ("Mode", mode),
                     ("Method", os.path.basename(self.method) if self.method else None),
                     ("Encryptors", loader.encryptors_chain.to_string()),
                     ("Evasion Modules", loader.evasion_chain.to_string()),
-                    ("Injection Process", self.target_process),
+                    ("Injection Process", loader.target_process if mode == "Injection" and loader.target_process else None),
                     ("Syscalls", loader.syscall_method),
                     ("SysWhispers Mode", self.syswhispers_recovery_method if loader.syscall_method == "SysWhispers3" else None),
                 ],

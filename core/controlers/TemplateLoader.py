@@ -14,7 +14,10 @@ from core.engines.DefineComponent import DefineComponent
 from core.engines.IncludeComponent import IncludeComponent
 from core.engines.EvasionComponent import EvasionComponent
 from core.engines.SysCallsComponent import SysCallsComponent
+from core.engines.InjectionComponent import InjectionComponent
 from core.utils.utils import verify_file_type
+from core.controlers.InjectionControler import InjectionController
+
 
 import shutil
 import os
@@ -45,9 +48,12 @@ class TemplateLoader:
         self.define_components = []
         self.syscall_components = []
         self.evasion_components = []
+        self.injection_components = []
         self.mingw_options = []
 
         self.sysCallss = None
+        
+        self.injection_controller = None
 
         self.build_options = ""
 
@@ -86,6 +92,9 @@ class TemplateLoader:
 
         # Check if template need syscall and user didn't specified it
         self.check_syscalls()
+        
+        # Check injection support
+        self.check_injection()
 
         #Process Syscalls --> moved in write_code() for output beatify
         #self.load_syscalls()
@@ -145,6 +154,21 @@ class TemplateLoader:
                 self.mingw_options.append(SysModule.mingw_options)
                 for component in SysModule.components:
                         self.process_component(component)
+                        
+    def load_injector(self):
+        """
+        Load the injection module and process its components.
+        This function should be called after check_injection().
+        """
+        if not hasattr(self, 'injection_controller') or not self.injection_controller:
+            return
+    
+        # Use supports_injection() instead of is_supported()
+        if self.injection_controller.supports_injection():
+            injection_module = self.injection_controller.injection_module
+            if injection_module:
+                for component in injection_module.components:
+                    self.process_component(component)
 
 
     def process_component(self,component):
@@ -160,9 +184,13 @@ class TemplateLoader:
             self.evasion_components.append(component)
         elif isinstance(component, SysCallsComponent):
             self.syscall_components.append(component)
+        elif isinstance(component, InjectionComponent):
+            self.injection_components.append(component)
 
     def write_code(self):
         self.load_syscalls()
+        self.load_injector()
+        
         with open(self.template_file, "r") as template_file:
             template_content = template_file.read()
         
@@ -227,6 +255,14 @@ class TemplateLoader:
                 evasion_components_code += component.code
         template_content = template_content.replace(evasion_placeholder,evasion_components_code)       
 
+        # Replace Injection 
+        injection_placeholder = Config().get('PLACEHOLDERS', "INJECTION")
+        injection_components_code = ""
+        for component in self.injection_components:
+            if component:
+                injection_components_code += component.code 
+        template_content = template_content.replace(injection_placeholder, injection_components_code)
+        
         # Replace Delay
 
         # Replace ARGS
@@ -254,7 +290,7 @@ class TemplateLoader:
         #            template_content = template_content.replace(syscall,new_syscall )
         #            print(f"{syscall}--->{new_syscall}")
 
-
+        
         # Write to file
         #print(template_content)
         with open(self.template_file, "w") as evil_sc_file:
@@ -271,8 +307,32 @@ class TemplateLoader:
             with open(self.template_file, "r") as template_file:
                 template_content = template_file.read()
                 if Config().get('PLACEHOLDERS', 'SYSCALL') in template_content:
-                   print(f"{Fore.GREEN}[+] {Fore.WHITE}Selected template need a Direct Syscall method.... Switching to GetSyscallStub\n")
-                   self.syscall_method = "GetSyscallStub"
+                   print(f"{Fore.GREEN}[+] {Fore.WHITE}Selected template need a Indirect/Direct Syscall method.... ")
+                   print(f"{Fore.GREEN}[+] {Fore.WHITE}Switching to Indirest Syscall with NullGate\n")
+                   self.syscall_method = "NullGate"
+                   
+    def check_injection(self):
+        """
+        Check if injection is supported by the template and set default values.
+        This function should be called after the template file is set.
+        """
+        # Skip if platform doesn't support injection yet
+        if self.platform != "windows_cpp":
+            self.target_process = None
+            return
+
+        # Initialize injection controller to check template compatibility
+        self.injection_controller = InjectionController(
+            self.platform, 
+            self.target_process,
+            self.template_file
+        )
+        
+        # Update target_process with the possibly modified value from the controller
+        self.target_process = self.injection_controller.target_process
+        
+        # Set injection flag based on template support
+        self.injection = self.injection_controller.supports_injection()
 
     ## Adjut build options here if needed
     def get_build_options(self):

