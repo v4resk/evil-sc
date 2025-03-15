@@ -154,9 +154,9 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
     }
     
     // Parse the PE header to find the entry point
-    PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)headerBuffer;
-    PIMAGE_NT_HEADERS ntHeader = (PIMAGE_NT_HEADERS)((DWORD_PTR)headerBuffer + dosHeader->e_lfanew);
-    DWORD_PTR entryPointOffset = ntHeader->OptionalHeader.AddressOfEntryPoint;
+    PIMAGE_DOS_HEADER mdosHeader = (PIMAGE_DOS_HEADER)headerBuffer;
+    PIMAGE_NT_HEADERS mntHeader = (PIMAGE_NT_HEADERS)((DWORD_PTR)headerBuffer + mdosHeader->e_lfanew);
+    DWORD_PTR entryPointOffset = mntHeader->OptionalHeader.AddressOfEntryPoint;
     LPVOID entryPoint = (LPVOID)((DWORD_PTR)remoteModule + entryPointOffset);
     
     std::cout << "Module entry point offset: 0x" << std::hex << entryPointOffset << std::endl;

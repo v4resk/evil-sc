@@ -59,8 +59,29 @@ class SysCallsControler:
         if self.sysCallsType == "":
             module = self.get_noSysCall_module()
         
+        # V1 GetSyscallStub
+        #elif self.sysCallsType == "GetSyscallStub":
+        #    module = self.get_GetSyscallStub_module()
+        
         elif self.sysCallsType == "GetSyscallStub":
-            module = self.get_GetSyscallStub_module()
+
+            # Use the new GetSyscallStub implementation
+            from core.syscalls.GetSyscallStub.GetSyscallStub import compute_syscall_module
+            components = compute_syscall_module(self.nt_functions, self.headers_folder)
+            self.copy_sycall_header_file("GetSyscallStub.h")
+            
+            # Create module
+            module = Module()
+            module.mingw_options = " -s -w -masm=intel -fpermissive -static -lntdll -lpsapi -Wl,--subsystem,console"
+            module.components.append(IncludeComponent('#include "winhelper.h"'))
+            # Add other components
+            for component in components:
+                if component["type"] == "define":
+                    module.components.append(DefineComponent(component["content"]))
+                elif component["type"] == "syscalls":
+                    module.components.append(SysCallsComponent(component["content"]))
+
+            return module
 
         elif self.sysCallsType == "SysWhispers3":         
             ### Import and generate SW3 files

