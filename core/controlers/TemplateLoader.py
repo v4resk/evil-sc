@@ -269,16 +269,21 @@ class TemplateLoader:
         
         # Replace Class Name
         class_name_placeholder = Config().get('PLACEHOLDERS', 'CLASS_NAME')
-        template_content = template_content.replace(class_name_placeholder, self.class_name)
+        if hasattr(self, 'class_name') and self.class_name and isinstance(self.class_name, str):
+            template_content = template_content.replace(class_name_placeholder, self.class_name)
 
         # Replace Function Name
         function_name_placeholder = Config().get('PLACEHOLDERS', 'FUNCTION_NAME')
-        template_content = template_content.replace(function_name_placeholder, self.function_name)
-        
+        if hasattr(self, 'function_name') and self.function_name and isinstance(self.function_name, str):
+            template_content = template_content.replace(function_name_placeholder, self.function_name)
+
         # Replace Entry Args
         entry_args_placeholder = Config().get('PLACEHOLDERS', 'ENTRY_ARGS')
-        template_content = template_content.replace(entry_args_placeholder, self.entry_args)
-        
+        if hasattr(self, 'entry_args'):
+            # Convert to string if it's not already
+            entry_args_str = str(self.entry_args) if self.entry_args else ""
+            template_content = template_content.replace(entry_args_placeholder, entry_args_str)
+    
         # Replace Delay
 
         # Replace ARGS
