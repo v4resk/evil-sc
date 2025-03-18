@@ -54,6 +54,7 @@ class TemplateLoader:
         self.sysCallss = None
         
         self.injection_controller = None
+        self.injection = False
 
         self.build_options = ""
 
@@ -95,6 +96,9 @@ class TemplateLoader:
         
         # Check injection support
         self.check_injection()
+        
+        # Check reflection
+        self.check_reflection()
 
         #Process Syscalls --> moved in write_code() for output beatify
         #self.load_syscalls()
@@ -263,6 +267,18 @@ class TemplateLoader:
                 injection_components_code += component.code 
         template_content = template_content.replace(injection_placeholder, injection_components_code)
         
+        # Replace Class Name
+        class_name_placeholder = Config().get('PLACEHOLDERS', 'CLASS_NAME')
+        template_content = template_content.replace(class_name_placeholder, self.class_name)
+
+        # Replace Function Name
+        function_name_placeholder = Config().get('PLACEHOLDERS', 'FUNCTION_NAME')
+        template_content = template_content.replace(function_name_placeholder, self.function_name)
+        
+        # Replace Entry Args
+        entry_args_placeholder = Config().get('PLACEHOLDERS', 'ENTRY_ARGS')
+        template_content = template_content.replace(entry_args_placeholder, self.entry_args)
+        
         # Replace Delay
 
         # Replace ARGS
@@ -333,6 +349,49 @@ class TemplateLoader:
         
         # Set injection flag based on template support
         self.injection = self.injection_controller.supports_injection()
+        
+        
+    def check_reflection(self):
+        """
+        Checks if the template uses reflection placeholders and validates required parameters.
+        Sets default values for function_name and entry_args if needed.
+        """
+        # Read the template file content
+        with open(self.template_file, 'r') as f:
+            template_content = f.read()
+
+        # Get placeholders from config
+        class_name_placeholder = Config().get('PLACEHOLDERS', 'class_name')
+        function_name_placeholder = Config().get('PLACEHOLDERS', 'function_name')
+        entry_args_placeholder = Config().get('PLACEHOLDERS', 'entry_args')
+
+        # Check if template uses any of the reflection placeholders
+        uses_reflection = (class_name_placeholder in template_content or 
+                          function_name_placeholder in template_content or 
+                          entry_args_placeholder in template_content)
+
+        if not uses_reflection:
+            # Template doesn't use reflection, set values to None
+            self.class_name = None
+            self.function_name = None
+            self.entry_args = None
+            return
+
+        # Template uses reflection, validate required parameters
+        if not hasattr(self, 'class_name') or not self.class_name:
+            from colorama import Fore
+            print(f"{Fore.RED}[!] Error: {Fore.WHITE}This template requires a class name to be specified with -c/--classname")
+            print(f"{Fore.RED}[!] {Fore.WHITE}Example: -c 'namespace.classname'")
+            exit(1)
+
+        # Set default values if not provided
+        if not hasattr(self, 'function_name') or not self.function_name:
+            self.function_name = "Main"
+            from colorama import Fore
+            print(f"{Fore.YELLOW}[*] {Fore.WHITE}No function specified, using default: {self.function_name}")
+
+        if not hasattr(self, 'entry_args') or not self.entry_args:
+            self.entry_args = ""
 
     ## Adjut build options here if needed
     def get_build_options(self):

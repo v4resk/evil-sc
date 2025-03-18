@@ -43,7 +43,7 @@ Evil-SC is a template-based shellcode loader written in Python. It allows you to
 | Direct (GetSyscallStub) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Indirect (NullGate) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Standard API | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-### Evasion Techniques
+
 
 ### Evasion Techniques
 

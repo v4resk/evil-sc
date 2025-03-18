@@ -60,7 +60,8 @@ class aesc(Encryptor):
                 CallComponent(f"buf = AesEncryptor_{self.uuid}.Decrypt(buf);"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid))
                                 .replace("####KEY####", f"new byte[] {{{','.join([str(b) for b in self.key])}}}")
-                                .replace("####IV####", f"new byte[] {{{','.join([str(b) for b in self.iv])}}}"))
+                                .replace("####IV####", f"new byte[] {{{','.join([str(b) for b in self.iv])}}}")),
+                DefineComponent("using System.Linq;\n")
             ]
         
         elif self.platform == "windows_pwsh":

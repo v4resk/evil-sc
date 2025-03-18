@@ -19,6 +19,7 @@ function Invoke-SecureStringDecrypt_####UUID#### {
             $encryptedString = [System.Text.Encoding]::UTF8.GetString($Data)
         }
         else {
+            Write-Host "[-] Unhandled type: $($Data.GetType().FullName)"
             throw "Invalid input type. Expected string or byte array."
         }
         

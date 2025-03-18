@@ -3,14 +3,6 @@
 
 
 
-typedef NTSTATUS (NTAPI *pNtProtectVirtualMemory)(
-    HANDLE ProcessHandle,
-    PVOID *BaseAddress,
-    PSIZE_T RegionSize,
-    ULONG NewProtect,
-    PULONG OldProtect
-);
-
 typedef NTSTATUS (NTAPI *pNtCreateThreadEx)(
     PHANDLE ThreadHandle,
     ACCESS_MASK DesiredAccess,
@@ -25,18 +17,27 @@ typedef NTSTATUS (NTAPI *pNtCreateThreadEx)(
     PVOID AttributeList
 );
 
+typedef NTSTATUS (NTAPI *pNtFreeVirtualMemory)(
+    HANDLE ProcessHandle,
+    PVOID *BaseAddress,
+    PSIZE_T RegionSize,
+    ULONG FreeType
+);
+
+typedef NTSTATUS (NTAPI *pNtProtectVirtualMemory)(
+    HANDLE ProcessHandle,
+    PVOID *BaseAddress,
+    PSIZE_T RegionSize,
+    ULONG NewProtect,
+    PULONG OldProtect
+);
+
 typedef NTSTATUS (NTAPI *pNtWriteVirtualMemory)(
     HANDLE ProcessHandle,
     PVOID BaseAddress,
     PVOID Buffer,
     SIZE_T NumberOfBytesToWrite,
     PSIZE_T NumberOfBytesWritten
-);
-
-typedef NTSTATUS (NTAPI *pNtWaitForSingleObject)(
-    HANDLE Handle,
-    BOOLEAN Alertable,
-    PLARGE_INTEGER Timeout
 );
 
 typedef NTSTATUS (NTAPI *pNtAllocateVirtualMemory)(
@@ -48,22 +49,21 @@ typedef NTSTATUS (NTAPI *pNtAllocateVirtualMemory)(
     ULONG Protect
 );
 
+typedef NTSTATUS (NTAPI *pNtWaitForSingleObject)(
+    HANDLE Handle,
+    BOOLEAN Alertable,
+    PLARGE_INTEGER Timeout
+);
+
 typedef NTSTATUS (NTAPI *pNtClose)(
     HANDLE Handle
 );
 
-typedef NTSTATUS (NTAPI *pNtFreeVirtualMemory)(
-    HANDLE ProcessHandle,
-    PVOID *BaseAddress,
-    PSIZE_T RegionSize,
-    ULONG FreeType
-);
-
 // Function declarations
-pNtProtectVirtualMemory NtProtectVirtualMemory;
 pNtCreateThreadEx NtCreateThreadEx;
-pNtWriteVirtualMemory NtWriteVirtualMemory;
-pNtWaitForSingleObject NtWaitForSingleObject;
-pNtAllocateVirtualMemory NtAllocateVirtualMemory;
-pNtClose NtClose;
 pNtFreeVirtualMemory NtFreeVirtualMemory;
+pNtProtectVirtualMemory NtProtectVirtualMemory;
+pNtWriteVirtualMemory NtWriteVirtualMemory;
+pNtAllocateVirtualMemory NtAllocateVirtualMemory;
+pNtWaitForSingleObject NtWaitForSingleObject;
+pNtClose NtClose;

@@ -60,9 +60,6 @@ class esc:
         win_cpp_parser.add_argument('--llvmo', dest='llvmo', action='store_true',
                                 help='Use Obfuscator-LLVM to compile')
         
-        win_cpp_parser.add_argument('-i' ,'--inject', dest='injection', action='store_true', default=False,
-                        help='Enable process injection for templates that support it')
-        
         win_cpp_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="explorer.exe",
                         help='Process name for shellcode injection (use "self" for current process)')
 
@@ -106,24 +103,33 @@ class esc:
                                 help='Output filename')
 
         # Windows Powershell subparser
-        win_cs_parser = subparsers.add_parser('windows_pwsh', help='Powershell Windows Shellcode Loader')
+        win_pwsh_parser = subparsers.add_parser('windows_pwsh', help='Powershell Windows Shellcode Loader')
 
-        win_cs_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+        win_pwsh_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
-        win_cs_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_pwsh"),
+        win_pwsh_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_pwsh"),
                                 help='Shellcode-loading method')
 
-        win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_pwsh"),
+        win_pwsh_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_pwsh"),
                                 help='Encryption/Encoding algorithm to be applied to the shellcode')
 
-        win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
+        win_pwsh_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
                                 help='Process name for shellcode injection')
-
-        win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+        
+        win_pwsh_parser.add_argument( '-c', '--classname', dest='class_name', metavar='CLASS_NAME', default=False,
+                                help='Class to be used as EntryPoint (ex: namespace.class)')
+        
+        win_pwsh_parser.add_argument( '-f', '--function', dest='function_name', metavar='FUNCTION', default=False,
+                                help='Function to be used as EntryPoint (ex: Main)')
+        
+        win_pwsh_parser.add_argument( '-a', '--args', dest='entry_args', metavar='ARGS', default=False,
+                                help='Arguments to be used for EntryPoint (ex: "arg1 arg2 arg3")')
+  
+        win_pwsh_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
                                 choices=self.get_available_files("evasions", platform="windows_pwsh"),
                                 help='Evasion module')
 
-        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
+        win_pwsh_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
         #win_cs_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
@@ -176,25 +182,27 @@ class esc:
                                 help='Output filename')
 
         # Windows ASPX subparser
-        win_cs_parser = subparsers.add_parser('windows_aspx', help='Dotnet Windows Shellcode Loader (C#)')
+        win_aspx_parser = subparsers.add_parser('windows_aspx', help='Dotnet Windows Shellcode Loader (C#)')
 
-        win_cs_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+        win_aspx_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
 
-        win_cs_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_aspx"),
+        win_aspx_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_aspx"),
                                 help='Shellcode-loading method')
 
-        win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_aspx"),
+        win_aspx_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_aspx"),
                                 help='Encryption/Encoding algorithm to be applied to the shellcode')
 
-        win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="False",
+        win_aspx_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="False",
                                 help='Process name for shellcode injection')
 
-        win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+        win_aspx_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
                                 choices=self.get_available_files("evasions", platform="windows_aspx"),
                                 help='Evasion module')
 
-        win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
+        win_aspx_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
+        
+        
         # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
         lin_parser = subparsers.add_parser('linux', help='Native Linux Shellcode Loader (C++)')
         lin_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
@@ -282,6 +290,9 @@ class esc:
                     ("Injection Process", loader.target_process if mode == "Injection" and loader.target_process else None),
                     ("Syscalls", loader.syscall_method),
                     ("SysWhispers Mode", self.syswhispers_recovery_method if loader.syscall_method == "SysWhispers3" else None),
+                    ("Entry Point", loader.class_name),
+                    ("Entry Function", loader.function_name),
+                    ("Entry Args", loader.entry_args),
                 ],
                 "Outputs": [
                     ("Compiler", self.compiler),
