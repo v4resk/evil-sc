@@ -1,0 +1,172 @@
+using System;
+using System.Text;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+using System.Reflection;
+using System.Linq;
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+public class Program
+{
+    [STAThread]
+    static void Main(string[] args)
+    {
+        // Check .NET Framework version
+        CheckCompatibility();
+        
+        byte[] buf = ####SHELLCODE####;
+        
+        //####CALL####
+        
+        ExecutePowerShell(buf);
+    }
+
+    private static void CheckCompatibility()
+    {
+        try
+        {
+            Version version = Environment.Version;
+            Console.WriteLine($"[+] .NET Framework Version: {version}");
+            
+            if (version.Major < 3 || (version.Major == 3 && version.Minor < 5))
+            {
+                throw new Exception("This application requires .NET Framework 3.5 or later.");
+            }
+
+            // Check if PowerShell is available
+            Type psType = typeof(PowerShell);
+            if (psType == null)
+            {
+                throw new Exception("PowerShell automation is not available on this system.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[-] Compatibility check failed: {ex.Message}");
+            Environment.Exit(1);
+        }
+    }
+
+    private static void ExecutePowerShell(byte[] data)
+    {
+        try
+        {
+            // Convert byte array to command string safely
+            string command = "";
+            try
+            {
+                command = Encoding.UTF8.GetString(data);
+                if (command.IndexOf('\0') != -1)
+                {
+                    command = command.Substring(0, command.IndexOf('\0'));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[-] Error decoding command: {ex.Message}");
+                return;
+            }
+
+            Console.WriteLine("[+] Creating PowerShell runspace");
+            using (Runspace runspace = RunspaceFactory.CreateRunspace())
+            {
+                runspace.Open();
+                using (PowerShell ps = PowerShell.Create())
+                {
+                    ps.Runspace = runspace;
+                    SetupPowerShellEnvironment(ps);
+
+                    Console.WriteLine($"[+] Executing command: {command}");
+                    ps.AddScript(command);
+                    ps.AddCommand("Out-String");
+
+                    try
+                    {
+                        var results = ps.Invoke();
+                        ProcessResults(ps, results);
+                    }
+                    catch (RuntimeException psEx)
+                    {
+                        Console.WriteLine($"[-] PowerShell execution error: {psEx.Message}");
+                        if (psEx.ErrorRecord != null)
+                        {
+                            Console.WriteLine($"[-] Error details: {psEx.ErrorRecord.FullyQualifiedErrorId}");
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[-] Execution failed: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[-] Inner Exception: {ex.InnerException.Message}");
+            }
+        }
+    }
+
+    private static void SetupPowerShellEnvironment(PowerShell ps)
+    {
+        try
+        {
+            // Basic Write-Host redefinition that works across PS versions
+            var redefineWriteHost = @"
+                function Write-Host {
+                    param([object]$Object)
+                    $Object | Write-Output
+                }";
+            ps.AddScript(redefineWriteHost).Invoke();
+            ps.Commands.Clear();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[-] Warning: Could not setup PowerShell environment: {ex.Message}");
+        }
+    }
+
+    private static void ProcessResults(PowerShell ps, System.Collections.ObjectModel.Collection<PSObject> results)
+    {
+        var output = new StringBuilder();
+
+        // Process main output
+        if (results != null && results.Count > 0)
+        {
+            foreach (var result in results)
+            {
+                if (result != null)
+                {
+                    output.AppendLine(result.ToString());
+                }
+            }
+        }
+
+        // Process error stream
+        if (ps.Streams.Error != null && ps.Streams.Error.Count > 0)
+        {
+            output.AppendLine("\n[!] Errors:");
+            foreach (var error in ps.Streams.Error)
+            {
+                if (error != null)
+                {
+                    output.AppendLine($"- {error.ToString()}");
+                }
+            }
+        }
+
+        string finalOutput = output.ToString().Trim();
+        if (!string.IsNullOrEmpty(finalOutput))
+        {
+            Console.WriteLine(finalOutput);
+        }
+        else
+        {
+            Console.WriteLine("[i] Command completed with no output");
+        }
+    }
+}

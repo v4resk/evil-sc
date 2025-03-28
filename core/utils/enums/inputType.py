@@ -7,7 +7,7 @@ class inputType(Enum):
     NATIVE_DLL = 2
     DOTNET_BIN = 3
     DOTNET_DLL = 4
-
+    TEXT = 5
     @classmethod
     def from_string(cls, format_str):
         """Convert a format string to an inputType enum."""
@@ -17,5 +17,6 @@ class inputType(Enum):
             "NATIVE_DLL": cls.NATIVE_DLL,
             "DOTNET_BIN": cls.DOTNET_BIN,
             "DOTNET_DLL": cls.DOTNET_DLL,
+            "TEXT": cls.TEXT,
         }
         return mapping.get(format_str.upper(), None)

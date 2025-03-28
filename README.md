@@ -159,6 +159,13 @@ Each platform has its own set of options. Here's an example for Windows C++:
 -o, --outfile           Output filename
 ```
 
+## Known Issues & Planned Features
+
+- **BUG:** SecureString is not supported for PowerShell if after an other encryption method
+- **FEATURE:** Support for DLL copy (for DLL sideloading)  
+- **FEATURE:** Support for directly inject VBA Macros into provided office files
+- **FEATURE:** Output metrics about generated malware (sha256, entropy, size, scan results, etc...)
+- **FEATURE:** Support for "CmdLine" input files for new powershell/vbscript/vba/aspx/js templates(execute a command instead of loading a shellcode file)
 
 ## Contributing
 
