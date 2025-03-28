@@ -1,0 +1,13 @@
+
+Sub CesarDecode####UUID#### (buf As Variant)
+    Dim i As Long
+    Dim shift As Byte
+    
+    shift = ####SHIFT####
+    
+    ' Loop through each byte in the buffer
+    For i = LBound(buf) To UBound(buf)
+        ' Reverse Caesar shift with wraparound
+        buf(i) = (buf(i) - shift + 256) Mod 256
+    Next i
+End Sub

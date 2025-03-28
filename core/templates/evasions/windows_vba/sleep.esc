@@ -1,7 +1,16 @@
-Sub sleep(amount As Long)
-    Dim MyV As Date
-    MyV = Now
-    Do
-        DoEvents
-    Loop Until Now >= DateAdd("s", amount, MyV)
+
+Sub Sleep####UUID####()
+    Dim startTime As Date
+    Dim endTime As Date
+    Dim elapsedSeconds As Double
+    
+    startTime = Now()
+    Sleep ####SLEEP_TIME####
+    endTime = Now()
+    
+    elapsedSeconds = DateDiff("s", startTime, endTime)
+    
+    If elapsedSeconds < ####VERIFY_TIME#### Then
+        End
+    End If
 End Sub

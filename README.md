@@ -161,11 +161,14 @@ Each platform has its own set of options. Here's an example for Windows C++:
 
 ## Known Issues & Planned Features
 
-- **BUG:** SecureString is not supported for PowerShell if after an other encryption method
+- **BUG:** SecureString is not supported for PowerShell if after an other encryption method (AES mainly)
+- **FEATURE:** Support for --arch paramaters (compile for x86 or x64 target)
+- **FEATURE:** add argument support for some encryptors / evasion modules (ex: --em user:MyUser --em sleep:10)
+- **FEATURE:** Support for Assembly Execution inside a C# Template
 - **FEATURE:** Support for DLL copy (for DLL sideloading)  
-- **FEATURE:** Support for directly inject VBA Macros into provided office files
 - **FEATURE:** Output metrics about generated malware (sha256, entropy, size, scan results, etc...)
-- **FEATURE:** Support for "CmdLine" input files for new powershell/vbscript/vba/aspx/js templates(execute a command instead of loading a shellcode file)
+- **FEATURE:** VBA modules: -em cesar, -e ? . 
+- **FEATURE:** Obfusaction modules (after compile / generation)
 
 ## Contributing
 
