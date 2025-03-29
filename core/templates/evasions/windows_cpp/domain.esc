@@ -1,0 +1,26 @@
+void CheckDomain####UUID####() {
+    WCHAR computerName[MAX_COMPUTERNAME_LENGTH + 1];
+    WCHAR domainName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD computerSize = sizeof(computerName)/sizeof(computerName[0]);
+    DWORD domainSize = sizeof(domainName)/sizeof(domainName[0]);
+
+    if (!GetComputerNameW(computerName, &computerSize)) {
+        ExitProcess(0);
+    }
+    
+    if (!GetEnvironmentVariableW(L"USERDOMAIN", domainName, domainSize)) {
+        ExitProcess(0);
+    }
+
+    // If computer name equals domain name, we're not domain joined
+    if (_wcsicmp(computerName, domainName) == 0) {
+        ExitProcess(0);
+    }
+
+    #if ####CHECK_SPECIFIC#### == 1
+    WCHAR expectedDomain[] = L"####DOMAIN####";
+    if (_wcsicmp(domainName, expectedDomain) != 0) {
+        ExitProcess(0);
+    }
+    #endif
+}

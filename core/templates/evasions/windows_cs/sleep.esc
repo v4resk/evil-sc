@@ -2,12 +2,11 @@ public static class GetTimeInfo####UUID####
 {
         public static void DoTimeSleep()
     {
-            var meowrand = new Random();
-            uint meowdream = (uint)meowrand.Next(10000, 20000);
-            double deltameow = meowdream / 1000 - 0.5;
+            uint sleepTime = ####SLEEP_TIME####;
+            double verifyTime = ####VERIFY_TIME####;
             DateTime longbefore = DateTime.Now;
-            Thread.Sleep((int)meowdream);
-            if (DateTime.Now.Subtract(longbefore).TotalSeconds < deltameow)
+            Thread.Sleep((int)sleepTime);
+            if (DateTime.Now.Subtract(longbefore).TotalSeconds < verifyTime)
             {
                 System.Environment.Exit(0);
             }

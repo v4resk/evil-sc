@@ -7,13 +7,14 @@ from core.config.config import Config
 
 class Evasion(ABC):
 
-    def __init__(self, platform ,order=None):
+    def __init__(self, platform, args=None, order=None):
         self.implementations_dir = Config().get("FOLDERS", "EVASION")
         self.decoder_in = None
         self.decoder_out = None
         self.order = order
         self.isStringShellcode = False
         self.platform = platform
+        self.args = args or []
         pass
 
     def set_order(self, order):

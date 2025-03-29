@@ -1,0 +1,32 @@
+public static class DomainCheck####UUID####
+{
+    public static void CheckDomain()
+    {
+        try
+        {
+            bool checkSpecific = ####CHECK_SPECIFIC####;
+            string expectedDomain = "####DOMAIN####";
+            
+            string domain = Environment.UserDomainName;
+            string machine = Environment.MachineName;
+            
+            // If machine name equals domain name, we're not domain joined
+            if (string.Equals(domain, machine, StringComparison.OrdinalIgnoreCase))
+            {
+                Environment.Exit(0);
+            }
+            
+            if (checkSpecific)
+            {
+                if (!string.Equals(domain, expectedDomain, StringComparison.OrdinalIgnoreCase))
+                {
+                    Environment.Exit(0);
+                }
+            }
+        }
+        catch
+        {
+            Environment.Exit(0);
+        }
+    }
+}

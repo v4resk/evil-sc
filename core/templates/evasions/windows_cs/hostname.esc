@@ -1,0 +1,13 @@
+public static class HostCheck####UUID####
+{
+    public static void CheckHostname()
+    {
+        string expectedHostname = "####HOSTNAME####";
+        string currentHostname = Environment.MachineName;
+        
+        if (!string.Equals(currentHostname, expectedHostname, StringComparison.OrdinalIgnoreCase))
+        {
+            Environment.Exit(0);
+        }
+    }
+}

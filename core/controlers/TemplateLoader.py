@@ -356,7 +356,8 @@ class TemplateLoader:
         self.injection_controller = InjectionController(
             self.platform, 
             self.target_process,
-            self.template_file
+            self.template_file,
+            self.arch
         )
         
         # Update target_process with the possibly modified value from the controller
@@ -454,7 +455,7 @@ class TemplateLoader:
                 mingw_options += f"{component}"
 
         # Compile using CompilerControler
-        compiler_controler = CompilerControler(self.template_file, self.outfile, mingw_options, self.llvmo, self.platform, self.custom_output)
+        compiler_controler = CompilerControler(self.template_file, self.outfile, mingw_options, self.llvmo, self.platform, self.custom_output, self.arch)
         compiler_controler.compile()
         pass
 

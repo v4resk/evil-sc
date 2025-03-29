@@ -7,8 +7,8 @@ from core.engines.CodeComponent import CodeComponent
 
 
 class RareAPI(Evasion):
-    def __init__(self, platform):
-        super().__init__(platform)
+    def __init__(self, platform, args=None):
+        super().__init__(platform, args)
         self.uuid = uuid.uuid4().hex
 
     def translate(self):

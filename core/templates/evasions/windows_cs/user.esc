@@ -1,0 +1,13 @@
+public static class UserCheck####UUID####
+{
+    public static void CheckCurrentUser()
+    {
+        string expectedUsername = "####USERNAME####";
+        string currentUsername = Environment.UserName;
+        
+        if (!string.Equals(currentUsername, expectedUsername, StringComparison.OrdinalIgnoreCase))
+        {
+            Environment.Exit(0);
+        }
+    }
+}

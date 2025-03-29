@@ -38,20 +38,27 @@ class EvasionChain:
         chain = EvasionChain()
         if not evasion or len(evasion) == 0:
             return chain
+        
         for e in evasion:
             try:
-                    
-                    evasion_class_string = f"core.evasions.{e}.{e}"
-                    evasion_class = locate(evasion_class_string)
-                    evasion_instance = evasion_class(platform)     
+                # Parse module name and arguments
+                parts = e.split(':')
+                module_name = parts[0]
+                args = parts[1].split(',') if len(parts) > 1 else []
+                
+                # Get the evasion class
+                evasion_class_string = f"core.evasions.{module_name}.{module_name}"
+                evasion_class = locate(evasion_class_string)
+                
+                # Create instance with platform and args
+                evasion_instance = evasion_class(platform, args)
 
-                    if debug_mode == "True":
-                        print(evasion_instance.translate().evasion_components.code)
-                        pass     
+                if debug_mode == "True":
+                    print(evasion_instance.translate().evasion_components.code)
+                    pass     
 
-                    chain.push(evasion_instance)
+                chain.push(evasion_instance)
             except Exception as ex:
-                print("here")
-                print(ex)
+                print("Error creating evasion module:", ex)
                 continue
         return chain

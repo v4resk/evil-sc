@@ -5,13 +5,14 @@ from colorama import init, Fore
 debug_mode = Config().get("DEBUG", "COMPILER")
 
 class CompilerControler:
-    def __init__(self,evil_sc_template_file,outfile,compile_options, llvmo , platform, custom_output):
+    def __init__(self,evil_sc_template_file,outfile,compile_options, llvmo , platform, custom_output, arch):
         self.evil_sc_template_file = evil_sc_template_file
         self.outfile = outfile
         self.llvmo = llvmo
         self.platform = platform
         self.compile_options = compile_options
         self.custom_output = custom_output
+        self.arch = arch
         self.llvmo_options = " -Xclang -flto-visibility-public-std -mllvm -bcf -mllvm -sub -mllvm -fla -mllvm -split -mllvm -bcf_loop=3 -mllvm -sub_loop=2"
 
     def compile(self):
@@ -20,7 +21,7 @@ class CompilerControler:
             for line in custom_output_with_newlines.splitlines():
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}{line}")
                 
-        if(self.platform == "windows_cpp"):
+        if(self.platform == "windows_cpp"):            
             # If not using LLVM Obf
             self.compile_options += " -static-libgcc -static-libstdc++ -static -s -O3 "
             if self.llvmo is False:
@@ -33,8 +34,12 @@ class CompilerControler:
                 os.system(f"x86_64-w64-mingw32-clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}")
 
         elif(self.platform == "windows_cs"):
+            if self.arch == "x86":
+                self.compile_options += " -platform:x86"
+            else:
+                self.compile_options += " -platform:x64"
             if debug_mode == "True":
-                print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} {self.compile_options} -out:{self.outfile}\n")
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: mono-csc {self.evil_sc_template_file} {self.compile_options} -out:{self.outfile}\n")
             os.system(f"mono-csc -platform:x64 -unsafe {self.evil_sc_template_file} {self.compile_options} -out:{self.outfile}")
 
         elif(self.platform == "windows_pwsh"):

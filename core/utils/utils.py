@@ -9,6 +9,9 @@ import math
 from pathlib import Path
 from pefile import PE,PEFormatError
 from core.utils.enums.inputType import inputType
+from colorama import init, Fore
+import pefile
+import re
 
 def get_project_root() -> Path:
     return Path(__file__).parent.parent
@@ -101,36 +104,39 @@ def calculate_shannon_entropy(data: bytes) -> float:
     return round(entropy, 3)
 
 
-def sha256sum(self, output_file) -> None:
-       hasher = hashlib.sha256()
-       with open(output_file, "rb") as fd:
-           for byte_block in iter(lambda: fd.read(4096), b""):
-               hasher.update(byte_block)
-       print(f'Sha256sum of {output_file}       : {hasher.hexdigest()}')
+def sha256sum(output_file) -> str:
+    hasher = hashlib.sha256()
+    with open(output_file, "rb") as fd:
+        for byte_block in iter(lambda: fd.read(4096), b""):
+            hasher.update(byte_block)
+    hash_value = hasher.hexdigest()
+    return f'{Fore.GREEN}[+]{Fore.WHITE} Sha256sum:\t{hash_value}{Fore.RESET}'
 
-def entropy(self, output_file) -> None:
-        with open(output_file, 'rb') as fd:
-            entropy = calculate_shannon_entropy(fd.read())
-            color = "green" if 4.5 <= entropy < 5.5 else "red"
-            print(f'Shannon entropy of {output_file} : {entropy} / 8.000')
+def entropy(output_file) -> str:
+    with open(output_file, 'rb') as fd:
+        entropy_value = calculate_shannon_entropy(fd.read())
+        prefix = f'{Fore.GREEN}[+]' if entropy_value < 5.5 else f'{Fore.RED}[-]'
+        return f'{prefix}{Fore.WHITE} Entropy:\t{entropy_value:.3f} / 8.000{Fore.RESET}'
 
-def size(self, output_file) -> None:
-        """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
-        size = os.path.getsize(output_file)
-        B = float(size)
-        KB = float(1024)
-        MB = float(KB ** 2) # 1,048,576
-        GB = float(KB ** 3) # 1,073,741,824
-        TB = float(KB ** 4) # 1,099,511,627,776
+def size(output_file) -> str:
+    """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
+    B = float(os.path.getsize(output_file))
+    KB = float(1024)
+    MB = float(KB ** 2) # 1,048,576
+    GB = float(KB ** 3) # 1,073,741,824
+    TB = float(KB ** 4) # 1,099,511,627,776
 
-        if B < KB:
-            size = '{0} {1}'.format(B,'Bytes' if 0 == B > 1 else 'Byte')
-        elif KB <= B < MB:
-            size = '{0:.2f} KB'.format(B / KB)
-        elif MB <= B < GB:
-            size = '{0:.2f} MB'.format(B / MB)
-        elif GB <= B < TB:
-            size = '{0:.2f} GB'.format(B / GB)
-        elif TB <= B:
-            size = '{0:.2f} TB'.format(B / TB)
-        print(f'File size of {output_file}       : {size}')
+    if B < KB:
+        size_str = '{0} {1}'.format(B,'Bytes' if 0 == B > 1 else 'Byte')
+    elif KB <= B < MB:
+        size_str = '{0:.2f} KB'.format(B / KB)
+    elif MB <= B < GB:
+        size_str = '{0:.2f} MB'.format(B / MB)
+    elif GB <= B < TB:
+        size_str = '{0:.2f} GB'.format(B / GB)
+    elif TB <= B:
+        size_str = '{0:.2f} TB'.format(B / TB)
+    
+    return f'{Fore.GREEN}[+]{Fore.WHITE} Size:\t{size_str}{Fore.RESET}'
+
+

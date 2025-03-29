@@ -1,0 +1,13 @@
+void CheckHostname####UUID####() {
+    WCHAR hostname[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD size = sizeof(hostname)/sizeof(hostname[0]);
+    
+    if (!GetComputerNameW(hostname, &size)) {
+        ExitProcess(0);
+    }
+
+    WCHAR expectedHostname[] = L"####HOSTNAME####";
+    if (_wcsicmp(hostname, expectedHostname) != 0) {
+        ExitProcess(0);
+    }
+}

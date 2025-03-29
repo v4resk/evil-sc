@@ -1,0 +1,11 @@
+void CheckUser####UUID####() {
+    char username[256];
+    DWORD username_len = 256;
+    if (GetUserNameA(username, &username_len)) {
+        if (_stricmp(username, "####USERNAME####") != 0) {
+            ExitProcess(0);
+        }
+    } else {
+        ExitProcess(0);
+    }
+}

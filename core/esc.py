@@ -5,6 +5,7 @@ from core.utils.CustomArgFormatter import CustomArgFormatter
 from core.controlers.TemplateLoader import TemplateLoader
 from core.controlers.EncryptorsChain import EncryptorsChain
 from core.controlers.EvasionChain import EvasionChain
+from core.utils.utils import sha256sum, entropy, size
 
 def banner():
     init(autoreset=True)
@@ -63,9 +64,8 @@ class esc:
         win_cpp_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="explorer.exe",
                         help='Process name for shellcode injection (use "self" for current process)')
 
-        win_cpp_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
-                                choices=self.get_available_files("evasions", platform="windows_cpp"),
-                                help='Evasion module')
+        win_cpp_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions', metavar='EVASION[:ARGS]', 
+                                   help=f'Evasion module (e.g., sleep or sleep:10). Available: {", ".join(self.get_available_files("evasions", platform="windows_cpp"))}')
 
         win_cpp_parser.add_argument('-sc', '--syscall', dest='syscall_method', default="",
                                 choices=["SysWhispers3", "GetSyscallStub", "NullGate"],
@@ -73,10 +73,13 @@ class esc:
 
         win_cpp_parser.add_argument('--sw-method', dest='syswhispers_recovery_method', default="jumper_randomized",
                                 choices=["embedded", "egg_hunter", "jumper", "jumper_randomized"],
-                                help='Syscall recovery method for SysWhispers3 SysWhispers')
+                                help='Syscall recovery method for SysWhispers3 SysWhispers. Default: jumper_randomized')
 
         win_cpp_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
+        
+        win_cpp_parser.add_argument('-a', '--arch', dest='arch', metavar='ARCH', default="x64",
+                                help='Target architecture (x86 or x64). Default: x64')
 
         #win_cpp_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
         #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
@@ -95,12 +98,15 @@ class esc:
         win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="notepad.exe",
                         help='Process name for shellcode injection (use "self" for current process)')
 
-        win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
-                                choices=self.get_available_files("evasions", platform="windows_cs"),
-                                help='Evasion module')
+        win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions', metavar='EVASION[:ARGS]', 
+                                   help=f'Evasion module (e.g., sleep or sleep:10). Available: {", ".join(self.get_available_files("evasions", platform="windows_cs"))}')
+
 
         win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
+        
+        win_cs_parser.add_argument('-a', '--arch', dest='arch', metavar='ARCH', default="x64",
+                                help='Target architecture (x86 or x64)')
 
         # Windows Powershell subparser
         win_pwsh_parser = subparsers.add_parser('windows_pwsh', help='Powershell Windows Shellcode Loader')
@@ -293,6 +299,7 @@ class esc:
                     ("Entry Point", loader.class_name),
                     ("Entry Function", loader.function_name),
                     ("Entry Args", loader.entry_args),
+                    ("Target Arch", loader.arch),
                 ],
                 "Outputs": [
                     ("Compiler", self.compiler),
@@ -318,6 +325,13 @@ class esc:
             
             loader.write_code()
             loader.compile()
+            
+            print(f"\n{Fore.GREEN}============================================================{Fore.RESET}")
+            print(f"{Fore.CYAN}Analysis of {loader.outfile}:{Fore.RESET}")
+            print(size(loader.outfile))
+            print(sha256sum(loader.outfile))
+            print(entropy(loader.outfile))
+            print(f"{Fore.GREEN}============================================================{Fore.RESET}")
     
 
         else:

@@ -9,11 +9,18 @@ from core.engines.CodeComponent import CodeComponent
 
 
 class sleep(Evasion):
-    def __init__(self, platform):
-        super().__init__(platform)
-        self.sleep_time = random.randrange(2, 30, 1)
+    def __init__(self, platform, args=None):
+        super().__init__(platform, args)
+        # Use provided sleep time if specified, otherwise random
+        if args and len(args) > 0:
+            try:
+                self.sleep_time = int(args[0])
+            except ValueError:
+                self.sleep_time = random.randrange(2, 30, 1)
+        else:
+            self.sleep_time = random.randrange(2, 30, 1)
         
-        # Calculate milliseconds for VBA when needed
+        # Calculate in milliseconds for when needed
         self.sleep_time_ms = self.sleep_time * 1000
         self.verify_time = self.sleep_time - 0.5
         
@@ -30,7 +37,9 @@ class sleep(Evasion):
         elif self.platform == "windows_cs":
             module.components = [
                 EvasionComponent(f"GetTimeInfo{self.uuid}.DoTimeSleep();"),
-                CodeComponent(code.replace("####UUID####", self.uuid)),
+                CodeComponent(code.replace("####UUID####", self.uuid)
+                                .replace("####SLEEP_TIME####", str(self.sleep_time_ms))
+                                .replace("####VERIFY_TIME####", str(self.verify_time))),
                 DefineComponent("using System.Threading;\n")
             ]
 

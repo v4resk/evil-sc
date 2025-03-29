@@ -54,6 +54,8 @@ DWORD WINAPI esc_main(LPVOID lpParameter)
     // Clean up handles
     NtClose(hThread);
     NtClose(hProc);
+
+    ExitProcess(0);
     
     return 0;
 }
@@ -65,4 +67,5 @@ int main()
     //####ARGS####
 
     esc_main(NULL);
+    return 0;
 }
