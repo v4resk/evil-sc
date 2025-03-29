@@ -36,7 +36,7 @@ class sleep(Evasion):
 
         elif self.platform == "windows_vba":
             module.components = [
-                DefineComponent("Private Declare PtrSafe Function Sleep Lib \"KERNEL32\" (ByVal mili As Long) As Long"),
+                DefineComponent("Private Declare PtrSafe Function Sleep Lib \"KERNEL32\" (ByVal mili As Long) As Long\n"),
                 CodeComponent(code.replace("####SLEEP_TIME####", str(self.sleep_time_ms))
                                    .replace("####VERIFY_TIME####", str(self.verify_time))
                                    .replace("####UUID####", str(self.uuid))),

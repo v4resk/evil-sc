@@ -267,6 +267,16 @@ class TemplateLoader:
                 injection_components_code += component.code 
         template_content = template_content.replace(injection_placeholder, injection_components_code)
         
+        # Replace Process
+        process_placeholder = Config().get('PLACEHOLDERS', 'INJECT_PROCESS')
+        if hasattr(self, 'target_process') and process_placeholder and isinstance(self.target_process, str):
+            template_content = template_content.replace(process_placeholder, self.target_process)
+        
+        # Replace Process Path
+        process_path_placeholder = Config().get('PLACEHOLDERS', 'INJECT_PROCESS_PATH')
+        if hasattr(self, 'target_process_path') and process_path_placeholder and isinstance(self.target_process_path, str):
+            template_content = template_content.replace(process_path_placeholder, self.target_process_path)
+        
         # Replace Class Name
         class_name_placeholder = Config().get('PLACEHOLDERS', 'CLASS_NAME')
         if hasattr(self, 'class_name') and self.class_name and isinstance(self.class_name, str):
@@ -338,9 +348,9 @@ class TemplateLoader:
         This function should be called after the template file is set.
         """
         # Skip if platform doesn't support injection yet
-        if self.platform != "windows_cpp":
-            self.target_process = None
-            return
+        #if self.platform != "windows_cpp":
+        #    self.target_process = None
+        #    return
 
         # Initialize injection controller to check template compatibility
         self.injection_controller = InjectionController(
@@ -351,7 +361,7 @@ class TemplateLoader:
         
         # Update target_process with the possibly modified value from the controller
         self.target_process = self.injection_controller.target_process
-        
+        self.target_process_path = self.injection_controller.target_process_path
         # Set injection flag based on template support
         self.injection = self.injection_controller.supports_injection()
         

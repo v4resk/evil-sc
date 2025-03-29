@@ -20,8 +20,18 @@ typedef NTSTATUS (NTAPI *pNtProtectVirtualMemory)(
     PULONG OldProtect
 );
 
-typedef NTSTATUS (NTAPI *pNtClose)(
-    HANDLE Handle
+typedef NTSTATUS (NTAPI *pNtCreateThreadEx)(
+    PHANDLE ThreadHandle,
+    ACCESS_MASK DesiredAccess,
+    PVOID ObjectAttributes,
+    HANDLE ProcessHandle,
+    PVOID StartRoutine,
+    PVOID Argument,
+    ULONG CreateFlags,
+    SIZE_T ZeroBits,
+    SIZE_T StackSize,
+    SIZE_T MaximumStackSize,
+    PVOID AttributeList
 );
 
 typedef NTSTATUS (NTAPI *pNtWaitForSingleObject)(
@@ -38,24 +48,14 @@ typedef NTSTATUS (NTAPI *pNtWriteVirtualMemory)(
     PSIZE_T NumberOfBytesWritten
 );
 
-typedef NTSTATUS (NTAPI *pNtCreateThreadEx)(
-    PHANDLE ThreadHandle,
-    ACCESS_MASK DesiredAccess,
-    PVOID ObjectAttributes,
-    HANDLE ProcessHandle,
-    PVOID StartRoutine,
-    PVOID Argument,
-    ULONG CreateFlags,
-    SIZE_T ZeroBits,
-    SIZE_T StackSize,
-    SIZE_T MaximumStackSize,
-    PVOID AttributeList
+typedef NTSTATUS (NTAPI *pNtClose)(
+    HANDLE Handle
 );
 
 // Function declarations
 pNtAllocateVirtualMemory NtAllocateVirtualMemory;
 pNtProtectVirtualMemory NtProtectVirtualMemory;
-pNtClose NtClose;
+pNtCreateThreadEx NtCreateThreadEx;
 pNtWaitForSingleObject NtWaitForSingleObject;
 pNtWriteVirtualMemory NtWriteVirtualMemory;
-pNtCreateThreadEx NtCreateThreadEx;
+pNtClose NtClose;

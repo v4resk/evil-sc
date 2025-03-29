@@ -1,3 +1,4 @@
+
 Sub dop()
 
     Dim dllAddr As LongPtr
@@ -41,3 +42,4 @@ Sub dop()
     #End If
 
 End Sub
+

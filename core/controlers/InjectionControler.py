@@ -10,16 +10,18 @@ from core.engines.InjectionComponent import InjectionComponent
 
 
 class InjectionController:
-    def __init__(self, platform, target_process=None, template_file=None):
+    def __init__(self, platform, target_process=None, template_file=None, target_arch="x64"):
         self.platform = platform
         self.target_process = target_process
+        self.target_process_path = None
         self.template_file = template_file
+        self.target_arch = target_arch
         
         # Check template capabilities
-        self.has_injection_placeholder, self.has_process_placeholder = self.validate_template_compatibility(template_file)
+        self.has_injection_placeholder, self.has_process_placeholder, self.has_process_path_placeholder = self.validate_template_compatibility(template_file)
         
-        # Set default target process if needed
-        self.set_default_target_process()
+        # Set default target process / or update if path is needed
+        self._set_target_process()
         
         # Get the appropriate injection module
         self.injection_module = self._get_injection_handler()
@@ -29,22 +31,83 @@ class InjectionController:
         if not self.supports_injection():
             return None
             
-        if self.platform == "windows_cpp":
-            return self.get_windows_cpp_injection_module()
-        # Add more platforms as they become supported
+        # Map platforms to their respective handler methods
+        handlers = {
+            "windows_cpp": self.get_windows_cpp_injection_module,
+            "windows_cs": self.get_windows_cs_injection_module,
+            "windows_pwsh": self.get_windows_pwsh_injection_module,
+        }
         
+        # Get the handler for the platform or return None if not supported
+        handler = handlers.get(self.platform)
+        if handler:
+            return handler()
+            
         return None
     
     def supports_injection(self):
         """Check if the template supports injection"""
-        return (self.has_injection_placeholder or self.has_process_placeholder)
+        return (self.has_injection_placeholder or self.has_process_placeholder or self.has_process_path_placeholder)
     
-    def set_default_target_process(self):
+    def _set_target_process(self):
         """Set default target process if needed"""
         if self.supports_injection() and not self.target_process:
             self.target_process = "self"
             print(f"{Fore.GREEN}[+] {Fore.WHITE}Using default target process: {self.target_process}")
+        
+        # Map process name to full path if needed
+        if self.has_process_path_placeholder and self.target_process and self.target_process.lower() != "self":
+            # Map common Windows processes to their paths based on architecture
+            process_paths = {
+                "notepad.exe": {
+                    "x86": "C:\\\\Windows\\\\SysWOW64\\\\notepad.exe",
+                    "x64": "C:\\\\Windows\\\\System32\\\\notepad.exe"
+                },
+                "cmd.exe": {
+                    "x86": "C:\\\\Windows\\\\SysWOW64\\\\cmd.exe",
+                    "x64": "C:\\\\Windows\\\\System32\\\\cmd.exe"
+                },
+                "powershell.exe": {
+                    "x86": "C:\\\\Windows\\\\SysWOW64\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe",
+                    "x64": "C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe"
+                },
+                "explorer.exe": {
+                    "x86": "C:\\\\Windows\\\\SysWOW64\\\\explorer.exe",
+                    "x64": "C:\\\\Windows\\\\System32\\\\explorer.exe"
+                },
+                "svchost.exe": {
+                    "x86": "C:\\\\Windows\\\\SysWOW64\\\\svchost.exe",
+                    "x64": "C:\\\\Windows\\\\System32\\\\svchost.exe"
+                }
+            }
+            
+            # Determine architecture path
+            arch_key = "x86" if "x86" in self.target_arch.lower() else "x64"
+            
+            # Get process path if it exists in our mapping
+            if self.target_process.lower() in process_paths:
+                self.target_process_path = process_paths[self.target_process.lower()][arch_key]
+            else:
+                # For unknown processes, assume System32/SysWOW64 path
+                base_path = "C:\\\\Windows\\\\SysWOW64\\\\" if arch_key == "x86" else "C:\\\\Windows\\\\System32\\\\"
+                self.target_process_path = base_path + self.target_process
     
+    def get_windows_cs_injection_module(self):
+        """Create and return a module for Windows C# injection"""
+        injection_module = Module()
+        
+        # IMPLEMENTATION HERE        
+        
+        return injection_module
+
+    def get_windows_pwsh_injection_module(self):
+        """Create and return a module for Windows PowerShell injection"""
+        injection_module = Module()
+        
+        # IMPLEMENTATION HERE
+                
+        return injection_module
+
     def get_windows_cpp_injection_module(self):
         """Create and return a module for Windows C++ injection"""
         injection_module = Module()
@@ -52,7 +115,7 @@ class InjectionController:
         # Determine which code to use based on target process
         if self.target_process and self.target_process.lower() != "self":
             # Remote process injection
-            injection_code = self.generate_remote_process_code()
+            injection_code = self.generate_cpp_remote_process_code()
             
             # Add includes needed for process enumeration            
             injection_module.components = [
@@ -61,7 +124,7 @@ class InjectionController:
             
         else:
             # Local process injection
-            injection_code = self.generate_local_process_code()
+            injection_code = self.generate_cpp_local_process_code()
         
         # Add the injection component
         injection_component = InjectionComponent(injection_code)
@@ -76,14 +139,14 @@ class InjectionController:
         # Add more platforms as needed
         return None
         
-    def generate_local_process_code(self):
+    def generate_cpp_local_process_code(self):
         """Generate code for injecting into the local process"""
         return """
     // Using current process
     hProc = GetCurrentProcess();
 """
         
-    def generate_remote_process_code(self):
+    def generate_cpp_remote_process_code(self):
         """Generate code for injecting into a remote process"""
         process_name = self.target_process
         return f"""
@@ -126,30 +189,12 @@ class InjectionController:
             template_content = f.read()
             
         injection_placeholder = Config().get('PLACEHOLDERS', 'INJECTION')
-        process_placeholder = Config().get('PLACEHOLDERS', 'PROCESS_X64')
+        process_placeholder = Config().get('PLACEHOLDERS', 'INJECT_PROCESS')
+        process_path_placeholder = Config().get('PLACEHOLDERS', 'INJECT_PROCESS_PATH')
         
         has_injection = injection_placeholder in template_content
         has_process = process_placeholder in template_content
+        has_process_path = process_path_placeholder in template_content
         
-        return has_injection, has_process
+        return has_injection, has_process,has_process_path
         
-    def apply_to_template(self, template_content):
-        """Apply injection code to the template content"""
-        if not self.supports_injection() or not self.injection_module:
-            return template_content
-            
-        # Replace process placeholder if present
-        if self.has_process_placeholder:
-            process_placeholder = Config().get('PLACEHOLDERS', 'PROCESS_X64')
-            template_content = template_content.replace(process_placeholder, self.target_process)
-            
-        # Replace injection placeholder if present
-        if self.has_injection_placeholder:
-            injection_placeholder = Config().get('PLACEHOLDERS', 'INJECTION')
-            # Get the injection component from the module
-            for component in self.injection_module.components:
-                if isinstance(component, InjectionComponent):
-                    template_content = template_content.replace(injection_placeholder, component.code)
-                    break
-                
-        return template_content

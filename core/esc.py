@@ -92,8 +92,8 @@ class esc:
         win_cs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_cs"),
                                 help='Encryption/Encoding algorithm to be applied to the shellcode')
 
-        win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
-                                help='Process name for shellcode injection')
+        win_cs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="notepad.exe",
+                        help='Process name for shellcode injection (use "self" for current process)')
 
         win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
                                 choices=self.get_available_files("evasions", platform="windows_cs"),
