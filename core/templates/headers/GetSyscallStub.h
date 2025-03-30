@@ -3,6 +3,14 @@
 
 
 
+typedef NTSTATUS (NTAPI *pNtWriteVirtualMemory)(
+    HANDLE ProcessHandle,
+    PVOID BaseAddress,
+    PVOID Buffer,
+    SIZE_T NumberOfBytesToWrite,
+    PSIZE_T NumberOfBytesWritten
+);
+
 typedef NTSTATUS (NTAPI *pNtAllocateVirtualMemory)(
     HANDLE ProcessHandle,
     PVOID *BaseAddress,
@@ -10,6 +18,12 @@ typedef NTSTATUS (NTAPI *pNtAllocateVirtualMemory)(
     PSIZE_T RegionSize,
     ULONG AllocationType,
     ULONG Protect
+);
+
+typedef NTSTATUS (NTAPI *pNtWaitForSingleObject)(
+    HANDLE Handle,
+    BOOLEAN Alertable,
+    PLARGE_INTEGER Timeout
 );
 
 typedef NTSTATUS (NTAPI *pNtProtectVirtualMemory)(
@@ -34,28 +48,14 @@ typedef NTSTATUS (NTAPI *pNtCreateThreadEx)(
     PVOID AttributeList
 );
 
-typedef NTSTATUS (NTAPI *pNtWaitForSingleObject)(
-    HANDLE Handle,
-    BOOLEAN Alertable,
-    PLARGE_INTEGER Timeout
-);
-
-typedef NTSTATUS (NTAPI *pNtWriteVirtualMemory)(
-    HANDLE ProcessHandle,
-    PVOID BaseAddress,
-    PVOID Buffer,
-    SIZE_T NumberOfBytesToWrite,
-    PSIZE_T NumberOfBytesWritten
-);
-
 typedef NTSTATUS (NTAPI *pNtClose)(
     HANDLE Handle
 );
 
 // Function declarations
+pNtWriteVirtualMemory NtWriteVirtualMemory;
 pNtAllocateVirtualMemory NtAllocateVirtualMemory;
+pNtWaitForSingleObject NtWaitForSingleObject;
 pNtProtectVirtualMemory NtProtectVirtualMemory;
 pNtCreateThreadEx NtCreateThreadEx;
-pNtWaitForSingleObject NtWaitForSingleObject;
-pNtWriteVirtualMemory NtWriteVirtualMemory;
 pNtClose NtClose;

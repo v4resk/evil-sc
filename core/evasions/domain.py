@@ -32,5 +32,11 @@ class domain(Evasion):
                                 .replace("####CHECK_SPECIFIC####", "1" if self.specific_domain else "0")),
                 EvasionComponent(f"CheckDomain{self.uuid}();")
             ]
-
+        elif self.platform == "windows_vba":
+            module.components = [
+                CodeComponent(code.replace("####UUID####", self.uuid)
+                                .replace("####DOMAIN####", self.specific_domain if self.specific_domain else "")
+                                .replace("####CHECK_SPECIFIC####", "true" if self.specific_domain else "false")),
+                EvasionComponent(f"CheckDomain{self.uuid}")
+            ]
         return module

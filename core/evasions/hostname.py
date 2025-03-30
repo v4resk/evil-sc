@@ -32,5 +32,11 @@ class hostname(Evasion):
                                 .replace("####HOSTNAME####", self.hostname)),
                 EvasionComponent(f"CheckHostname{self.uuid}();")
             ]
+        elif self.platform == "windows_vba":
+            module.components = [
+                CodeComponent(code.replace("####UUID####", self.uuid)
+                                .replace("####HOSTNAME####", self.hostname)),
+                EvasionComponent(f"CheckHostname{self.uuid}")
+            ]
 
         return module

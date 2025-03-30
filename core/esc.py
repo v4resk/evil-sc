@@ -159,9 +159,9 @@ class esc:
         win_vba_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="",
                                 help='Process name for shellcode injection')
 
-        win_vba_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
-                                choices=self.get_available_files("evasions", platform="windows_vba"),
-                                help='Evasion module')
+        win_vba_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions', metavar='EVASION[:ARGS]', 
+                                   help=f'Evasion module (e.g., sleep or sleep:10). Available: {", ".join(self.get_available_files("evasions", platform="windows_vba"))}')
+
 
         win_vba_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')

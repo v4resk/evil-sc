@@ -1,0 +1,51 @@
+void CheckIPRange####UUID####() {
+    ULONG bufLen = 15000;
+    PIP_ADAPTER_ADDRESSES pAddresses = NULL;
+    DWORD dwRetVal = 0;
+    bool found = false;
+    
+    ULONG ulIpAddr = inet_addr("####NETWORK_ADDRESS####");
+    ULONG ulMask = inet_addr("####NETMASK####");
+    
+    // Allocate memory for adapter addresses
+    do {
+        pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(bufLen);
+        if (pAddresses == NULL) {
+            ExitProcess(0);
+        }
+        
+        dwRetVal = GetAdaptersAddresses(AF_INET, 0, NULL, pAddresses, &bufLen);
+        if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
+            free(pAddresses);
+            pAddresses = NULL;
+        }
+    } while (dwRetVal == ERROR_BUFFER_OVERFLOW);
+    
+    if (dwRetVal == NO_ERROR) {
+        PIP_ADAPTER_ADDRESSES pCurrAddresses = pAddresses;
+        while (pCurrAddresses && !found) {
+            PIP_ADAPTER_UNICAST_ADDRESS pUnicast = pCurrAddresses->FirstUnicastAddress;
+            while (pUnicast && !found) {
+                SOCKADDR_IN* sockaddr = (SOCKADDR_IN*)pUnicast->Address.lpSockaddr;
+                if (sockaddr && sockaddr->sin_family == AF_INET) {
+                    ULONG ipAddr = sockaddr->sin_addr.s_addr;
+                    // Check if IP is in range
+                    if ((ipAddr & ulMask) == (ulIpAddr & ulMask)) {
+                        found = true;
+                        break;
+                    }
+                }
+                pUnicast = pUnicast->Next;
+            }
+            pCurrAddresses = pCurrAddresses->Next;
+        }
+    }
+    
+    if (pAddresses) {
+        free(pAddresses);
+    }
+    
+    if (!found) {
+        ExitProcess(0);
+    }
+}

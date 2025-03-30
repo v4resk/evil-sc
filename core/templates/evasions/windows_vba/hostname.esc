@@ -1,0 +1,11 @@
+Sub CheckHostname####UUID####()
+    Dim objNetwork As Object
+    Dim computerName As String
+    
+    Set objNetwork = CreateObject("WScript.Network")
+    computerName = objNetwork.ComputerName
+    
+    If StrComp(computerName, "####HOSTNAME####", vbTextCompare) <> 0 Then
+        End
+    End If
+End Sub

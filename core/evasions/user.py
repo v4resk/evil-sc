@@ -33,5 +33,11 @@ class user(Evasion):
                                 .replace("####USERNAME####", self.username)),
                 EvasionComponent(f"CheckUser{self.uuid}();")
             ]
+        elif self.platform == "windows_vba":
+            module.components = [
+                EvasionComponent(f"CheckUser{self.uuid}"),
+                CodeComponent(code.replace("####UUID####", self.uuid)
+                                .replace("####USERNAME####", self.username))
+            ]
 
         return module 

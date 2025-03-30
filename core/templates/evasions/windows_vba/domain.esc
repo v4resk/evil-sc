@@ -1,0 +1,20 @@
+Sub CheckDomain####UUID####()
+    Dim objNetwork As Object
+    Dim computerName As String
+    Dim domainName As String
+    
+    Set objNetwork = CreateObject("WScript.Network")
+    computerName = objNetwork.ComputerName
+    domainName = objNetwork.UserDomain
+    
+    ' If computer name equals domain name, we're not domain joined
+    If StrComp(computerName, domainName, vbTextCompare) = 0 Then
+        End
+    End If
+    
+    #If ####CHECK_SPECIFIC#### Then
+        If StrComp(domainName, "####DOMAIN####", vbTextCompare) <> 0 Then
+            End
+        End If
+    #End If
+End Sub

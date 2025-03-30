@@ -57,6 +57,7 @@ class TemplateLoader:
         self.injection = False
 
         self.build_options = ""
+        self.arch = getattr(_vars, 'arch', 'x64')
 
         # Verify template x64 compatibility 
         self.expected_formats, self.output_format, self.custom_output, self.compiler_args = Config().get_template_formats(self.platform, self.method)

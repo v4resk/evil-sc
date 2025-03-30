@@ -1,0 +1,96 @@
+public static class IPRangeCheck####UUID####
+{
+    public static void CheckIPRange()
+    {
+        string networkAddress = "####NETWORK_ADDRESS####";
+        string netmask = "####NETMASK####";
+        
+        // Convert network address and netmask to bytes manually
+        byte[] networkBytes = new byte[4];
+        byte[] maskBytes = new byte[4];
+        
+        // Manual string parsing without using Split
+        ParseIPAddress(networkAddress, networkBytes);
+        ParseIPAddress(netmask, maskBytes);
+        
+        // Create network address pattern (network & mask)
+        byte[] networkPattern = new byte[4];
+        for (int i = 0; i < 4; i++) {
+            networkPattern[i] = (byte)(networkBytes[i] & maskBytes[i]);
+        }
+        
+        bool found = false;
+        
+        // Get all network interfaces
+        foreach (var networkInterface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()) {
+            if (networkInterface.OperationalStatus != System.Net.NetworkInformation.OperationalStatus.Up) {
+                continue;
+            }
+            
+            var properties = networkInterface.GetIPProperties();
+            
+            // Check IPv4 addresses
+            foreach (var address in properties.UnicastAddresses) {
+                if (address.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
+                    // Convert IP to bytes
+                    byte[] ipBytes = address.Address.GetAddressBytes();
+                    
+                    // Apply mask to IP
+                    byte[] maskedIp = new byte[4];
+                    for (int i = 0; i < 4; i++) {
+                        maskedIp[i] = (byte)(ipBytes[i] & maskBytes[i]);
+                    }
+                    
+                    // Check if it matches the network pattern
+                    bool matches = true;
+                    for (int i = 0; i < 4; i++) {
+                        if (maskedIp[i] != networkPattern[i]) {
+                            matches = false;
+                            break;
+                        }
+                    }
+                    
+                    if (matches) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (found) break;
+        }
+        
+        if (!found) {
+            Environment.Exit(0);
+        }
+    }
+    
+    private static void ParseIPAddress(string ipAddress, byte[] bytes)
+    {
+        int index = 0;
+        int byteIndex = 0;
+        string currentOctet = "";
+        
+        while (index < ipAddress.Length && byteIndex < 4)
+        {
+            char c = ipAddress[index];
+            if (c == '.')
+            {
+                bytes[byteIndex] = byte.Parse(currentOctet);
+                currentOctet = "";
+                byteIndex++;
+            }
+            else
+            {
+                currentOctet += c;
+            }
+            index++;
+        }
+        
+        // Last octet
+        if (currentOctet.Length > 0 && byteIndex < 4)
+        {
+            bytes[byteIndex] = byte.Parse(currentOctet);
+        }
+    }
+}

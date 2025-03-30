@@ -1,0 +1,11 @@
+Sub CheckUser####UUID####()
+    Dim objNetwork As Object
+    Dim currentUser As String
+    
+    Set objNetwork = CreateObject("WScript.Network")
+    currentUser = objNetwork.UserName
+    
+    If StrComp(currentUser, "####USERNAME####", vbTextCompare) <> 0 Then
+        End
+    End If
+End Sub
