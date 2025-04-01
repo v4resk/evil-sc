@@ -20,6 +20,7 @@ class CompilerControler:
             custom_output_with_newlines = self.custom_output.replace("\\n", "\n")
             for line in custom_output_with_newlines.splitlines():
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}{line}")
+            print("\n")
                 
         if(self.platform == "windows_cpp"):            
             # If not using LLVM Obf

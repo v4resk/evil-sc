@@ -103,6 +103,9 @@ class TemplateLoader:
 
         #Process Syscalls --> moved in write_code() for output beatify
         #self.load_syscalls()
+        #self.load_injector()
+        #self.load_strong_name()
+
 
         #Get Build options
         self.get_build_options()
@@ -195,7 +198,7 @@ class TemplateLoader:
     def write_code(self):
         self.load_syscalls()
         self.load_injector()
-        
+        self.load_strong_name()
         with open(self.template_file, "r") as template_file:
             template_content = template_file.read()
         
@@ -409,6 +412,65 @@ class TemplateLoader:
 
         if not hasattr(self, 'entry_args') or not self.entry_args:
             self.entry_args = ""
+
+    def load_strong_name(self):
+        from colorama import Fore
+        """
+        Checks if the template requires a strong name key and generates one if needed.
+        This is primarily used for .NET assemblies that need to be signed.
+        """
+        
+        # Read the template file content
+        with open(self.template_file, 'r') as f:
+            template_content = f.read()
+
+        # Get strong name placeholder from config
+        strong_name_placeholder = Config().get('PLACEHOLDERS', 'strong_name_required')
+        
+        # Check if template requires strong name
+        if strong_name_placeholder not in template_content:
+            return
+        
+        # Get key path from config
+        key_path = Config().get('FILES', 'strong_name_key')
+        
+        if not key_path:
+            print(f"{Fore.YELLOW}[!] {Fore.WHITE}Strong name key path not specified in config")
+            return
+        
+        # Ensure directory exists
+        key_dir = os.path.dirname(key_path)
+        if not os.path.exists(key_dir):
+            os.makedirs(key_dir)
+        
+        # Generate strong name key if it doesn't exist
+        print(f"{Fore.GREEN}[+] {Fore.WHITE}Generating strong name key at {key_path}")
+        
+        # Execute sn -k command to generate key
+        import subprocess
+        try:
+            subprocess.run(['sn', '-k', key_path], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"{Fore.RED}[-] {Fore.WHITE}Failed to generate strong name key: {e}")
+            return
+        except FileNotFoundError:
+            print(f"{Fore.RED}[-] {Fore.WHITE}Strong Name Utility (sn) not found. Make sure it's installed and in your PATH")
+            return
+        
+        # Replace placeholder with compiler argument for strong name
+        compiler_arg = f" /keyfile:{key_path} "
+        self.mingw_options.append(compiler_arg)
+        
+        # Remove the placeholder from the template
+        template_content = template_content.replace(strong_name_placeholder, "")
+        
+        # Write updated template back to file
+        with open(self.template_file, "w") as f:
+            f.write(template_content)
+        
+        from colorama import Fore
+        print(f"{Fore.GREEN}[+] {Fore.WHITE}Strong name signing enabled for assembly\n")
+
 
     ## Adjut build options here if needed
     def get_build_options(self):

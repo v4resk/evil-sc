@@ -101,6 +101,14 @@ class esc:
         win_cs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions', metavar='EVASION[:ARGS]', 
                                    help=f'Evasion module (e.g., sleep or sleep:10). Available: {", ".join(self.get_available_files("evasions", platform="windows_cs"))}')
 
+        win_cs_parser.add_argument( '-c', '--classname', dest='class_name', metavar='CLASS_NAME', default=False,
+                                help='Class to be used as EntryPoint (ex: namespace.class)')
+        
+        win_cs_parser.add_argument( '-f', '--function', dest='function_name', metavar='FUNCTION', default=False,
+                                help='Function to be used as EntryPoint (ex: Main)')
+        
+        win_cs_parser.add_argument( '--args', dest='entry_args', metavar='ARGS', default=False,
+                                help='Arguments to be used for EntryPoint (ex: "arg1 arg2 arg3")')
 
         win_cs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
@@ -128,7 +136,7 @@ class esc:
         win_pwsh_parser.add_argument( '-f', '--function', dest='function_name', metavar='FUNCTION', default=False,
                                 help='Function to be used as EntryPoint (ex: Main)')
         
-        win_pwsh_parser.add_argument( '-a', '--args', dest='entry_args', metavar='ARGS', default=False,
+        win_pwsh_parser.add_argument( '--args', dest='entry_args', metavar='ARGS', default=False,
                                 help='Arguments to be used for EntryPoint (ex: "arg1 arg2 arg3")')
   
         win_pwsh_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',

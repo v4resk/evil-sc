@@ -629,7 +629,7 @@ namespace venCustoma{
             IndirectNtWaitForSingleObject(hThread, true, 0);
         }
             
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
 
             //####EVASION####
