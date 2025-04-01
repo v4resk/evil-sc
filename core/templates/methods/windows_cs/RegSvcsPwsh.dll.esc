@@ -1,8 +1,12 @@
 using System;
-using System.Text;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+using System.EnterpriseServices;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
-using System.Linq;
+using System.Text;
+
+//####STRONG_NAME_REQUIRED####
 
 //####INCLUDE####
 
@@ -10,10 +14,33 @@ using System.Linq;
 
 //####CODE####
 
-public class Program
+namespace ComDll
+{
+
+    public class ComEDll : ServicedComponent
+    {
+        [ComRegisterFunction] 
+        public static void DllRegisterServer(string key)
+        {
+            Console.WriteLine("DllRegisterServer");
+            string[] args = { "DllRegisterServer" };
+            ComConDll.COMDllDo(args); 
+        }
+
+        [ComUnregisterFunction] //This executes if registration fails
+		public static void UnRegisterClass ( string key )
+		{
+            Console.WriteLine("DllUnregisterServer");
+            string[] args = { "DllUnregisterServer" };
+            ComConDll.COMDllDo(args); 
+		}
+    }
+
+
+    internal class ComConDll
 {
     [STAThread]
-    static void Main(string[] args)
+    public static void COMDllDo(string[] args)
     {
         // Check .NET Framework version
         CheckCompatibility();
@@ -168,4 +195,5 @@ public class Program
             Console.WriteLine("[i] Command completed with no output");
         }
     }
+}
 }
