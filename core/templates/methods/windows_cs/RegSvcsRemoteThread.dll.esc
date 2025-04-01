@@ -104,26 +104,7 @@ namespace ComDll
             
         private const uint PROCESS_ALL_ACCESS = 0x001F0FFF;
 
-        public static bool DllRegisterServer()
-        {
-            Console.WriteLine("DllRegisterServer");
-            COMDllDo(); 
-            return true;
-        }
-    
-        public static bool DllUnregisterServer()
-        {
-            Console.WriteLine("DllUnregisterServer");
-            COMDllDo(); 
-            return true;
-        }
-    
-        public static void DllInstall(bool bInstall, IntPtr a)
-        {
-            Console.WriteLine("DllInstall");
-            COMDllDo(); 
-           
-        }
+
 
         
         public static void COMDllDo()

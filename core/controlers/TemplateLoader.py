@@ -481,7 +481,8 @@ class TemplateLoader:
             self.mingw_options += " -fPIC -shared -ldl -fpermissive "
         if self.platform == "windows_cs" and self.output_format == ".dll":
             self.mingw_options += " /target:library "
-
+        if self.platform == "windows_cpp" and self.output_format == ".dll":
+            self.mingw_options += " -shared "
         return ""
 
     def verify_template(self):

