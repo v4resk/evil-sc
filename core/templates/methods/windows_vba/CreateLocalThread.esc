@@ -58,10 +58,10 @@ Sub test()
     JustE
 End Sub
 
-Sub Document_Open()
+Sub ####VBA_FILE_OPEN####()
     test
 End Sub
 
-Sub AutoOpen()
+Sub ####VBA_AUTO_OPEN####()
     test
 End Sub

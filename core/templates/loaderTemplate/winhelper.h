@@ -1,291 +1,418 @@
 #pragma once
 
-#include <cstdint>
-#include <map>
-#include <minwindef.h>
-#include <ntdef.h>
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <cstdio>
-#include <ctime>
-#include <libloaderapi.h>
-#include <stdexcept>
+// Code below is adapted from @modexpblog. Read linked article for more details.
+// https://www.mdsec.co.uk/2020/12/bypassing-user-mode-hooks-and-direct-invocation-of-system-calls-for-red-teams
+
+#ifndef SW3_HEADER_H_
+#define SW3_HEADER_H_
+
 #include <windows.h>
-#include <winnt.h>
-#include <winternl.h>
-#include <ntstatus.h>
 
+#ifndef _NTDEF_
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+typedef NTSTATUS* PNTSTATUS;
+#endif
 
-// NT API structures from ntapi.hpp
-typedef struct _PS_ATTRIBUTE {
-  ULONG_PTR Attribute;
-  SIZE_T Size;
-  union {
-    ULONG_PTR Value;
-    PVOID ValuePtr;
-  };
-  PSIZE_T ReturnLength;
+#define SW3_SEED 0x3705D7B1
+#define SW3_ROL8(v) (v << 8 | v >> 24)
+#define SW3_ROR8(v) (v >> 8 | v << 24)
+#define SW3_ROX8(v) ((SW3_SEED % 2) ? SW3_ROL8(v) : SW3_ROR8(v))
+#define SW3_MAX_ENTRIES 600
+#define SW3_RVA2VA(Type, DllBase, Rva) (Type)((ULONG_PTR) DllBase + Rva)
+
+// Typedefs are prefixed to avoid pollution.
+
+typedef struct _SW3_SYSCALL_ENTRY
+{
+    DWORD Hash;
+    DWORD Address;
+	PVOID SyscallAddress;
+} SW3_SYSCALL_ENTRY, *PSW3_SYSCALL_ENTRY;
+
+typedef struct _SW3_SYSCALL_LIST
+{
+    DWORD Count;
+    SW3_SYSCALL_ENTRY Entries[SW3_MAX_ENTRIES];
+} SW3_SYSCALL_LIST, *PSW3_SYSCALL_LIST;
+
+typedef struct _SW3_PEB_LDR_DATA {
+	BYTE Reserved1[8];
+	PVOID Reserved2[3];
+	LIST_ENTRY InMemoryOrderModuleList;
+} SW3_PEB_LDR_DATA, *PSW3_PEB_LDR_DATA;
+
+typedef struct _SW3_LDR_DATA_TABLE_ENTRY {
+	PVOID Reserved1[2];
+	LIST_ENTRY InMemoryOrderLinks;
+	PVOID Reserved2[2];
+	PVOID DllBase;
+} SW3_LDR_DATA_TABLE_ENTRY, *PSW3_LDR_DATA_TABLE_ENTRY;
+
+typedef struct _SW3_PEB {
+	BYTE Reserved1[2];
+	BYTE BeingDebugged;
+	BYTE Reserved2[1];
+	PVOID Reserved3[2];
+	PSW3_PEB_LDR_DATA Ldr;
+} SW3_PEB, *PSW3_PEB;
+
+DWORD SW3_HashSyscall(PCSTR FunctionName);
+BOOL SW3_PopulateSyscallList();
+EXTERN_C DWORD SW3_GetSyscallNumber(DWORD FunctionHash);
+EXTERN_C PVOID SW3_GetSyscallAddress(DWORD FunctionHash);
+EXTERN_C PVOID internal_cleancall_wow64_gate(VOID);
+typedef struct _UNICODE_STRING
+{
+	USHORT Length;
+	USHORT MaximumLength;
+	PWSTR  Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+
+#ifndef InitializeObjectAttributes
+#define InitializeObjectAttributes( p, n, a, r, s ) { \
+	(p)->Length = sizeof( OBJECT_ATTRIBUTES );        \
+	(p)->RootDirectory = r;                           \
+	(p)->Attributes = a;                              \
+	(p)->ObjectName = n;                              \
+	(p)->SecurityDescriptor = s;                      \
+	(p)->SecurityQualityOfService = NULL;             \
+}
+#endif
+
+typedef struct _PS_ATTRIBUTE
+{
+	ULONG  Attribute;
+	SIZE_T Size;
+	union
+	{
+		ULONG Value;
+		PVOID ValuePtr;
+	} u1;
+	PSIZE_T ReturnLength;
 } PS_ATTRIBUTE, *PPS_ATTRIBUTE;
 
-typedef struct _PS_ATTRIBUTE_LIST {
-  SIZE_T TotalLength;
-  PS_ATTRIBUTE Attributes[1];
+typedef struct _OBJECT_ATTRIBUTES
+{
+	ULONG           Length;
+	HANDLE          RootDirectory;
+	PUNICODE_STRING ObjectName;
+	ULONG           Attributes;
+	PVOID           SecurityDescriptor;
+	PVOID           SecurityQualityOfService;
+} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+
+typedef struct _PS_ATTRIBUTE_LIST
+{
+	SIZE_T       TotalLength;
+	PS_ATTRIBUTE Attributes[1];
 } PS_ATTRIBUTE_LIST, *PPS_ATTRIBUTE_LIST;
 
-inline const std::string KEY = "FfqO3ZQ6XJ+SICAp";
+EXTERN_C NTSTATUS NtWaitForSingleObject(
+	IN HANDLE ObjectHandle,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER TimeOut OPTIONAL);
+
+EXTERN_C NTSTATUS NtProtectVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID * BaseAddress,
+	IN OUT PSIZE_T RegionSize,
+	IN ULONG NewProtect,
+	OUT PULONG OldProtect);
+
+EXTERN_C NTSTATUS NtAllocateVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID * BaseAddress,
+	IN ULONG ZeroBits,
+	IN OUT PSIZE_T RegionSize,
+	IN ULONG AllocationType,
+	IN ULONG Protect);
+
+EXTERN_C NTSTATUS NtCreateThreadEx(
+	OUT PHANDLE ThreadHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN HANDLE ProcessHandle,
+	IN PVOID StartRoutine,
+	IN PVOID Argument OPTIONAL,
+	IN ULONG CreateFlags,
+	IN SIZE_T ZeroBits,
+	IN SIZE_T StackSize,
+	IN SIZE_T MaximumStackSize,
+	IN PPS_ATTRIBUTE_LIST AttributeList OPTIONAL);
+
+EXTERN_C NTSTATUS NtWriteVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN PVOID Buffer,
+	IN SIZE_T NumberOfBytesToWrite,
+	OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
+
+EXTERN_C NTSTATUS NtClose(
+	IN HANDLE Handle);
+
+#endif
+
+#include <stdio.h>
+
+//#define DEBUG
+
+#define JUMPER
+
+#ifdef _M_IX86
+
+EXTERN_C PVOID internal_cleancall_wow64_gate(VOID) {
+    return (PVOID)__readfsdword(0xC0);
+}
 
 
-extern "C" NTSTATUS NTAPI trampoline(size_t syscallNo, uintptr_t syscallAddr,
-                                     size_t ArgumentsSize, ...);
 
-namespace nullgate {
+#endif
 
-class obfuscation {
-  static std::string base64Encode(const std::string &in);
+// Code below is adapted from @modexpblog. Read linked article for more details.
+// https://www.mdsec.co.uk/2020/12/bypassing-user-mode-hooks-and-direct-invocation-of-system-calls-for-red-teams
 
-  static std::string base64Decode(const std::string &in);
+SW3_SYSCALL_LIST SW3_SyscallList;
 
-  static std::string xorHash(const std::string &str);
+// SEARCH_AND_REPLACE
+#ifdef SEARCH_AND_REPLACE
+// THIS IS NOT DEFINED HERE; don't know if I'll add it in a future release
+EXTERN void SearchAndReplace(unsigned char[], unsigned char[]);
+#endif
 
-  static uint8_t char2int(char c);
+DWORD SW3_HashSyscall(PCSTR FunctionName)
+{
+    DWORD i = 0;
+    DWORD Hash = SW3_SEED;
 
-public:
-  static inline consteval uint64_t fnv1Const(const char *str) {
-    const uint64_t fnvOffsetBasis = 14695981039346656037U;
-    const uint64_t fnvPrime = 1099511628211;
-    uint64_t hash = fnvOffsetBasis;
-    char c{};
-    while ((c = *str++)) {
-      hash *= fnvPrime;
-      hash ^= c;
+    while (FunctionName[i])
+    {
+        WORD PartialName = *(WORD*)((ULONG_PTR)FunctionName + i++);
+        Hash ^= PartialName + SW3_ROR8(Hash);
     }
-    return hash;
-  }
 
-  // Don't use for hardcoded strings, the string won't be obfuscated
-  static uint64_t fnv1Runtime(const char *str);
-
-  static std::string xorEncode(const std::string &in);
-
-  static std::string xorDecode(const std::string &in);
-
-  static std::vector<unsigned char> hex2bin(const std::string &hexString);
-};
-
-uint64_t obfuscation::fnv1Runtime(const char *str) {
-  const uint64_t fnvOffsetBasis = 14695981039346656037U;
-  const uint64_t fnvPrime = 1099511628211;
-  uint64_t hash = fnvOffsetBasis;
-  char c{};
-  while ((c = *str++)) {
-    hash *= fnvPrime;
-    hash ^= c;
-  }
-  return hash;
+    return Hash;
 }
 
-std::string obfuscation::xorHash(const std::string &str) {
-  std::string output;
-  output.reserve(str.length());
-  for (int i{}; i < str.length(); i++)
-    output.push_back(str.at(i) ^ KEY.at(i % KEY.length()));
-  return output;
+#ifndef JUMPER
+PVOID SC_Address(PVOID NtApiAddress)
+{
+    return NULL;
 }
+#else
+PVOID SC_Address(PVOID NtApiAddress)
+{
+    DWORD searchLimit = 512;
+    PVOID SyscallAddress;
 
-std::string obfuscation::base64Encode(const std::string &in) {
-  std::string out;
+   #ifdef _WIN64
+    // If the process is 64-bit on a 64-bit OS, we need to search for syscall
+    BYTE syscall_code[] = { 0x0f, 0x05, 0xc3 };
+    ULONG distance_to_syscall = 0x12;
+   #else
+    // If the process is 32-bit on a 32-bit OS, we need to search for sysenter
+    BYTE syscall_code[] = { 0x0f, 0x34, 0xc3 };
+    ULONG distance_to_syscall = 0x0f;
+   #endif
 
-  int val = 0, valb = -6;
-  for (unsigned char c : in) {
-    val = (val << 8) + c;
-    valb += 8;
-    while (valb >= 0) {
-      out.push_back(
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-              [(val >> valb) & 0x3F]);
-      valb -= 6;
+  #ifdef _M_IX86
+    // If the process is 32-bit on a 64-bit OS, we need to jump to WOW32Reserved
+    if (local_is_wow64())
+    {
+    #ifdef DEBUG
+        printf("[+] Running 32-bit app on x64 (WOW64)\n");
+    #endif
+        return NULL;
     }
-  }
-  if (valb > -6)
-    out.push_back(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-            [((val << 8) >> (valb + 8)) & 0x3F]);
-  while (out.size() % 4)
-    out.push_back('=');
-  return out;
-}
+  #endif
 
-std::string obfuscation::base64Decode(const std::string &in) {
-  // table from '+' to 'z'
-  const uint8_t lookup[] = {
-      62,  255, 62,  255, 63,  52,  53, 54, 55, 56, 57, 58, 59, 60, 61, 255,
-      255, 0,   255, 255, 255, 255, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-      10,  11,  12,  13,  14,  15,  16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-      255, 255, 255, 255, 63,  255, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
-      36,  37,  38,  39,  40,  41,  42, 43, 44, 45, 46, 47, 48, 49, 50, 51};
-  static_assert(sizeof(lookup) == 'z' - '+' + 1);
+    // we don't really care if there is a 'jmp' between
+    // NtApiAddress and the 'syscall; ret' instructions
+    SyscallAddress = SW3_RVA2VA(PVOID, NtApiAddress, distance_to_syscall);
 
-  std::string out;
-  int val = 0, valb = -8;
-  for (uint8_t c : in) {
-    if (c < '+' || c > 'z')
-      break;
-    c -= '+';
-    if (lookup[c] >= 64)
-      break;
-    val = (val << 6) + lookup[c];
-    valb += 6;
-    if (valb >= 0) {
-      out.push_back(char((val >> valb) & 0xFF));
-      valb -= 8;
+    if (!memcmp((PVOID)syscall_code, SyscallAddress, sizeof(syscall_code)))
+    {
+        // we can use the original code for this system call :)
+        #if defined(DEBUG)
+            printf("Found Syscall Opcodes at address 0x%p\n", SyscallAddress);
+        #endif
+        return SyscallAddress;
     }
-  }
-  return out;
-}
 
-std::string obfuscation::xorEncode(const std::string &in) {
-  return base64Encode(xorHash(in));
-}
+    // the 'syscall; ret' intructions have not been found,
+    // we will try to use one near it, similarly to HalosGate
 
-std::string obfuscation::xorDecode(const std::string &in) {
-  return xorHash(base64Decode(in));
-}
+    for (ULONG32 num_jumps = 1; num_jumps < searchLimit; num_jumps++)
+    {
+        // let's try with an Nt* API below our syscall
+        SyscallAddress = SW3_RVA2VA(
+            PVOID,
+            NtApiAddress,
+            distance_to_syscall + num_jumps * 0x20);
+        if (!memcmp((PVOID)syscall_code, SyscallAddress, sizeof(syscall_code)))
+        {
+        #if defined(DEBUG)
+            printf("Found Syscall Opcodes at address 0x%p\n", SyscallAddress);
+        #endif
+            return SyscallAddress;
+        }
 
-uint8_t obfuscation::char2int(char c) {
-  if (c >= '0' && c <= '9')
-    return c - '0';
-  if (c >= 'A' && c <= 'F')
-    return c - 'A' + 10;
-  if (c >= 'a' && c <= 'f')
-    return c - 'a' + 10;
-
-  throw std::invalid_argument(std::string("Character is not a hex number: ") +
-                              c);
-}
-
-std::vector<unsigned char> obfuscation::hex2bin(const std::string &hexString) {
-  std::vector<unsigned char> byteArray;
-  byteArray.reserve(hexString.size() / 2);
-  for (int i{}; i < hexString.size(); i += 2) {
-    byteArray.emplace_back(16 * char2int(hexString.at(i)) +
-                           char2int(hexString.at(i + 1)));
-  }
-  return byteArray;
-}
-
-class syscalls {
-  std::map<PDWORD, std::string> stubMap;
-  std::unordered_map<std::string, DWORD> syscallNoMap;
-  void populateStubs();
-  void populateSyscalls();
-  DWORD getSyscallNumber(const std::string &func);
-  DWORD getSyscallNumber(uint64_t funcNameHash);
-  uintptr_t getSyscallInstrAddr();
-
-public:
-  explicit syscalls();
-
-  template <typename... Args>
-  NTSTATUS Call(const std::string &funcName, Args... args) {
-    // We don't care that are right know there could be more on the stack, this
-    // is supposed to represent the number of args on the stack disregarding the
-    // added arguments
-    constexpr size_t argStackSize =
-        sizeof...(args) <= 4 ? 0 : sizeof...(args) - 4;
-    return trampoline(getSyscallNumber(funcName), getSyscallInstrAddr(),
-                      argStackSize, std::forward<Args>(args)...);
-  }
-
-  template <typename... Args>
-  NTSTATUS Call(uint64_t funcNameHash, Args... args) {
-    // We don't care that are right know there could be more on the stack, this
-    // is supposed to represent the number of args on the stack disregarding the
-    // added arguments
-    constexpr size_t argStackSize =
-        sizeof...(args) <= 4 ? 0 : sizeof...(args) - 4;
-    return trampoline(getSyscallNumber(funcNameHash), getSyscallInstrAddr(),
-                      argStackSize, std::forward<Args>(args)...);
-  }
-};
-
-syscalls::syscalls() {
-  populateStubs();
-  populateSyscalls();
-}
-
-void syscalls::populateStubs() {
-  PPEB peb = reinterpret_cast<PPEB>(__readgsqword(0x60));
-  // ntdll is always the first module after the executable to be loaded
-  const auto ntdllLdrEntry = reinterpret_cast<PLDR_DATA_TABLE_ENTRY>(
-      // NIGHTMARE NIGHTMARE NIGHTMARE
-      CONTAINING_RECORD(peb->Ldr->InMemoryOrderModuleList.Flink->Flink,
-                        LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks));
-  const auto ntdllBase = reinterpret_cast<PBYTE>(ntdllLdrEntry->DllBase);
-
-  const auto dosHeaders = reinterpret_cast<PIMAGE_DOS_HEADER>(ntdllBase);
-  // e_lfanew points to ntheaders(microsoft's great naming)
-  const auto ntHeaders =
-      reinterpret_cast<PIMAGE_NT_HEADERS>(ntdllBase + dosHeaders->e_lfanew);
-  const auto exportDir = reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(
-      ntdllBase +
-      ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
-          .VirtualAddress);
-
-  const auto functionsTable =
-      reinterpret_cast<PDWORD>(ntdllBase + exportDir->AddressOfFunctions);
-  const auto namesTable =
-      reinterpret_cast<PDWORD>(ntdllBase + exportDir->AddressOfNames);
-  const auto ordinalsTable =
-      reinterpret_cast<PWORD>(ntdllBase + exportDir->AddressOfNameOrdinals);
-
-  for (DWORD i{}; i < exportDir->NumberOfNames; i++) {
-    std::string funcName =
-        reinterpret_cast<const char *>(ntdllBase + namesTable[i]);
-    if (funcName.starts_with(obfuscation::xorDecode("HBE="))) {
-      auto funcAddr = reinterpret_cast<PDWORD>(
-          ntdllBase + functionsTable[ordinalsTable[i]]);
-      stubMap.emplace(funcAddr,
-                      obfuscation::xorDecode("CBI=") + funcName.substr(2));
+        // let's try with an Nt* API above our syscall
+        SyscallAddress = SW3_RVA2VA(
+            PVOID,
+            NtApiAddress,
+            distance_to_syscall - num_jumps * 0x20);
+        if (!memcmp((PVOID)syscall_code, SyscallAddress, sizeof(syscall_code)))
+        {
+        #if defined(DEBUG)
+            printf("Found Syscall Opcodes at address 0x%p\n", SyscallAddress);
+        #endif
+            return SyscallAddress;
+        }
     }
-  }
+
+#ifdef DEBUG
+    printf("Syscall Opcodes not found!\n");
+#endif
+
+    return NULL;
+}
+#endif
+
+
+BOOL SW3_PopulateSyscallList()
+{
+    // Return early if the list is already populated.
+    if (SW3_SyscallList.Count) return TRUE;
+
+    #ifdef _WIN64
+    PSW3_PEB Peb = (PSW3_PEB)__readgsqword(0x60);
+    #else
+    PSW3_PEB Peb = (PSW3_PEB)__readfsdword(0x30);
+    #endif
+    PSW3_PEB_LDR_DATA Ldr = Peb->Ldr;
+    PIMAGE_EXPORT_DIRECTORY ExportDirectory = NULL;
+    PVOID DllBase = NULL;
+
+    // Get the DllBase address of NTDLL.dll. NTDLL is not guaranteed to be the second
+    // in the list, so it's safer to loop through the full list and find it.
+    PSW3_LDR_DATA_TABLE_ENTRY LdrEntry;
+    for (LdrEntry = (PSW3_LDR_DATA_TABLE_ENTRY)Ldr->Reserved2[1]; LdrEntry->DllBase != NULL; LdrEntry = (PSW3_LDR_DATA_TABLE_ENTRY)LdrEntry->Reserved1[0])
+    {
+        DllBase = LdrEntry->DllBase;
+        PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)DllBase;
+        PIMAGE_NT_HEADERS NtHeaders = SW3_RVA2VA(PIMAGE_NT_HEADERS, DllBase, DosHeader->e_lfanew);
+        PIMAGE_DATA_DIRECTORY DataDirectory = (PIMAGE_DATA_DIRECTORY)NtHeaders->OptionalHeader.DataDirectory;
+        DWORD VirtualAddress = DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+        if (VirtualAddress == 0) continue;
+
+        ExportDirectory = (PIMAGE_EXPORT_DIRECTORY)SW3_RVA2VA(ULONG_PTR, DllBase, VirtualAddress);
+
+        // If this is NTDLL.dll, exit loop.
+        PCHAR DllName = SW3_RVA2VA(PCHAR, DllBase, ExportDirectory->Name);
+
+        if ((*(ULONG*)DllName | 0x20202020) != 0x6c64746e) continue;
+        if ((*(ULONG*)(DllName + 4) | 0x20202020) == 0x6c642e6c) break;
+    }
+
+    if (!ExportDirectory) return FALSE;
+
+    DWORD NumberOfNames = ExportDirectory->NumberOfNames;
+    PDWORD Functions = SW3_RVA2VA(PDWORD, DllBase, ExportDirectory->AddressOfFunctions);
+    PDWORD Names = SW3_RVA2VA(PDWORD, DllBase, ExportDirectory->AddressOfNames);
+    PWORD Ordinals = SW3_RVA2VA(PWORD, DllBase, ExportDirectory->AddressOfNameOrdinals);
+
+    // Populate SW3_SyscallList with unsorted Zw* entries.
+    DWORD i = 0;
+    PSW3_SYSCALL_ENTRY Entries = SW3_SyscallList.Entries;
+    do
+    {
+        PCHAR FunctionName = SW3_RVA2VA(PCHAR, DllBase, Names[NumberOfNames - 1]);
+
+        // Is this a system call?
+        if (*(USHORT*)FunctionName == 0x775a)
+        {
+            Entries[i].Hash = SW3_HashSyscall(FunctionName);
+            Entries[i].Address = Functions[Ordinals[NumberOfNames - 1]];
+            Entries[i].SyscallAddress = SC_Address(SW3_RVA2VA(PVOID, DllBase, Entries[i].Address));
+
+            i++;
+            if (i == SW3_MAX_ENTRIES) break;
+        }
+    } while (--NumberOfNames);
+
+    // Save total number of system calls found.
+    SW3_SyscallList.Count = i;
+
+    // Sort the list by address in ascending order.
+    for (DWORD i = 0; i < SW3_SyscallList.Count - 1; i++)
+    {
+        for (DWORD j = 0; j < SW3_SyscallList.Count - i - 1; j++)
+        {
+            if (Entries[j].Address > Entries[j + 1].Address)
+            {
+                // Swap entries.
+                SW3_SYSCALL_ENTRY TempEntry;
+
+                TempEntry.Hash = Entries[j].Hash;
+                TempEntry.Address = Entries[j].Address;
+                TempEntry.SyscallAddress = Entries[j].SyscallAddress;
+
+                Entries[j].Hash = Entries[j + 1].Hash;
+                Entries[j].Address = Entries[j + 1].Address;
+                Entries[j].SyscallAddress = Entries[j + 1].SyscallAddress;
+
+                Entries[j + 1].Hash = TempEntry.Hash;
+                Entries[j + 1].Address = TempEntry.Address;
+                Entries[j + 1].SyscallAddress = TempEntry.SyscallAddress;
+            }
+        }
+    }
+
+    return TRUE;
 }
 
-void syscalls::populateSyscalls() {
-  unsigned int syscallNo{};
-  for (const auto &stub : stubMap)
-    syscallNoMap.emplace(stub.second, syscallNo++);
+EXTERN_C DWORD SW3_GetSyscallNumber(DWORD FunctionHash)
+{
+    // Ensure SW3_SyscallList is populated.
+    if (!SW3_PopulateSyscallList()) return -1;
+
+    for (DWORD i = 0; i < SW3_SyscallList.Count; i++)
+    {
+        if (FunctionHash == SW3_SyscallList.Entries[i].Hash)
+        {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
-DWORD syscalls::getSyscallNumber(const std::string &funcName) {
-  if (!syscallNoMap.contains(funcName))
-    throw std::runtime_error(
-        obfuscation::xorDecode("ABMfLEczPlh4JEQnaSUuBSgCS28=") + funcName);
+EXTERN_C PVOID SW3_GetSyscallAddress(DWORD FunctionHash)
+{
+    // Ensure SW3_SyscallList is populated.
+    if (!SW3_PopulateSyscallList()) return NULL;
 
-  return syscallNoMap.at(funcName);
+    for (DWORD i = 0; i < SW3_SyscallList.Count; i++)
+    {
+        if (FunctionHash == SW3_SyscallList.Entries[i].Hash)
+        {
+            return SW3_SyscallList.Entries[i].SyscallAddress;
+        }
+    }
+
+    return NULL;
 }
 
-DWORD syscalls::getSyscallNumber(uint64_t funcNameHash) {
-  for (const auto &ntFuncPair : syscallNoMap) {
-    if (obfuscation::fnv1Runtime(ntFuncPair.first.c_str()) == funcNameHash)
-      return ntFuncPair.second;
-  }
+EXTERN_C PVOID SW3_GetRandomSyscallAddress(DWORD FunctionHash)
+{
+    // Ensure SW3_SyscallList is populated.
+    if (!SW3_PopulateSyscallList()) return NULL;
 
-  throw std::runtime_error(
-      obfuscation::xorDecode("ABMfLEczPlh4IkogIWMvHzJGFyBGNDUMeA==") +
-      std::to_string(funcNameHash));
+    DWORD index = ((DWORD) rand()) % SW3_SyscallList.Count;
+
+    while (FunctionHash == SW3_SyscallList.Entries[index].Hash){
+        // Spoofing the syscall return address
+        index = ((DWORD) rand()) % SW3_SyscallList.Count;
+    }
+    return SW3_SyscallList.Entries[index].SyscallAddress;
 }
-
-uintptr_t syscalls::getSyscallInstrAddr() {
-  auto stubBase = reinterpret_cast<PBYTE>((*stubMap.begin()).first);
-  const int maxStubSize = 32; // I have no idea if it can be larger
-  const BYTE syscallOpcode[] = {0x0F, 0x05, 0xC3}; // syscall; ret
-  for (int i{}; i < maxStubSize; i++) {
-    if (memcmp(syscallOpcode, stubBase + i, sizeof(syscallOpcode)) == 0)
-      return reinterpret_cast<uintptr_t>(stubBase + i);
-  }
-  throw std::runtime_error(obfuscation::xorDecode(
-      "BQkEI1c0dkJ4LEI9LWMgUDUfAixSNj0WMSRYJzs2IgQvCR8="));
-}
-
-} // namespace nullgate

@@ -2,11 +2,11 @@
 
 //####CODE####
 
-Sub Document_Open()
+Sub ####VBA_FILE_OPEN####()
     MyMacro
 End Sub
 
-Sub AutoOpen()
+Sub ####VBA_AUTO_OPEN####()
     MyMacro
 End Sub
 

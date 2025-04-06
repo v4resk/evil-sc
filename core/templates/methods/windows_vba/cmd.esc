@@ -100,10 +100,10 @@ ErrorHandler:
     ArrayToString = ""
 End Function
 
-Sub Document_Open()
+Sub ####VBA_FILE_OPEN####()
     ExecuteCommand
 End Sub
 
-Sub AutoOpen()
+Sub ####VBA_AUTO_OPEN####()
     ExecuteCommand
 End Sub

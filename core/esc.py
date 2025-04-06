@@ -6,6 +6,7 @@ from core.controlers.TemplateLoader import TemplateLoader
 from core.controlers.EncryptorsChain import EncryptorsChain
 from core.controlers.EvasionChain import EvasionChain
 from core.utils.utils import sha256sum, entropy, size
+from core.utils.office_utils import insert_custom_xml, list_custom_xml
 
 def banner():
     init(autoreset=True)
@@ -81,9 +82,6 @@ class esc:
         win_cpp_parser.add_argument('-a', '--arch', dest='arch', metavar='ARCH', default="x64",
                                 help='Target architecture (x86 or x64). Default: x64')
 
-        #win_cpp_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
-        #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
-
         # Windows Dotnet subparser
         win_cs_parser = subparsers.add_parser('windows_cs', help='Dotnet Windows Shellcode Loader (C#)')
 
@@ -146,10 +144,6 @@ class esc:
         win_pwsh_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
-        #win_cs_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
-        #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
-
-
         # Windows VBA (Macro) subparser
         win_vba_parser = subparsers.add_parser('windows_vba', help='Microsoft Office Macros Shellcode Loader (VBA)')
 
@@ -160,6 +154,10 @@ class esc:
 
         win_vba_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_vba"),
                                 help='Shellcode-loading method')
+        
+        win_vba_parser.add_argument('--doctype', dest='doctype', default="doc",
+                            choices=["doc", "xl"],
+                            help='Word or Excel Document type. Default: doc')
 
         win_vba_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_vba"),
                                 help='Encryption/Encoding algorithm to be applied to the shellcode')
@@ -243,12 +241,27 @@ class esc:
         #lin_parser.add_argument('--encoder', action='append', dest='encoders', metavar='ENCODER',
         #                        help='Template-independent encoding method to be applied to the shellcode (default: sgn)')
 
-        # Utils subparser 
-        utils_parser = subparsers.add_parser('utils', help='Utility module for shellcodes')
-        utils_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
-
-        utils_parser.add_argument('-n', '--name', dest='name', default="shellcode",
-                                help='Shellcode variable name')
+        # Add a utils subparser
+        utils_parser = subparsers.add_parser('utils', help='Utility functions')
+        utils_subparsers = utils_parser.add_subparsers(dest='util_command', help='Utility command')
+        
+        # Add insert-xml subcommand with updated help text
+        insert_xml_parser = utils_subparsers.add_parser('insert-xml', help='Insert custom XML part into Office document (creates document if it doesn\'t exist)')
+        insert_xml_parser.add_argument('--doc', '-d', required=True, help='Path to the Office document (.docx, .xlsx, .pptx) - will be created if it doesn\'t exist')
+        insert_xml_parser.add_argument('--xml', '-x', required=True, help='Path to the XML file to insert')
+        insert_xml_parser.add_argument('--output', '-o', help='Path to save the modified document (default: overwrite original)')
+        
+        # Add list-xml subcommand
+        list_xml_parser = utils_subparsers.add_parser('list-xml', help='List custom XML parts in Office document')
+        list_xml_parser.add_argument('--doc', '-d', required=True, help='Path to the Office document (.docx, .xlsx, .pptx)')
+        
+        # Add extract-xml subcommand
+        extract_xml_parser = utils_subparsers.add_parser('extract-xml', help='Extract custom XML parts from Office document')
+        extract_xml_parser.add_argument('--doc', '-d', required=True, help='Path to the Office document (.docx, .xlsx, .pptx)')
+        extract_xml_parser.add_argument('--output', '-o', help='Directory to save the extracted XML files (default: current directory)')
+        
+        # Make utils_parser show help when no subcommand is provided
+        utils_parser.set_defaults(func=lambda args: utils_parser.print_help())
 
         # Parse arguments
         args = parser.parse_args()
@@ -271,6 +284,24 @@ class esc:
         args = self.parse_arguments()
         for key, value in vars(args).items():
             setattr(self, key, value)
+
+        # Handle utils commands
+        if hasattr(args, 'platform') and args.platform == 'utils':
+            if hasattr(args, 'func') and args.util_command is None:
+                # No subcommand specified, show help for utils
+                args.func(args)
+                return
+            if args.util_command == 'insert-xml':
+                insert_custom_xml(args.doc, args.xml, args.output)
+                return
+            elif args.util_command == 'list-xml':
+                from core.utils.office_utils import list_custom_xml
+                list_custom_xml(args.doc)
+                return
+            elif args.util_command == 'extract-xml':
+                from core.utils.office_utils import extract_custom_xml
+                extract_custom_xml(args.doc, args.output)
+                return
 
         # TO DO
         # Obfuscation for .NET & Powershell

@@ -12,6 +12,9 @@ from core.utils.enums.inputType import inputType
 from colorama import init, Fore
 import pefile
 import re
+import base64
+import random
+import string
 
 def get_project_root() -> Path:
     return Path(__file__).parent.parent

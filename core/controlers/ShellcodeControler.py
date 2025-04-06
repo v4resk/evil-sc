@@ -3,6 +3,8 @@ from core.config.config import Config
 import base64
 from core.utils.enums.inputType import inputType
 from core.utils.utils import verify_file_type
+import random
+import string
 
 debug_mode = Config().get("DEBUG", "SHELLCODE")   
 
@@ -169,3 +171,16 @@ class ShellcodeControler:
         else:
             # Default case
             return "byte[]"
+    
+    
+    def generate_customxml(self):
+        part_name = ''.join(random.choice(string.ascii_lowercase) for i in range(8))
+        step = 512
+        customxml = ''
+        part_number = 1
+        encoded = base64.b64encode(self.encrypted_shellcode_bytes).decode()
+        for i in range(0, len(encoded), step):
+            customxml += '<{0}_{1}>{2}</{0}_{1}>\n'.format(part_name, part_number, encoded[i:i+step])
+            part_number += 1
+
+        return '<{0}_0>\n{1}</{0}_0>'.format(part_name, customxml), part_name

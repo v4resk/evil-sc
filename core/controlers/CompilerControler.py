@@ -18,9 +18,12 @@ class CompilerControler:
     def compile(self):
         if self.custom_output:
             custom_output_with_newlines = self.custom_output.replace("\\n", "\n")
+            print(f"\n{Fore.GREEN}============================================================{Fore.RESET}")
+            print(f"{Fore.CYAN} Custom Template Output:{Fore.RESET}")
             for line in custom_output_with_newlines.splitlines():
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}{line}")
-            print("\n")
+            print(f"{Fore.GREEN}============================================================{Fore.RESET}")
+
                 
         if(self.platform == "windows_cpp"):            
             # If not using LLVM Obf

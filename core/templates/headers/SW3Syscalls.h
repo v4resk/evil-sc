@@ -13,7 +13,7 @@ typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 typedef NTSTATUS* PNTSTATUS;
 #endif
 
-#define SW3_SEED 0xC86669F2
+#define SW3_SEED 0x3705D7B1
 #define SW3_ROL8(v) (v << 8 | v >> 24)
 #define SW3_ROR8(v) (v >> 8 | v << 24)
 #define SW3_ROX8(v) ((SW3_SEED % 2) ? SW3_ROL8(v) : SW3_ROR8(v))
@@ -61,6 +61,13 @@ BOOL SW3_PopulateSyscallList();
 EXTERN_C DWORD SW3_GetSyscallNumber(DWORD FunctionHash);
 EXTERN_C PVOID SW3_GetSyscallAddress(DWORD FunctionHash);
 EXTERN_C PVOID internal_cleancall_wow64_gate(VOID);
+typedef struct _UNICODE_STRING
+{
+	USHORT Length;
+	USHORT MaximumLength;
+	PWSTR  Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+
 #ifndef InitializeObjectAttributes
 #define InitializeObjectAttributes( p, n, a, r, s ) { \
 	(p)->Length = sizeof( OBJECT_ATTRIBUTES );        \
@@ -84,13 +91,6 @@ typedef struct _PS_ATTRIBUTE
 	PSIZE_T ReturnLength;
 } PS_ATTRIBUTE, *PPS_ATTRIBUTE;
 
-typedef struct _UNICODE_STRING
-{
-	USHORT Length;
-	USHORT MaximumLength;
-	PWSTR  Buffer;
-} UNICODE_STRING, *PUNICODE_STRING;
-
 typedef struct _OBJECT_ATTRIBUTES
 {
 	ULONG           Length;
@@ -107,17 +107,17 @@ typedef struct _PS_ATTRIBUTE_LIST
 	PS_ATTRIBUTE Attributes[1];
 } PS_ATTRIBUTE_LIST, *PPS_ATTRIBUTE_LIST;
 
+EXTERN_C NTSTATUS NtWaitForSingleObject(
+	IN HANDLE ObjectHandle,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER TimeOut OPTIONAL);
+
 EXTERN_C NTSTATUS NtProtectVirtualMemory(
 	IN HANDLE ProcessHandle,
 	IN OUT PVOID * BaseAddress,
 	IN OUT PSIZE_T RegionSize,
 	IN ULONG NewProtect,
 	OUT PULONG OldProtect);
-
-EXTERN_C NTSTATUS NtWaitForSingleObject(
-	IN HANDLE ObjectHandle,
-	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER TimeOut OPTIONAL);
 
 EXTERN_C NTSTATUS NtAllocateVirtualMemory(
 	IN HANDLE ProcessHandle,
@@ -126,9 +126,6 @@ EXTERN_C NTSTATUS NtAllocateVirtualMemory(
 	IN OUT PSIZE_T RegionSize,
 	IN ULONG AllocationType,
 	IN ULONG Protect);
-
-EXTERN_C NTSTATUS NtClose(
-	IN HANDLE Handle);
 
 EXTERN_C NTSTATUS NtCreateThreadEx(
 	OUT PHANDLE ThreadHandle,
@@ -149,6 +146,9 @@ EXTERN_C NTSTATUS NtWriteVirtualMemory(
 	IN PVOID Buffer,
 	IN SIZE_T NumberOfBytesToWrite,
 	OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
+
+EXTERN_C NTSTATUS NtClose(
+	IN HANDLE Handle);
 
 #endif
 
