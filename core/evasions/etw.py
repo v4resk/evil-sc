@@ -6,7 +6,7 @@ from core.controlers.Module import Module
 from core.engines.CodeComponent import CodeComponent
 
 
-class PerunsFart(Evasion):
+class etw(Evasion):
     def __init__(self, platform, args=None):
         super().__init__(platform, args)
         self.uuid = uuid.uuid4().hex
@@ -18,13 +18,15 @@ class PerunsFart(Evasion):
 
         if self.platform == "windows_cs":
             module.components = [
-                DefineComponent("using System.Collections;\n"),
-                DefineComponent("using System.Diagnostics;\n"),
-                #DefineComponent(f"using perF{str(self.uuid)};\n"),
-                CodeComponent(code.replace("####UUID####",str(self.uuid))),
-                EvasionComponent(f"perF{str(self.uuid)}.Structs.PerunsFart();")
+                CodeComponent(code.replace("####UUID####", self.uuid)),
+                EvasionComponent(f"ETWPatcher{self.uuid}.PatchETW();")
             ]
-        return module
+        elif self.platform == "windows_cpp":
+            module.components = [
+                DefineComponent("#include <windows.h>\n"),
+                CodeComponent(code.replace("####UUID####", self.uuid)),
+                EvasionComponent(f"PatchETW{self.uuid}();")
+            ]
 
-    def test(self):
-        print("hello PerunsFart")
+
+        return module

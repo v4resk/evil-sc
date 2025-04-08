@@ -3,37 +3,6 @@
 
 
 
-typedef NTSTATUS (NTAPI *pNtProtectVirtualMemory)(
-    HANDLE ProcessHandle,
-    PVOID *BaseAddress,
-    PSIZE_T RegionSize,
-    ULONG NewProtect,
-    PULONG OldProtect
-);
-
-typedef NTSTATUS (NTAPI *pNtAllocateVirtualMemory)(
-    HANDLE ProcessHandle,
-    PVOID *BaseAddress,
-    ULONG_PTR ZeroBits,
-    PSIZE_T RegionSize,
-    ULONG AllocationType,
-    ULONG Protect
-);
-
-typedef NTSTATUS (NTAPI *pNtWaitForSingleObject)(
-    HANDLE Handle,
-    BOOLEAN Alertable,
-    PLARGE_INTEGER Timeout
-);
-
-typedef NTSTATUS (NTAPI *pNtWriteVirtualMemory)(
-    HANDLE ProcessHandle,
-    PVOID BaseAddress,
-    PVOID Buffer,
-    SIZE_T NumberOfBytesToWrite,
-    PSIZE_T NumberOfBytesWritten
-);
-
 typedef NTSTATUS (NTAPI *pNtCreateThreadEx)(
     PHANDLE ThreadHandle,
     ACCESS_MASK DesiredAccess,
@@ -52,10 +21,41 @@ typedef NTSTATUS (NTAPI *pNtClose)(
     HANDLE Handle
 );
 
+typedef NTSTATUS (NTAPI *pNtWriteVirtualMemory)(
+    HANDLE ProcessHandle,
+    PVOID BaseAddress,
+    PVOID Buffer,
+    SIZE_T NumberOfBytesToWrite,
+    PSIZE_T NumberOfBytesWritten
+);
+
+typedef NTSTATUS (NTAPI *pNtAllocateVirtualMemory)(
+    HANDLE ProcessHandle,
+    PVOID *BaseAddress,
+    ULONG_PTR ZeroBits,
+    PSIZE_T RegionSize,
+    ULONG AllocationType,
+    ULONG Protect
+);
+
+typedef NTSTATUS (NTAPI *pNtWaitForSingleObject)(
+    HANDLE Handle,
+    BOOLEAN Alertable,
+    PLARGE_INTEGER Timeout
+);
+
+typedef NTSTATUS (NTAPI *pNtProtectVirtualMemory)(
+    HANDLE ProcessHandle,
+    PVOID *BaseAddress,
+    PSIZE_T RegionSize,
+    ULONG NewProtect,
+    PULONG OldProtect
+);
+
 // Function declarations
-pNtProtectVirtualMemory NtProtectVirtualMemory;
-pNtAllocateVirtualMemory NtAllocateVirtualMemory;
-pNtWaitForSingleObject NtWaitForSingleObject;
-pNtWriteVirtualMemory NtWriteVirtualMemory;
 pNtCreateThreadEx NtCreateThreadEx;
 pNtClose NtClose;
+pNtWriteVirtualMemory NtWriteVirtualMemory;
+pNtAllocateVirtualMemory NtAllocateVirtualMemory;
+pNtWaitForSingleObject NtWaitForSingleObject;
+pNtProtectVirtualMemory NtProtectVirtualMemory;

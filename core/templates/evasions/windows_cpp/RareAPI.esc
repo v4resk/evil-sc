@@ -1,0 +1,34 @@
+void CheckRareAPI####UUID####() {
+    // Import the rarely emulated API
+    typedef LPVOID (WINAPI *pVirtualAllocExNuma)(
+        HANDLE hProcess,
+        LPVOID lpAddress,
+        SIZE_T dwSize,
+        DWORD flAllocationType,
+        DWORD flProtect,
+        DWORD nndPreferred
+    );
+    
+    // Get handle to kernel32.dll
+    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+    if (!hKernel32) {
+        ExitProcess(0);
+    }
+    
+    // Get function pointer to VirtualAllocExNuma
+    pVirtualAllocExNuma VirtualAllocExNuma = (pVirtualAllocExNuma)GetProcAddress(hKernel32, "VirtualAllocExNuma");
+    if (!VirtualAllocExNuma) {
+        ExitProcess(0);
+    }
+    
+    // Call the rarely emulated API
+    LPVOID mem = VirtualAllocExNuma(GetCurrentProcess(), NULL, 0x1000, 0x3000, 0x4, 0);
+    
+    // If the API call fails or returns NULL, we're likely in a sandbox
+    if (mem == NULL) {
+        ExitProcess(0);
+    }
+    
+    // Free the allocated memory if the call succeeded
+    VirtualFree(mem, 0, MEM_RELEASE);
+}

