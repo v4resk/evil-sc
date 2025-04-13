@@ -56,6 +56,11 @@ class CompilerControler:
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting Macro: cp {self.evil_sc_template_file} {self.outfile}\n")
             os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
         
+        elif(self.platform == "windows_vbs"):
+            if debug_mode == "True":
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting VBScript: cp {self.evil_sc_template_file} {self.outfile}\n")
+            os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
+        
         elif self.platform == "windows_js":
             if debug_mode == "True":
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting JScript: cp {self.evil_sc_template_file} {self.outfile}\n")

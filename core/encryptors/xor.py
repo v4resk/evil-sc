@@ -73,7 +73,12 @@ class xor(Encryptor):
             module.components = [
                 CallComponent(f"XORDecode{self.uuid} buf\n"),
                 CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####UUID####",str(self.uuid)))
-            ]   
+            ] 
+        elif self.platform == "windows_vbs":
+            module.components = [
+                CallComponent(f"XORDecode{self.uuid} buf\n"),
+                CodeComponent(code.replace("####KEY####", self.key.decode()).replace("####UUID####",str(self.uuid)))
+            ] 
 
         return module
 

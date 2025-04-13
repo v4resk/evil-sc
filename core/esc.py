@@ -193,6 +193,29 @@ class esc:
         win_js_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
 
+
+        # Windows VBS subparser
+        win_vbs_parser = subparsers.add_parser('windows_vbs', help='Windows VBScript Shellcode Loader')
+
+        win_vbs_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        win_vbs_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_vbs"),
+                                help='Shellcode-loading method')
+
+        win_vbs_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_vbs"),
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
+
+        win_vbs_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="",
+                                help='Process name for shellcode injection')
+
+        win_vbs_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="windows_vbs"),
+                                help='Evasion module')
+
+        win_vbs_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
+                                help='Output filename')
+
+
         # Windows ASPX subparser
         win_aspx_parser = subparsers.add_parser('windows_aspx', help='Dotnet Windows Shellcode Loader (C#)')
 

@@ -102,7 +102,9 @@ class ShellcodeControler:
                 return shellcode
             else:
                 print("[*] String shellcode")
-                return ";System.Text.Encoding.ASCII.GetBytes(\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\\0"+"\").CopyTo(buf, 0)"        
+                shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
+                shellcode = "{" + ",".join([f"0x{shellcode[i:i + 2]}" for i in range(0, len(shellcode), 2)]) + "}"
+                return shellcode+";System.Text.Encoding.ASCII.GetBytes(\"" +self.encrypted_shellcode_bytes.decode("utf-8")+"\\0"+"\").CopyTo(buf, 0)"        
 
         
         elif self.platform == "windows_pwsh":
@@ -115,7 +117,7 @@ class ShellcodeControler:
                 print("[*] String shellcode")
                 return f"\"{self.encrypted_shellcode_bytes.decode('utf-8')}\""
     
-        elif self.platform == "windows_vba":
+        elif self.platform == "windows_vba" or self.platform == "windows_vbs":
             shellcode = hexlify(self.encrypted_shellcode_bytes).decode()
             byte_array = [f"{int(shellcode[i:i + 2], 16)}" for i in range(0, len(shellcode), 2)]
 

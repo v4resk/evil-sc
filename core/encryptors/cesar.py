@@ -51,4 +51,10 @@ class cesar(Encryptor):
                 CodeComponent(code.replace("####SHIFT####", str(self.shift))
                                 .replace("####UUID####", str(self.uuid)))
             ]
+        elif self.platform == "windows_vbs":
+            module.components = [
+                CallComponent(f"CesarDecode{self.uuid} buf\n"),
+                CodeComponent(code.replace("####SHIFT####", str(self.shift))
+                                .replace("####UUID####", str(self.uuid)))
+            ]
         return module
