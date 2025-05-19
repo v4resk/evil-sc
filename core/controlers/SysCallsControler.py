@@ -15,7 +15,7 @@ from colorama import init, Fore
 debug_mode = Config().get("DEBUG", "SYSCALLS")
 
 class SysCallsControler:
-    def __init__(self,evil_sc_template_file,sysCallsType,hashSyscalls,recovery="jumper_randomized"):
+    def __init__(self,evil_sc_template_file,sysCallsType,hashSyscalls,recovery="jumper_randomized", arch="x64"):
         self.evil_sc_template_file = evil_sc_template_file
         self.sysCallsType = sysCallsType
         self.hashSyscalls = hashSyscalls
@@ -24,7 +24,7 @@ class SysCallsControler:
         #Load Config
         self.headers_folder = Config().get("FOLDERS", "HEADERS")
         self.loader_folder = Config().get("FOLDERS", "LOADER_TEMPLATE")
-
+        self.arch = arch
         #Load all Nt* functions of the template
         self.nt_functions = self.get_template_nt_functions()
 
@@ -91,7 +91,7 @@ class SysCallsControler:
             sw3_basename = f"{self.headers_folder}/SW3Syscalls"
             sw3_recovery_type = SyscallRecoveryType.from_name_or_default(self.recovery)
 
-            syswhispers_module =  SysWhispers(compiler="mingw", arch="x64", recovery=sw3_recovery_type)
+            syswhispers_module =  SysWhispers(compiler="mingw", arch=self.arch, recovery=sw3_recovery_type)
             syswhispers_module.generate(function_names=self.nt_functions, basename=sw3_basename)
             
             self.fix_sw3_header(sw3_basename) # Fix SW3 generated files for compilation

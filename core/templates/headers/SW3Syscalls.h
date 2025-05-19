@@ -13,7 +13,7 @@ typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 typedef NTSTATUS* PNTSTATUS;
 #endif
 
-#define SW3_SEED 0xA3F21A62
+#define SW3_SEED 0x29D73F60
 #define SW3_ROL8(v) (v << 8 | v >> 24)
 #define SW3_ROR8(v) (v >> 8 | v << 24)
 #define SW3_ROX8(v) ((SW3_SEED % 2) ? SW3_ROL8(v) : SW3_ROR8(v))
@@ -107,25 +107,6 @@ typedef struct _PS_ATTRIBUTE_LIST
 	PS_ATTRIBUTE Attributes[1];
 } PS_ATTRIBUTE_LIST, *PPS_ATTRIBUTE_LIST;
 
-EXTERN_C NTSTATUS NtProtectVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN OUT PVOID * BaseAddress,
-	IN OUT PSIZE_T RegionSize,
-	IN ULONG NewProtect,
-	OUT PULONG OldProtect);
-
-EXTERN_C NTSTATUS NtWriteVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress,
-	IN PVOID Buffer,
-	IN SIZE_T NumberOfBytesToWrite,
-	OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
-
-EXTERN_C NTSTATUS NtWaitForSingleObject(
-	IN HANDLE ObjectHandle,
-	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER TimeOut OPTIONAL);
-
 EXTERN_C NTSTATUS NtAllocateVirtualMemory(
 	IN HANDLE ProcessHandle,
 	IN OUT PVOID * BaseAddress,
@@ -134,8 +115,17 @@ EXTERN_C NTSTATUS NtAllocateVirtualMemory(
 	IN ULONG AllocationType,
 	IN ULONG Protect);
 
-EXTERN_C NTSTATUS NtClose(
-	IN HANDLE Handle);
+EXTERN_C NTSTATUS NtProtectVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID * BaseAddress,
+	IN OUT PSIZE_T RegionSize,
+	IN ULONG NewProtect,
+	OUT PULONG OldProtect);
+
+EXTERN_C NTSTATUS NtWaitForSingleObject(
+	IN HANDLE ObjectHandle,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER TimeOut OPTIONAL);
 
 EXTERN_C NTSTATUS NtCreateThreadEx(
 	OUT PHANDLE ThreadHandle,
@@ -149,6 +139,16 @@ EXTERN_C NTSTATUS NtCreateThreadEx(
 	IN SIZE_T StackSize,
 	IN SIZE_T MaximumStackSize,
 	IN PPS_ATTRIBUTE_LIST AttributeList OPTIONAL);
+
+EXTERN_C NTSTATUS NtClose(
+	IN HANDLE Handle);
+
+EXTERN_C NTSTATUS NtWriteVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN PVOID Buffer,
+	IN SIZE_T NumberOfBytesToWrite,
+	OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
 
 #endif
 

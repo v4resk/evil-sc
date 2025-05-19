@@ -157,7 +157,7 @@ class TemplateLoader:
 
     def load_syscalls(self):
         if self.platform == "windows_cpp":
-            self.sysCallss = SysCallsControler(self.template_file, self.syscall_method,"False",recovery=self.syswhispers_recovery_method)
+            self.sysCallss = SysCallsControler(self.template_file, self.syscall_method,"False",recovery=self.syswhispers_recovery_method, arch=self.arch)
             if self.sysCallss:
                 SysModule = self.sysCallss.get_syscall_module()
                 self.mingw_options.append(SysModule.mingw_options)
