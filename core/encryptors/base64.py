@@ -52,6 +52,12 @@ class base64(Encryptor):
                 CallComponent(f"$buf = Invoke-Base64Decode{self.uuid} -Data $buf\n"),
                 CodeComponent(code.replace("####UUID####",str(self.uuid))),
             ]
+        
+        elif self.platform == "linux":
+            module.components = [
+                CallComponent(f"length = base64_decode_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####", str(self.uuid)))
+            ]
         return module
 
     def test(self):

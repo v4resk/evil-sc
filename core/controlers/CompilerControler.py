@@ -72,6 +72,11 @@ class CompilerControler:
             if debug_mode == "True":
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting JScript: cp {self.evil_sc_template_file} {self.outfile}\n")
             os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
+            
+        elif self.platform == "windows_hta":
+            if debug_mode == "True":
+                print(f"{Fore.GREEN}[+] {Fore.WHITE}Getting HTA: cp {self.evil_sc_template_file} {self.outfile}\n")
+            os.system(f"cp {self.evil_sc_template_file} {self.outfile}")
 
         elif self.platform == "windows_aspx":
             if debug_mode == "True":

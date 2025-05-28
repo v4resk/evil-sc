@@ -141,7 +141,7 @@ class ShellcodeControler:
 
             return "\n".join(lines)  # Join all lines into a single output
         
-        elif self.platform == "windows_js":
+        elif self.platform == "windows_js" or self.platform == "windows_hta":
             shellcode = base64.b64encode(self.encrypted_shellcode_bytes)
             shellcode = shellcode.decode(encoding="latin-1")
             return f"\"{shellcode}\""

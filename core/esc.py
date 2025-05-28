@@ -113,6 +113,10 @@ class esc:
         
         win_cs_parser.add_argument('-a', '--arch', dest='arch', metavar='ARCH', default="x64",
                                 help='Target architecture (x86 or x64)')
+        # Add this after the existing win_cs_parser arguments (around line 94)
+        win_cs_parser.add_argument('--dotnetver', dest='dotnet_version', default="4",
+                          choices=["2", "4"], metavar='VERSION',
+                          help='Target .NET Framework version (2 or 4). Default: 4')
 
         # Windows Powershell subparser
         win_pwsh_parser = subparsers.add_parser('windows_pwsh', help='Powershell Windows Shellcode Loader')
@@ -189,10 +193,38 @@ class esc:
         win_js_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
                                 choices=self.get_available_files("evasions", platform="windows_js"),
                                 help='Evasion module')
+        
+        win_js_parser.add_argument('-v', '--version', dest='dot2js_version', metavar='DOTNET2JS_VERSION', choices=["auto", "2", "4"], default="auto",
+                                help='Specify .NET version to use for SharpShooter like templates')
 
         win_js_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
+        
+    
 
+        # Windows HTA subparser
+        win_hta_parser = subparsers.add_parser('windows_hta', help='HTA Windows Shellcode Loader')
+
+        win_hta_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        win_hta_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_hta"),
+                                help='Shellcode-loading method')
+
+        win_hta_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_hta"),
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
+
+        win_hta_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default="",
+                                help='Process name for shellcode injection')
+
+        win_hta_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="windows_hta"),
+                                help='Evasion module')
+        
+        win_hta_parser.add_argument('-v', '--version', dest='dot2js_version', metavar='DOTNET2JS_VERSION', choices=["auto", "2", "4"],
+                                help='Specify .NET version to use for SharpShooter like templates')
+
+        win_hta_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
+                                help='Output filename')
 
         # Windows VBS subparser
         win_vbs_parser = subparsers.add_parser('windows_vbs', help='Windows VBScript Shellcode Loader')
@@ -251,9 +283,10 @@ class esc:
         lin_parser.add_argument('-l', '--llvmo', dest='llvmo', action='store_true',
                                 help='Use Obfuscator-LLVM to compile')
         
-        lin_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
-                                choices=self.get_available_files("evasions", platform="linux"),
-                                help='Evasion module')
+# Find where the evasion modules are added to the argument parser for Linux
+        lin_parser.add_argument('-em', '--evasion-module', dest='evasions', metavar='EVASION[:ARGS]', 
+                                action='append', 
+                                help=f'Evasion module (e.g., sleep or sleep:10). Available: {", ".join(self.get_available_files("evasions", platform="linux"))}')
 
         #lin_parser.add_argument('-p', '--process', dest='target_process', metavar='PROCESS_NAME', default=False,
         #                        help='Process name for shellcode injection')
@@ -333,7 +366,9 @@ class esc:
         # SGN Encoder ?
         # Windows Process injection Templates C++/C# 
         # Linux Process injection Templates C++/C#
+        
 
+    
 
         #### OUTPUTS  #####
         if self.platform != "utils":
@@ -358,6 +393,7 @@ class esc:
                     ("Injection Process", loader.target_process if mode == "Injection" and loader.target_process else None),
                     ("Syscalls", loader.syscall_method),
                     ("SysWhispers Mode", self.syswhispers_recovery_method if loader.syscall_method == "SysWhispers3" else None),
+                    ("Dot2Js Version", self.dot2js_version),
                     ("Entry Point", loader.class_name),
                     ("Entry Function", loader.function_name),
                     ("Entry Args", loader.entry_args),

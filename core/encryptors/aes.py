@@ -148,5 +148,16 @@ Private Declare PtrSafe Function CryptDeriveKey Lib "advapi32.dll" (ByVal hProv 
 Private Declare PtrSafe Function CryptDecrypt Lib "advapi32.dll" (ByVal hKey As LongPtr, ByVal hHash As LongPtr, ByVal Final As Boolean, ByVal dwFlags As LongPtr, pbData As Any, pdwDataLen As LongPtr) As Boolean
 """)
             ]            
+            
+            
+        elif self.platform == "linux":
+            module.components = [
+                CallComponent(f"length = aes_decrypt_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid)).replace("####KEY####", self.c_key).replace("####IV####", self.c_iv)),
+                IncludeComponent("#include <openssl/evp.h>"),
+                IncludeComponent("#include <openssl/err.h>")
+            ]
+            # Specify the correct linker flags for OpenSSL
+            module.mingw_options = " -lssl -lcrypto"
 
         return module

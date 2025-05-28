@@ -125,5 +125,13 @@ class vortex(Encryptor):
                             .replace("####KEY####", f"@({','.join([str(b) for b in self.key])})")
                             .replace("####NONCE####", f"@({','.join([str(b) for b in self.nonce])})"))
             ]
+            
+        elif self.platform == "linux":
+            module.components = [
+                CallComponent(f"length = vortex_decrypt_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####",str(self.uuid))
+                            .replace("####KEY####", self.c_key)
+                            .replace("####NONCE####", self.c_nonce)),
+            ]
 
         return module

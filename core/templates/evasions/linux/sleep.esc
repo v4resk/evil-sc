@@ -1,1 +1,16 @@
-//Sleep file !
+void sleep_with_verification####UUID####() {
+    time_t start_time = time(NULL);
+    
+    // Sleep for specified time
+    sleep(####SLEEP_TIME####);
+    
+    time_t end_time = time(NULL);
+    double elapsed = difftime(end_time, start_time);
+    
+    // Verify that the sleep actually took the expected time
+    // If it didn't, it might be a sign of debugging or sandbox analysis
+    if (elapsed < ####VERIFY_TIME####) {
+        printf("[!] Sleep timing anomaly detected\n");
+        exit(1);
+    }
+}

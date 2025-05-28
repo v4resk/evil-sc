@@ -1,0 +1,60 @@
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <string.h>
+#include <stdio.h>
+
+int aes_decrypt_####UUID####(unsigned char* encoded, int length) {
+    printf("\n[-] Decrypting from AES\n");
+
+    unsigned char key[] = ####KEY####;
+    int key_length = sizeof(key);
+    unsigned char iv[] = ####IV####;
+    int iv_length = sizeof(iv);
+
+    EVP_CIPHER_CTX *ctx;
+    int len;
+    int plaintext_len;
+    unsigned char *plaintext = (unsigned char*)malloc(length);
+    
+    // Create and initialize the context
+    if(!(ctx = EVP_CIPHER_CTX_new())) {
+        printf("[-] Error creating cipher context\n");
+        free(plaintext);
+        return -1;
+    }
+    
+    // Initialize decryption operation
+    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) {
+        printf("[-] Error initializing decryption\n");
+        EVP_CIPHER_CTX_free(ctx);
+        free(plaintext);
+        return -1;
+    }
+    
+    // Provide the message to be decrypted, and obtain the plaintext output
+    if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, encoded, length)) {
+        printf("[-] Error decrypting data\n");
+        EVP_CIPHER_CTX_free(ctx);
+        free(plaintext);
+        return -1;
+    }
+    plaintext_len = len;
+    
+    // Finalize the decryption. Further plaintext bytes may be written
+    if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) {
+        printf("[-] Error finalizing decryption\n");
+        EVP_CIPHER_CTX_free(ctx);
+        free(plaintext);
+        return -1;
+    }
+    plaintext_len += len;
+    
+    // Copy the decrypted data back to the original buffer
+    memcpy(encoded, plaintext, plaintext_len);
+    
+    // Clean up
+    EVP_CIPHER_CTX_free(ctx);
+    free(plaintext);
+    
+    return plaintext_len;
+}

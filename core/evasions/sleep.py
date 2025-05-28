@@ -33,6 +33,17 @@ class sleep(Evasion):
 
         if self.platform == "windows_cpp":
             module.components = [EvasionComponent(code.replace("####2####",str(2)))]
+            
+        elif self.platform == "linux":
+            module.components = [
+                EvasionComponent(f"sleep_with_verification{self.uuid}();"),
+                CodeComponent(code.replace("####UUID####", self.uuid)
+                                .replace("####SLEEP_TIME####", str(self.sleep_time))
+                                .replace("####VERIFY_TIME####", str(self.verify_time))),
+                DefineComponent("#include <time.h>\n"),
+                DefineComponent("#include <unistd.h>\n")
+                ]
+            
         
         elif self.platform == "windows_cs":
             module.components = [
@@ -52,8 +63,6 @@ class sleep(Evasion):
                 CallComponent(f"Sleep{self.uuid}")
             ]
             
-        elif self.platform == "linux":
-            module.components = [EvasionComponent(code)]
 
         elif self.platform == "windows_pwsh":
             module.components = [EvasionComponent(code.replace("####TIME####", str(self.sleep_time)).replace("####TIME2####", str(self.sleep_time - 0.5)))]

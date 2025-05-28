@@ -134,5 +134,12 @@ class serpentine(Encryptor):
                 CodeComponent(code.replace("####UUID####",str(self.uuid))
                             .replace("####KEY####", f"@({','.join([str(b) for b in self.key])})"))
             ]
+        
+        elif self.platform == "linux":
+            module.components = [
+                CallComponent(f"length = serpentine_decrypt_{self.uuid}(encoded, length);"),
+                CodeComponent(code.replace("####UUID####", str(self.uuid))
+                            .replace("####KEY####", self.c_key))
+            ]
 
         return module
