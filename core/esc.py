@@ -32,6 +32,7 @@ class esc:
         self.shellcode32_variable = ""
         self.syscall_method = ""
         self.syswhispers_recovery_method = ""
+        self.dot2js_version = ""
         self.method = ""
         self.encoders = []
         self.encryptors = []
