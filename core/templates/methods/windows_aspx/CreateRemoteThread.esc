@@ -16,7 +16,7 @@
     [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)] private static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);
     [DllImport("kernel32.dll")] private static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, Int32 nSize, out IntPtr lpNumberOfBytesWritten);
     [DllImport("kernel32.dll")] private static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
-    [DllImport("kernel32.dll")] private static extern void Sleep(uint dwMilliseconds);//####DEFINE####
+    [DllImport("kernel32.dll")] private static extern void Sleep(uint dwMilliseconds);
 
     //####DEFINE####
     

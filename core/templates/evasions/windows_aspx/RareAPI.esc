@@ -1,0 +1,6 @@
+    IntPtr mem = VirtualAllocExNuma(GetCurrentProcess(), IntPtr.Zero, 0x1000, 0x3000, 0x4, 0);
+    if(mem == null)
+    {
+        return;
+    }
+

