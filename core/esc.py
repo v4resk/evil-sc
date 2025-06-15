@@ -269,7 +269,24 @@ class esc:
 
         win_aspx_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
                                 help='Output filename')
-        
+ 
+         # Windows WIX subparser
+        win_wix_parser = subparsers.add_parser('windows_wix', help='Windows Installer XML (WIX) Loader, for Windows Installer (.msi) files')
+
+        win_wix_parser.add_argument('shellcode_variable', metavar='shellcode', help='Specify the raw shellcode file')
+
+        win_wix_parser.add_argument('-m', '--method', dest='method', required=True, choices=self.get_available_files("methods", platform="windows_wix"),
+                                help='Shellcode-loading method')
+
+        win_wix_parser.add_argument('-e', '--encrypt', action='append', dest='encryptors', choices=self.get_available_files("encryptors", platform="windows_wix"),
+                                help='Encryption/Encoding algorithm to be applied to the shellcode')
+
+        win_wix_parser.add_argument('-em', '--evasion-module', action='append', dest='evasions',
+                                choices=self.get_available_files("evasions", platform="windows_wix"),
+                                help='Evasion module')
+
+        win_wix_parser.add_argument('-o', '--outfile', dest='outfile', metavar='OUTPUT_FILE', default="evil-sc",
+                                help='Output filename')       
         
         # Linux subparser (if you want to add specific options for Linux, otherwise can be omitted)
         lin_parser = subparsers.add_parser('linux', help='Native Linux Shellcode Loader (C++)')
@@ -335,6 +352,25 @@ class esc:
         
         return available_files
 
+    def get_compiler(self):
+        # Platforms that don't need a compiler
+        if self.platform in ["windows_pwsh", "windows_vba", "windows_js", "windows_hta", "windows_vbs", "windows_wix"]:
+            return ""
+        
+        # Platform-specific compiler mapping
+        compiler_map = {
+            "windows_cs": "mono-csc",
+            "windows_cpp": "MinGW",
+            "windows_aspx": "mono-csc",
+            "linux": "gcc",
+            # Add new platforms here with their default compilers
+        }
+        
+        # Handle LLVM obfuscator override
+        if self.llvmo and self.platform in ["windows_cpp", "linux"]:
+            return "LLVM-Obfuscator"
+            
+        return compiler_map.get(self.platform, "")
 
     def run(self):
         # Parsing arguments
@@ -371,10 +407,9 @@ class esc:
 
     
 
-        #### OUTPUTS  #####
+        #### OUTPUTS  #####
         if self.platform != "utils":
-
-            self.compiler = "" if self.platform == "windows_pwsh" or self.platform == "windows_vba"  else ("mono-csc" if self.platform == "windows_cs" else ("LLVM-Obfuscator" if self.llvmo else "MinGW"))
+            self.compiler = self.get_compiler()
             loader = TemplateLoader(vars(self))
 
             mode = "Injection" if loader.injection else "Execution"

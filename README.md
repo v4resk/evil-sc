@@ -82,7 +82,7 @@ Evil-SC is a template-based shellcode loader written in Python. It allows you to
 ```bash
 # Install dependencies
 sudo apt update
-sudo apt install mono-complete mingw-w64 powershell
+sudo apt install mono-complete mingw-w64 powershell wixl
 
 # Install the repo
 git clone https://github.com/yourusername/Evil-SC.git
@@ -107,8 +107,10 @@ python evil-sc.py --help
 - `windows_cs` - Windows C# loader
 - `windows_pwsh` - Windows PowerShell loader
 - `windows_vba` - Windows VBA (Office Macros) loader
+- `windows_vbs` - Windows VBScript loader
 - `windows_js` - Windows JavaScript loader
 - `windows_aspx` - Windows ASPX loader
+- `windows_wix` - Windows Installer XML (WIX) loader (for .msi files)
 - `linux` - Linux C++ loader
 - `utils` - Utility functions for shellcode
 
@@ -161,8 +163,7 @@ Each platform has its own set of options. Here's an example for Windows C++:
 
 ## Known Issues & Planned Features
 
-- **BUG:** SecureString is not supported for PowerShell if after an other encryption method (AES mainly)
-- **FEATURE:** Support for Assembly Execution inside a C# Template
+- **BUG:** SecureString is not supported for PowerShell if after some encryption methods (AES mainly)
 - **FEATURE:** Support for DLL copy (for DLL sideloading)  
 - **FEATURE:** Obfusaction modules (after compile / generation)
 

@@ -146,6 +146,12 @@ class ShellcodeControler:
             shellcode = shellcode.decode(encoding="latin-1")
             return f"\"{shellcode}\""
         
+        elif self.platform == "windows_wix":
+            # For WIX, we need to return the command as a string
+            if isinstance(self.shellcode_bytes, bytes):
+                return self.shellcode_bytes.decode('utf-8')
+            return str(self.shellcode_bytes)
+        
     def get_shellcode_type(self):
         """
         Returns the appropriate shellcode type declaration based on platform and encoding chain
