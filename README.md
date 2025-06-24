@@ -1,7 +1,5 @@
-<h1 align="center">
-  <br>
-  <a href="https://github.com/v4resk/evil-sc/"><img src="assets/evil-logo.png"alt="Evil-SC"></a>
-</h1>
+![Evil-SC](assets/evil-logo-dark.png#gh-dark-mode-only)
+![Evil-SC](assets/evil-logo-light.png#gh-light-mode-only)
 
 ## Introduction
 
