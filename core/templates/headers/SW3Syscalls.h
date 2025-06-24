@@ -13,7 +13,7 @@ typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 typedef NTSTATUS* PNTSTATUS;
 #endif
 
-#define SW3_SEED 0x29D73F60
+#define SW3_SEED 0x3BDFB865
 #define SW3_ROL8(v) (v << 8 | v >> 24)
 #define SW3_ROR8(v) (v >> 8 | v << 24)
 #define SW3_ROX8(v) ((SW3_SEED % 2) ? SW3_ROL8(v) : SW3_ROR8(v))
@@ -73,6 +73,13 @@ typedef struct _PS_ATTRIBUTE
 	PSIZE_T ReturnLength;
 } PS_ATTRIBUTE, *PPS_ATTRIBUTE;
 
+typedef struct _UNICODE_STRING
+{
+	USHORT Length;
+	USHORT MaximumLength;
+	PWSTR  Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+
 #ifndef InitializeObjectAttributes
 #define InitializeObjectAttributes( p, n, a, r, s ) { \
 	(p)->Length = sizeof( OBJECT_ATTRIBUTES );        \
@@ -83,13 +90,6 @@ typedef struct _PS_ATTRIBUTE
 	(p)->SecurityQualityOfService = NULL;             \
 }
 #endif
-
-typedef struct _UNICODE_STRING
-{
-	USHORT Length;
-	USHORT MaximumLength;
-	PWSTR  Buffer;
-} UNICODE_STRING, *PUNICODE_STRING;
 
 typedef struct _OBJECT_ATTRIBUTES
 {
@@ -115,6 +115,13 @@ EXTERN_C NTSTATUS NtAllocateVirtualMemory(
 	IN ULONG AllocationType,
 	IN ULONG Protect);
 
+EXTERN_C NTSTATUS NtWriteVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN PVOID Buffer,
+	IN SIZE_T NumberOfBytesToWrite,
+	OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
+
 EXTERN_C NTSTATUS NtProtectVirtualMemory(
 	IN HANDLE ProcessHandle,
 	IN OUT PVOID * BaseAddress,
@@ -126,6 +133,9 @@ EXTERN_C NTSTATUS NtWaitForSingleObject(
 	IN HANDLE ObjectHandle,
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER TimeOut OPTIONAL);
+
+EXTERN_C NTSTATUS NtClose(
+	IN HANDLE Handle);
 
 EXTERN_C NTSTATUS NtCreateThreadEx(
 	OUT PHANDLE ThreadHandle,
@@ -139,16 +149,6 @@ EXTERN_C NTSTATUS NtCreateThreadEx(
 	IN SIZE_T StackSize,
 	IN SIZE_T MaximumStackSize,
 	IN PPS_ATTRIBUTE_LIST AttributeList OPTIONAL);
-
-EXTERN_C NTSTATUS NtClose(
-	IN HANDLE Handle);
-
-EXTERN_C NTSTATUS NtWriteVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress,
-	IN PVOID Buffer,
-	IN SIZE_T NumberOfBytesToWrite,
-	OUT PSIZE_T NumberOfBytesWritten OPTIONAL);
 
 #endif
 
