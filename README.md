@@ -1,5 +1,9 @@
-![Evil-SC](assets/evil-logo-dark.png#gh-dark-mode-only)
-![Evil-SC](assets/evil-logo-light.png#gh-light-mode-only)
+<p align="center">
+<picture>
+  <source srcset="assets/evil-logo-dark.png" media="(prefers-color-scheme: dark)">
+  <img src="assets/evil-logo-light.png">
+</picture>
+</p>
 
 ## Introduction
 
